@@ -25,7 +25,7 @@ static func build(app) -> void:
 	var title = app._label("NEXUS", 28, app.GOLD)
 	title.add_theme_font_override("font", preload("res://assets/cinzel.ttf"))
 	brand.add_child(title)
-	brand.add_child(app._label("ECOS DO CREPÚSCULO  /  ALPHA 0.5", 10, app.MUTED))
+	brand.add_child(app._label("ECOS DO CREPÚSCULO  /  ALPHA 0.6", 10, app.MUTED))
 	app.roster_button = app._button("Equipes", app._open_roster)
 	header.add_child(app.roster_button)
 	header.add_child(app._button("Afinidades", app._show_classes))
@@ -175,6 +175,7 @@ static func build(app) -> void:
 	app.active_energy.custom_minimum_size.y = 16
 	app.active_energy.fill = Color("9586dc")
 	identity.add_child(app.active_energy)
+	identity.move_child(app.active_energy, app.active_shield.get_index())
 	app.step_label = app._label("", 11, app.MUTED)
 	app.step_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	app.step_label.custom_minimum_size.x = 200
@@ -194,6 +195,7 @@ static func build(app) -> void:
 	app.description = app._label("", 13, Color("c1cfe3"))
 	app.description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	app.description.custom_minimum_size.y = 32
+	app.description.max_lines_visible = 2
 	command_column.add_child(app.description)
 	var targets := HBoxContainer.new()
 	command_column.add_child(targets)
@@ -269,6 +271,7 @@ static func refresh(app) -> void:
 			card.glyph.queue_redraw()
 		card.set_pressed_no_signal(app.selected_action == id)
 	app.description.text = action.description
+	app.description.tooltip_text = action.description
 	var selected = app.action_buttons[app.selected_action]
 	if not selected.reason.is_empty(): app.description.text += "  " + selected.reason
 	app._clear(app.target_buttons)
@@ -318,7 +321,7 @@ static func update_actor_stats(app, actor: Dictionary) -> void:
 	app.active_energy.value = actor.energy
 	app.active_health.caption = app.active_numbers.text
 	app.active_energy.caption = app.active_energy_label.text
-	app.active_shield.caption = app.active_shield_label.text + ((" · %dT" % actor.get("shieldTurns", 0) if actor.get("shieldTurns", 0) > 0 else " · última ação") if actor.shield > 0 else "")
+	app.active_shield.caption = app.active_shield_label.text + ((" · %dT" % actor.get("shieldTurns", 0) if actor.get("shieldTurns", 0) > 0 else " · AGORA") if actor.shield > 0 else "")
 
 static func event_detail(event: Dictionary) -> String:
 	var detail := ""

@@ -48,7 +48,13 @@ static func portrait(index: int, full_body: bool = false) -> Texture2D:
 	var texture := AtlasTexture.new()
 	texture.filter_clip = true
 	if region_cache.is_empty(): region_cache = JSON.parse_string(FileAccess.get_file_as_string("res://data/art-regions.json"))
-	if SPECIAL.has(index):
+	if region_cache.get("_refined", {}).has(str(index)):
+		var data: Dictionary = region_cache._refined[str(index)]
+		if not texture_cache.has(data.file): texture_cache[data.file] = load("res://assets/characters/" + data.file)
+		texture.atlas = texture_cache[data.file]
+		var bounds: Array = data.body if full_body else data.portrait
+		texture.region = Rect2(bounds[0], bounds[1], bounds[2], bounds[3])
+	elif SPECIAL.has(index):
 		var id: String = SPECIAL[index]
 		if not texture_cache.has(id): texture_cache[id] = load("res://assets/characters/%s.png" % id)
 		texture.atlas = texture_cache[id]
@@ -87,9 +93,8 @@ func setup(hero: Dictionary, id: String, color: Color) -> void:
 	resting_art = portrait(int(hero.index), true)
 	artwork.texture = resting_art
 	artwork.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	artwork.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	artwork.position = Vector2(-94, -200)
-	artwork.size = Vector2(188, 200)
+	artwork.stretch_mode = TextureRect.STRETCH_SCALE
+	_rest_pose()
 	artwork.flip_h = id.begins_with("1-")
 	artwork.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	material_fx = ShaderMaterial.new()
@@ -216,9 +221,7 @@ func hit_position() -> Vector2:
 func set_pose(frame: int) -> void:
 	pose_index = frame
 	if frame < 0:
-		artwork.texture = resting_art
-		artwork.position = Vector2(-94, -200)
-		artwork.size = Vector2(188, 200)
+		_rest_pose()
 		material_fx.set_shader_parameter("exclusion_count", 0)
 		return
 	if pose_regions.is_empty() and FileAccess.file_exists("res://data/pose-regions.json"):
@@ -242,6 +245,14 @@ func set_pose(frame: int) -> void:
 	while excluded.size() < 8: excluded.append(Vector4.ZERO)
 	material_fx.set_shader_parameter("excluded_regions", PackedVector4Array(excluded.slice(0, 8)))
 	material_fx.set_shader_parameter("exclusion_count", mini(8, data.exclude.size()))
+
+func _rest_pose() -> void:
+	artwork.texture = resting_art
+	var source_size := Vector2(resting_art.get_size())
+	var factor := minf(188.0 / source_size.x, 200.0 / source_size.y)
+	artwork.size = source_size * factor
+	# Anchor the texture's actual lower edge to the feet, including wide silhouettes.
+	artwork.position = Vector2(-artwork.size.x * 0.5, -artwork.size.y)
 
 func _has_point(point: Vector2) -> bool:
 	return Rect2(Vector2(93 - 90 * depth, 257 - 200 * depth), Vector2(180 * depth, 200 * depth)).has_point(point) or plate.get_rect().has_point(point)
@@ -280,7 +291,7 @@ func refresh(data: Dictionary, is_active: bool, is_chosen: bool, can_target: boo
 	shield_label.text = "ESCUDO  %d" % data.shield
 	health.caption = "VIDA  %d / %d" % [data.hp, data.maxHp]
 	energy.caption = "ENERGIA  %d / 100" % data.energy
-	shield.caption = "ESCUDO  %d / %d%s" % [data.shield, int(shield.max_value), (" · %dT" % data.get("shieldTurns", 0)) if data.shield > 0 and data.get("shieldTurns", 0) > 0 else " · expira após agir" if data.shield > 0 else ""]
+	shield.caption = "ESCUDO  %d / %d%s" % [data.shield, int(shield.max_value), (" · %dT" % data.get("shieldTurns", 0)) if data.shield > 0 and data.get("shieldTurns", 0) > 0 else " · AGORA" if data.shield > 0 else ""]
 	shield_label.modulate.a = 1.0 if data.shield > 0 else 0.55
 	stats.text = "%d/%d PV · %d EN" % [data.hp, data.maxHp, data.energy]
 	var states: Array = []
@@ -321,8 +332,11 @@ func _draw() -> void:
 	if not is_instance_valid(visual_root): return
 	var center := Vector2(93, 258)
 	var points := PackedVector2Array()
-	for i in range(49): points.append(center + Vector2(cos(TAU * i / 48.0) * 65 * depth, sin(TAU * i / 48.0) * 10 * depth))
-	draw_colored_polygon(points, Color(0, 0, 0, 0.45))
+	for i in range(49): points.append(center + Vector2(cos(TAU * i / 48.0) * 56 * depth, sin(TAU * i / 48.0) * 10 * depth))
+	draw_colored_polygon(points, Color(0, 0, 0, 0.20))
+	var contact := PackedVector2Array()
+	for i in range(49): contact.append(center + Vector2(cos(TAU * i / 48.0) * 30 * depth, sin(TAU * i / 48.0) * 5 * depth))
+	draw_colored_polygon(contact, Color(0, 0, 0, 0.55))
 	if active or chosen or available:
 		var ring := tint if active else Color("e5c38c")
 		ring.a = 0.9 if active or chosen else 0.25

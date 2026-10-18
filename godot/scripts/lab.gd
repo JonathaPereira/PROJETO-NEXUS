@@ -1,12 +1,17 @@
 extends AcceptDialog
 ## Two bounded, independent local datasets: played matches and deterministic AI samples.
 const Combat = preload("res://scripts/combat.gd")
+const SimulationLog = preload("res://scripts/simulation_log.gd")
 const STORE := "user://balance-0.5.json"
 var catalog
 var source: OptionButton
 var summary: Label
 var table: Tree
 var simulate: Button
+var export_json: Button
+var export_csv: Button
+var export_note: Label
+var export_dialog: FileDialog
 var running := false
 var rows: Array = []
 
@@ -33,7 +38,7 @@ static func record(state: Dictionary, mode: String, difficulty: String) -> void:
 	persist(data)
 
 func _ready() -> void:
-	title = "Laboratório de balanceamento · Alpha 0.5"
+	title = "Laboratório de balanceamento · Alpha 0.6"
 	ok_button_text = "Voltar"
 	var column := VBoxContainer.new()
 	column.custom_minimum_size = Vector2(1060, 530)
@@ -52,6 +57,19 @@ func _ready() -> void:
 	simulate.text = "Simular 156 partidas"
 	simulate.pressed.connect(_simulate)
 	toolbar.add_child(simulate)
+	export_json = Button.new()
+	export_json.text = "Exportar logs JSON"
+	export_json.pressed.connect(_open_export.bind("json"))
+	toolbar.add_child(export_json)
+	export_csv = Button.new()
+	export_csv.text = "Exportar tabela CSV"
+	export_csv.pressed.connect(_open_export.bind("csv"))
+	toolbar.add_child(export_csv)
+	export_note = Label.new()
+	export_note.add_theme_font_size_override("font_size", 12)
+	export_note.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	export_note.custom_minimum_size = Vector2(1040, 32)
+	column.add_child(export_note)
 	summary = Label.new()
 	summary.custom_minimum_size = Vector2(1040, 42)
 	summary.clip_text = true
@@ -65,7 +83,7 @@ func _ready() -> void:
 	var titles := ["Herói / função", "Classe", "N", "Vitórias", "Dano dir.", "Dano esc.", "Cura dir.", "Absorvido*", "Energia", "Combos"]
 	for i in range(titles.size()):
 		table.set_column_title(i, titles[i])
-		table.set_column_custom_minimum_width(i, 160 if i == 0 else 80)
+		table.set_column_custom_minimum_width(i, 160 if i == 0 else 130 if i == 3 else 80)
 	column.add_child(table)
 	var foot := Label.new()
 	foot.text = "Dano e cura diretos (sem ticks). Valores por aparição, exceto N e vitória. *Escudo efetivamente consumido + dano desviado pelo protetor.\nAmostras separadas: 60 variadas + 96 testes de suporte/tanque, incluindo Saira/Maura/Sylva. Pares espelhados, sementes fixas. Até 500 partidas locais."
@@ -73,9 +91,31 @@ func _ready() -> void:
 	column.add_child(foot)
 	refresh()
 
+static func aggregates(records: Array, heroes: Array) -> Array:
+	var result: Array = []
+	for hero in heroes:
+		var samples: Array = []
+		for row in records:
+			for member in row.units:
+				if member.heroId == hero.id: samples.append(member)
+		var n := samples.size()
+		var wins := 0
+		var totals := {"damage": 0.0, "shieldDamage": 0.0, "healing": 0.0, "protected": 0.0, "energyGiven": 0.0, "combos": 0.0}
+		for member in samples:
+			if member.won: wins += 1
+			for key in totals: totals[key] += member.stats.get(key, 0)
+			totals.protected += member.stats.get("shieldAbsorbed", 0)
+		for key in totals: totals[key] /= maxf(1, n)
+		result.append({"heroId": hero.id, "name": hero.name, "classId": hero.classId, "role": hero.role,
+			"appearances": n, "wins": wins, "winRatePct": wins * 100.0 / n if n else null, "averages": totals})
+	return result
+
+func _matches_filter(group: String) -> bool:
+	return group == "simulation" if source.selected == 1 else group != "simulation"
+
 func refresh() -> void:
 	if not is_instance_valid(table): return
-	rows = read_records().filter(func(m): return m.source == "played" if source.selected == 0 else (m.source == "ai" and (m.mode == "simulation" if source.selected == 1 else m.mode != "simulation")))
+	rows = read_records().filter(func(m): return m.source == "played" if source.selected == 0 else (m.source == "ai" and _matches_filter(m.mode)))
 	table.clear()
 	var root := table.create_item()
 	var rounds := 0.0
@@ -83,31 +123,69 @@ func refresh() -> void:
 	for row in rows:
 		rounds += row.rounds
 		if row.fracture: fractures += 1
-	summary.text = "%d partidas · média %.1f rodadas · Fratura: %d (%.1f%%)\nVitória por herói ainda depende de quem jogou com ele e das composições usadas." % [rows.size(), rounds / maxf(1, rows.size()), fractures, fractures * 100.0 / maxf(1, rows.size())]
-	for hero in catalog.heroes:
-		var samples: Array = []
-		for row in rows:
-			for unit in row.units:
-				if unit.heroId == hero.id: samples.append(unit)
-		var n := samples.size()
-		var totals := {"damage": 0.0, "shieldDamage": 0.0, "healing": 0.0, "protected": 0.0, "energyGiven": 0.0, "combos": 0.0}
-		var wins := 0
-		for unit in samples:
-			if unit.won: wins += 1
-			for key in totals: totals[key] += unit.stats.get(key, 0)
-		# Each shield point consumed is useful protection on its owner's team.
-		var absorbed := 0.0
-		for row in rows:
-			for unit in row.units:
-				if unit.heroId == hero.id: absorbed += unit.stats.get("shieldAbsorbed", 0)
+	summary.text = "%d partidas · média %.1f rodadas · Fratura: %d (%.1f%%)\nVitórias por aparição na equipe. Considere N e adversários: os testes de sustentação são dirigidos." % [rows.size(), rounds / maxf(1, rows.size()), fractures, fractures * 100.0 / maxf(1, rows.size())]
+	for row in aggregates(rows, catalog.heroes):
 		var item := table.create_item(root)
-		item.set_text(0, hero.name + " · " + hero.role)
-		item.set_text(1, catalog.class_by_id[hero.classId].name)
-		item.set_text(2, str(n))
-		item.set_text(3, "%.1f%%" % (wins * 100.0 / n) if n else "—")
-		var values: Array = [totals.damage, totals.shieldDamage, totals.healing, totals.protected + absorbed, totals.energyGiven, totals.combos]
-		for i in range(values.size()): item.set_text(i + 4, "%.1f" % (values[i] / n) if n else "—")
-		for i in range(10): item.set_tooltip_text(i, hero.identity + "\nSinergia: " + hero.synergy)
+		item.set_text(0, row.name + " · " + row.role)
+		item.set_text(1, catalog.class_by_id[row.classId].name)
+		item.set_text(2, str(row.appearances))
+		item.set_text(3, "%d/%d (%.1f%%)" % [row.wins, row.appearances, row.winRatePct] if row.appearances else "—")
+		if row.appearances > 0 and row.appearances < 30: item.set_custom_color(3, Color("e3c085"))
+		var totals: Dictionary = row.averages
+		var values: Array = [totals.damage, totals.shieldDamage, totals.healing, totals.protected, totals.energyGiven, totals.combos]
+		for i in range(values.size()): item.set_text(i + 4, "%.1f" % values[i] if row.appearances else "—")
+		var hero: Dictionary = catalog.hero_by_id[row.heroId]
+		for i in range(10): item.set_tooltip_text(i, "%d vitórias em %d aparições. A taxa inclui a equipe e o adversário; não mede duelos individuais.\n%s\nSinergia: %s" % [row.wins, row.appearances, hero.identity, hero.synergy])
+	var has_logs := FileAccess.file_exists(SimulationLog.STORE)
+	export_json.disabled = running or source.selected == 0 or not has_logs
+	export_csv.disabled = running or rows.is_empty()
+	export_json.tooltip_text = "Escolha um dos filtros IA × IA para exportar as ações simuladas." if source.selected == 0 else "Exporta o filtro atual: resumo do histórico e ações completas do último lote simulado."
+	export_note.text = "Simule para gerar logs completos. Históricos anteriores possuem apenas estatísticas." if not has_logs else "JSON: ações do último lote no filtro escolhido + resumo do histórico. CSV: tabela visível. Logs persistem ao fechar o jogo."
+	if source.selected == 0: export_note.text = "Partidas jogadas têm resumo em CSV. Para logs completos, selecione um dos filtros IA × IA e simule."
+
+func export_to(path: String, format_id: String) -> Error:
+	if not format_id in ["json", "csv"]: return ERR_INVALID_PARAMETER
+	var batch: Dictionary = {}
+	if format_id == "json":
+		batch = SimulationLog.read_batch()
+		if batch.is_empty() or source.selected == 0: return ERR_UNAVAILABLE
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	if not file: return FileAccess.get_open_error()
+	if format_id == "csv":
+		file.store_string("\ufeff")
+		file.store_csv_line(PackedStringArray(["heroi", "classe", "funcao", "aparicoes", "vitorias", "vitoria_pct", "dano_vida", "dano_escudo", "cura", "protecao_efetiva", "energia", "combos"]), ";")
+		for row in aggregates(rows, catalog.heroes):
+			var values := PackedStringArray([row.name, catalog.class_by_id[row.classId].name, row.role, str(row.appearances), str(row.wins)])
+			for value in [row.winRatePct, row.averages.damage, row.averages.shieldDamage, row.averages.healing, row.averages.protected, row.averages.energyGiven, row.averages.combos]:
+				values.append(("%.3f" % value).replace(".", ",") if value != null else "")
+			file.store_csv_line(values, ";")
+	else:
+		var matches: Array = batch.matches.filter(func(m): return _matches_filter(m.group))
+		file.store_string(JSON.stringify({"schemaVersion": 1, "gameVersion": SimulationLog.GAME_VERSION, "rulesVersion": SimulationLog.RULES_VERSION,
+			"exportedAtUTC": Time.get_datetime_string_from_system(true), "simulatedAtUTC": batch.get("generatedAtUTC", ""),
+			"filter": source.get_item_text(source.selected), "detailScope": "Full actions: latest simulation batch only. Historical summaries: current filter.",
+			"summaryMatches": rows.size(), "fullLogMatches": matches.size(), "heroSummary": aggregates(rows, catalog.heroes),
+			"historicalSummaries": rows, "matches": matches}, "\t"))
+	return file.get_error()
+
+func _open_export(format_id: String) -> void:
+	export_dialog = FileDialog.new()
+	export_dialog.title = "Salvar logs das simulações" if format_id == "json" else "Salvar tabela de balanceamento"
+	export_dialog.file_mode = FileDialog.FILE_MODE_SAVE_FILE
+	export_dialog.access = FileDialog.ACCESS_FILESYSTEM
+	export_dialog.filters = PackedStringArray(["*.%s ; %s" % [format_id, "Logs JSON" if format_id == "json" else "Tabela CSV"]])
+	export_dialog.use_native_dialog = DisplayServer.get_name() != "headless"
+	export_dialog.current_file = "nexus-simulacoes-%s.%s" % [Time.get_datetime_string_from_system().replace(":", "-"), format_id]
+	var downloads := OS.get_system_dir(OS.SYSTEM_DIR_DOWNLOADS)
+	if DirAccess.dir_exists_absolute(downloads): export_dialog.current_dir = downloads
+	add_child(export_dialog)
+	export_dialog.file_selected.connect(func(path):
+		var error := export_to(path, format_id)
+		export_note.text = "Arquivo salvo: " + path if error == OK else "Não foi possível salvar: " + error_string(error)
+		export_note.tooltip_text = export_note.text
+		export_dialog.queue_free())
+	export_dialog.canceled.connect(func(): export_dialog.queue_free())
+	export_dialog.popup_centered(Vector2i(900, 580))
 
 func _sample_teams(pair: int) -> Array:
 	var teams: Array = [[], []]
@@ -149,23 +227,27 @@ func _simulate() -> void:
 	var engine = Combat.new()
 	var data: Array = []
 	var samples := _samples()
+	export_json.disabled = true
+	export_csv.disabled = true
+	var batch := {"schemaVersion": 1, "gameVersion": SimulationLog.GAME_VERSION, "rulesVersion": SimulationLog.RULES_VERSION,
+		"generatedAtUTC": Time.get_datetime_string_from_system(true), "matches": []}
 	for index in range(samples.size()):
 		var sample: Dictionary = samples[index]
-		var state := engine.new_battle(sample.teams[0], sample.teams[1], "normal", sample.seed)
-		while state.phase == "playing" and state.turns < 400:
-			var choice := engine.choose_ai(state)
-			var actor := engine.current(state)
-			var action := engine.get_action(actor, choice.actionId)
-			if sample.get("defensive", false) and not engine.friendly(action) and action.get("secondary", {}).get("kind") != "heal":
-				choice = {"actionId": "guard", "targetId": actor.id}
-			engine.act(state, choice.actionId, choice.targetId)
-		if state.phase == "finished": data.append(receipt(state, "ai", sample.group, "normal"))
+		var result := SimulationLog.simulate(engine, sample)
+		var state: Dictionary = result.state
+		batch.matches.append(result.trace)
+		if state.phase == "finished":
+			var record := receipt(state, "ai", sample.group, "normal")
+			record.merge({"teams": sample.teams.duplicate(true), "seed": sample.seed, "winner": state.winner})
+			data.append(record)
 		simulate.text = "Simulando %d / %d" % [index + 1, samples.size()]
 		await get_tree().process_frame
+	var log_error := SimulationLog.save_batch(batch)
 	# A live battle may finish while the simulation yields frames. Preserve it.
 	persist(read_records() + data)
 	source.select(1)
-	refresh()
 	simulate.text = "Simular 156 partidas"
 	simulate.disabled = false
 	running = false
+	refresh()
+	if log_error != OK: export_note.text = "Estatísticas geradas; falha ao salvar logs: " + error_string(log_error)

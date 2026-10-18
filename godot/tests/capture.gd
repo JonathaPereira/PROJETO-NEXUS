@@ -64,6 +64,14 @@ func _capture() -> void:
 	app.roster_button.pressed.emit()
 	await shot("godot-roster")
 	app.roster_dialog.hide()
+	if args.size() == 2 and args[1] == "--ultimates":
+		await art_audit(app)
+		await ultimate_review(app)
+		app.queue_free()
+		await process_frame
+		await process_frame
+		quit()
+		return
 	app.mode = "local"
 	app.mode_picker.select(1)
 	for case in ["shield-critical", "shield-break", "area"]:
@@ -86,6 +94,7 @@ func _capture() -> void:
 		var baseline: int = app.director.impact_count
 		app._execute()
 		await wait_hit(app.director, baseline)
+		if case == "area": await create_timer(0.25).timeout
 		await shot("godot-" + case)
 		await wait_done(app)
 	app.teams = [["saira", "maura", "sylva"], ["nima", "riven", "kira"]]
@@ -162,3 +171,49 @@ func _capture() -> void:
 	await process_frame
 	await process_frame
 	quit()
+
+func art_audit(app) -> void:
+	app.visible = false
+	var sheet := Control.new()
+	sheet.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	root.add_child(sheet)
+	var cell := root.get_visible_rect().size / Vector2(5, 3)
+	for index in range(app.catalog.heroes.size()):
+		var offset := Vector2(index % 5, index / 5) * cell
+		var background := ColorRect.new()
+		background.color = Color("263d43") if index % 2 else Color("3e4148")
+		background.position = offset + Vector2(2, 2)
+		background.size = cell - Vector2(4, 4)
+		sheet.add_child(background)
+		var hero: Dictionary = app.catalog.heroes[index]
+		var fighter = app.Fighter.new()
+		fighter.setup(hero, "audit-" + hero.id, app.catalog.affinity_color(hero.classId))
+		fighter.disabled = true
+		fighter.motion_enabled = false
+		fighter.position = offset + Vector2(cell.x * 0.5 - 93, cell.y - 112 - 257)
+		fighter.set_depth(minf(1, (cell.y - 124) / 200))
+		fighter.plate.position = Vector2(-5, 265)
+		sheet.add_child(fighter)
+		fighter.refresh({"hp": hero.hp, "maxHp": hero.hp, "energy": 100, "shield": 0, "shieldTurns": 0, "statuses": [], "guarding": false}, false, false, false)
+	await shot("godot-art-audit")
+	sheet.queue_free()
+	app.visible = true
+	await process_frame
+
+func ultimate_review(app) -> void:
+	app._open_showcase()
+	await process_frame
+	await process_frame
+	var gallery = app.showcase
+	gallery.scenario.select(0)
+	for id in gallery.HEROES:
+		gallery._select_hero(id)
+		await process_frame
+		var baseline: int = gallery.director.impact_count
+		gallery._play("ultimate")
+		await wait_hit(gallery.director, baseline)
+		await create_timer(0.28).timeout
+		await shot("godot-ultimate-" + id)
+		await wait_done(gallery)
+		print("Rendered ultimate: " + id)
+	gallery.hide()

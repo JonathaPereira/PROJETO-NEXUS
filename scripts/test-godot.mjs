@@ -76,6 +76,43 @@ for (const [i, fixture] of fixtures.entries()) {
   assert.deepEqual(actual.cases[i].final, fixture.final, `${fixture.name}: final state`);
 }
 assert(actual.uiChecks >= 20, "Meaningful native interface coverage");
+let exportedMatches = 0, exportedActions = 0;
+assert.equal(actual.exports.length, 4, "Two filters export JSON logs and CSV tables");
+for (const path of actual.exports) {
+  const contents = await readFile(path, "utf8");
+  if (path.endsWith('.csv')) {
+    const lines = contents.trim().split(/\r?\n/);
+    assert.equal(lines.length, 16, "CSV contains the header and all fifteen heroes");
+    assert(lines.every(line=>line.split(';').length===12), "CSV columns remain aligned");
+    continue;
+  }
+  const report = JSON.parse(contents);
+  assert.equal(report.rulesVersion, '0.5.0', 'Presentation changes preserve the ruleset');
+  assert.equal(report.fullLogMatches, report.matches.length);
+  assert.equal(report.summaryMatches, report.historicalSummaries.length);
+  assert.equal(report.heroSummary.length, 15);
+  for (const match of report.matches) {
+    const state = createBattle(...match.teams, {difficulty:match.difficulty, seed:match.seed});
+    assert.deepEqual(state,match.initial,'Exported seed and teams reconstruct the initial battle');
+    for (const step of match.steps) {
+      assert.equal(step.round,state.round);
+      assert.equal(step.actor,currentUnit(state).id);
+      const result=act(state,step.actionId,step.targetId);
+      assert.deepEqual(result.events,step.events,'Exported action receipts replay exactly');
+      assert.deepEqual(result.turnEvents,step.turnEvents,'Exported periodic damage and healing replay exactly');
+      assert.deepEqual(step.after,{round:state.round,phase:state.phase,winner:state.winner,random:state.random,nextActor:state.phase==='playing'?currentUnit(state).id:null,
+        units:state.units.map(u=>({id:u.id,hp:u.hp,shield:u.shield,shieldTurns:u.shieldTurns,energy:u.energy,statuses:u.statuses,cooldowns:u.cooldowns}))});
+      exportedActions++;
+    }
+    assert.equal(state.phase,'finished');
+    assert.equal(state.winner,match.winner);
+    assert.equal(state.turns,match.actions);
+    assert.deepEqual(state.units.map(u=>({id:u.id,stats:u.stats})),match.finalStats);
+    exportedMatches++;
+  }
+}
+assert.equal(exportedMatches,156);
 console.log(log.trim());
 console.log(`✓ ${fixtures.length} partidas reproduzidas com resultados idênticos ao JavaScript (${fixtures.reduce((n, f) => n + f.commands.length, 0)} ações).`);
 console.log(`✓ ${actual.checks} verificações nativas, incluindo ${actual.uiChecks} de interface: formação, persistência, IA, animação, partida completa e replay.`);
+console.log(`✓ Logs exportados reproduzem ${exportedMatches} simulações completas (${exportedActions} ações); tabelas CSV e filtros conferidos.`);

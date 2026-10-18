@@ -25,6 +25,7 @@ var version := 0
 var scenario: OptionButton
 var report: RichTextLabel
 var preview_state: Dictionary = {}
+var omitted_receipts := 0
 
 func _ready() -> void:
 	title = "Galeria de golpes · todos os 15 personagens"
@@ -184,6 +185,11 @@ func _play(action_id: String) -> void:
 	actor.energy = 100
 	actor.hp = combat.rounded(actor.maxHp * 0.75)
 	target.hp = combat.rounded(target.maxHp * 0.70)
+	# Only the displayed pair may receive action effects. Hidden stand-ins used
+	# to contribute AoE drain/healing, making the displayed numbers disagree.
+	for member in preview_state.units:
+		if member.id in [actor_id, target_id]: continue
+		if member.side == actor.side or not friendly: member.hp = 0
 	if scenario.selected == 1 and not friendly:
 		target.shield = combat.rounded(target.maxHp * 0.25)
 		target.shieldTurns = 2
@@ -198,8 +204,11 @@ func _play(action_id: String) -> void:
 	fighters.target.set_relationship(combat.advantage(hero.classId, catalog.hero_by_id[dummy].classId), not friendly)
 	var result := combat.act(preview_state, action_id, actor_id if action.get("self", false) else target_id)
 	var mapped: Array = []
+	omitted_receipts = 0
 	for event in result.events:
-		if event.target not in [actor_id, target_id]: continue
+		if event.target not in [actor_id, target_id]:
+			omitted_receipts += 1
+			continue
 		var copy: Dictionary = event.duplicate(true)
 		copy.target = "actor" if event.target == actor_id else "target"
 		mapped.append(copy)
@@ -210,7 +219,8 @@ func _play(action_id: String) -> void:
 		for pair in [["actor", actor_id], ["target", target_id]]:
 			var data: Dictionary = result.impactUnits.filter(func(u): return u.id == pair[1])[0]
 			fighters[pair[0]].refresh(data, pair[0] == "actor", false, false)
-		report.text = "\n".join(mapped.filter(func(e): return e.has("amount")).map(func(e): return CombatUI.event_detail(e))))
+		report.text = "\n".join(mapped.filter(func(e): return e.has("amount")).map(func(e): return CombatUI.event_detail(e)))
+		report.tooltip_text = CombatUI._plain(report.text))
 	if stamp != version or not completed: return
 	var ticks: Array = []
 	for event in result.turnEvents:
@@ -222,7 +232,8 @@ func _play(action_id: String) -> void:
 		completed = await director.play_ticks(self, effects, fighters, ticks, reduced_motion, func(event):
 			for fighter in fighters.values(): fighter.refresh(fighter.display_data, fighter.unit_id == event.target, false, false)
 			fighters[event.target].apply_tick(event)
-			report.text = CombatUI.event_detail(event))
+			report.text = CombatUI.event_detail(event)
+			report.tooltip_text = CombatUI._plain(report.text))
 		if stamp != version or not completed: return
 	for pair in [["actor", actor_id], ["target", target_id]]:
 		fighters[pair[0]].refresh(combat.unit(preview_state, pair[1]), pair[0] == "actor", false, false)

@@ -3,6 +3,7 @@ const Combat = preload("res://scripts/combat.gd")
 const MainScene = preload("res://scenes/main.tscn")
 var checks := 0
 var failures: Array = []
+var exported_files: Array = []
 
 func _initialize() -> void:
 	_run.call_deferred()
@@ -93,7 +94,7 @@ func _run() -> void:
 		quit(1)
 		return
 	var output := FileAccess.open(args[1], FileAccess.WRITE)
-	output.store_string(JSON.stringify({"cases": results, "checks": checks, "uiChecks": checks - before_ui}))
+	output.store_string(JSON.stringify({"cases": results, "checks": checks, "uiChecks": checks - before_ui, "exports": exported_files}))
 	output.close()
 	print("Godot native validation complete: %d checks." % checks)
 	quit(0)
@@ -115,6 +116,9 @@ func _ui() -> void:
 	var Art = load("res://scripts/ability_art.gd")
 	var icons: Array = []
 	for hero in app.catalog.heroes:
+		var body: AtlasTexture = app.Fighter.portrait(int(hero.index), true)
+		check(body.atlas.resource_path != "res://assets/clean-atlas.png", "Active characters use isolated artwork rather than overlapping legacy atlas rows")
+		check(body.filter_clip, "Character regions clip sampling at their own boundary")
 		for action_id in ["basic", "skill", "ultimate"]:
 			var icon: AtlasTexture = Art.icon(int(hero.index), action_id)
 			icons.append("%s:%s" % [icon.atlas.resource_path, icon.region])
@@ -262,6 +266,8 @@ func _layout(app) -> void:
 		for member in app.state.units:
 			var actor = app.fighters[member.id]
 			var foot: Vector2 = bounds.position + actor.foot_position()
+			check(actor.foot_position().y > app.backdrop.floor_line() + 20, "Every fighter stands on the visible floor rather than the skyline")
+			check(is_zero_approx(actor.artwork.position.y + actor.artwork.size.y), "Resting artwork is anchored at its lower edge, without a centering gap under the feet")
 			bodies.append(Rect2(foot - Vector2(94, 200) * actor.depth, Vector2(188, 200) * actor.depth))
 		for body in bodies: check(bounds.encloses(body), "Idle character body stays inside the battlefield")
 		for data in app.state.units:
@@ -321,7 +327,9 @@ func _gallery(app) -> void:
 		check(not gallery.playing, "%s basic attack completes" % id)
 		await gallery._play("ultimate")
 		check(not gallery.playing, "%s supreme completes" % id)
+		check(gallery.omitted_receipts == 0, "%s supreme cannot derive hidden drain or healing from offscreen stand-ins" % id)
 	check(profiles.size() == 15 and profiles.all(func(profile): return profiles.count(profile) == 1), "All fifteen active heroes have distinct choreography profiles")
+	check(gallery.director.Ultimate.effect_texture != null, "Supremes load the painted effect atlas, including its shader presentation")
 	check(app.state == preserved, "The gallery does not mutate the live battle")
 	gallery.scenario.select(1)
 	gallery._select_hero("veyra")
@@ -457,6 +465,7 @@ func _new_features(app) -> void:
 	var healing_only: Array = app.lab.rows.filter(func(m): return m.mode == "stress-healing-only")
 	check(healing_only.size() == 6 and healing_only.all(func(m): return m.rounds <= 21), "Reported healer mirrors cannot outheal Fracture indefinitely")
 	check(app.lab.rows.filter(func(m): return m.mode == "stress-healers").size() == 30, "Reported Saira Maura Sylva trio tested against varied trios on both sides")
+	await _exports(app)
 	check(app.state.turns == 0, "Balance simulations cannot change the real battle")
 	app.lab.source.select(0)
 	app.lab.refresh()
@@ -468,3 +477,29 @@ func _new_features(app) -> void:
 	malformed.close()
 	check(app.Lab.read_records().is_empty(), "Malformed balance record is ignored safely")
 	app.Lab.persist(records)
+
+func _exports(app) -> void:
+	var batch: Dictionary = app.lab.SimulationLog.read_batch()
+	check(batch.matches.size() == 156 and batch.matches.all(func(m): return m.finished and m.steps.size() == m.actions), "Persisted logs contain every action of all 156 simulations")
+	check(batch.matches[-1].steps.size() > 100, "Long defensive matches retain actions beyond the engine's bounded live log")
+	for filter_index in [1, 2]:
+		app.lab.source.select(filter_index)
+		app.lab.refresh()
+		check(not app.lab.export_json.disabled and not app.lab.export_csv.disabled, "Simulation filters offer both log and table export")
+		app.lab.export_json.pressed.emit()
+		await process_frame
+		check(app.lab.export_dialog.file_mode == FileDialog.FILE_MODE_SAVE_FILE, "Export opens a save dialog so the player chooses the destination")
+		var destination := "user://export-%d.json" % filter_index
+		app.lab.export_dialog.file_selected.emit(ProjectSettings.globalize_path(destination))
+		await process_frame
+		check(app.lab.export_note.text.contains("Arquivo salvo:"), "Successful export reports where the file was saved")
+		var content: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(destination))
+		check(content.fullLogMatches == (60 if filter_index == 1 else 96), "JSON export respects the selected simulation sample")
+		exported_files.append(ProjectSettings.globalize_path(destination))
+		var csv_path := "user://export-%d.csv" % filter_index
+		check(app.lab.export_to(csv_path, "csv") == OK, "CSV table exports successfully")
+		exported_files.append(ProjectSettings.globalize_path(csv_path))
+	check(app.lab.export_to("user://missing-export-folder/log.json", "json") != OK, "An unwritable destination returns an error instead of claiming success")
+	app.lab.source.select(0)
+	app.lab.refresh()
+	check(app.lab.export_json.disabled, "Played summaries are not presented as complete simulation logs")

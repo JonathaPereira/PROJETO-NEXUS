@@ -1,6 +1,8 @@
 extends RefCounted
 const Impact = preload("res://scripts/impact.gd")
 const Fighter = preload("res://scripts/fighter.gd")
+const Ultimate = preload("res://scripts/ultimate_fx.gd")
+const AbilityArt = preload("res://scripts/ability_art.gd")
 const PROFILES = {"igneo": "flame_dash", "natural": "verdant_bloom", "tecnico": "ion_cannon", "arcano": "astral_rift", "sombrio": "shadow_step", "lumi": "dawn_lance"}
 var generation := 0
 var tweens: Array[Tween] = []
@@ -56,8 +58,26 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 	var home: Vector2 = actor.visual_root.position
 	var direction := -1.0 if actor.artwork.flip_h else 1.0
 	var ultimate: bool = result.actionId == "ultimate"
-	var charge_time := (0.48 if ultimate else (0.34 if result.actionId == "skill" else 0.24)) + (0.12 if hero.animation in ["crater", "roots"] else 0.0)
+	var charge_time := (0.72 if ultimate else (0.34 if result.actionId == "skill" else 0.24)) + (0.12 if hero.animation in ["crater", "roots"] else 0.0)
 	var support: bool = action.kind.begins_with("heal") or action.kind.begins_with("shield") or action.kind == "guard" or action.kind.begins_with("support")
+	var ultimate_scene: Control
+	if ultimate:
+		ultimate_scene = Ultimate.new()
+		ultimate_scene.z_index = -20 # Above bodies, below the fixed vitality cards.
+		ultimate_scene.origin = actor.foot_position()
+		ultimate_scene.affinity = hero.classId
+		ultimate_scene.signature = hero.animation
+		ultimate_scene.tint = actor.tint
+		ultimate_scene.title = action.name
+		ultimate_scene.icon = AbilityArt.icon(int(hero.index), "ultimate")
+		ultimate_scene.support = support
+		ultimate_scene.action_kind = action.kind
+		for event in result.events:
+			if event.type in (["heal", "shield", "support"] if support else ["damage"]) and not event.get("passive", false) and not event.get("reaction", false) and not event.get("intercepted", false):
+				var at: Vector2 = fighters[event.target].foot_position()
+				if not at in ultimate_scene.destinations: ultimate_scene.destinations.append(at)
+		effects.add_child(ultimate_scene)
+		transients.append(ultimate_scene)
 	var melee: bool = not support and hero.animation in ["sweep", "crater", "roots", "prism", "crescent", "daggers"]
 	var origin: Vector2 = actor.hit_position()
 	_effect(effects, origin, origin, art_hero, action.kind, "charge", ultimate, charge_time + 0.05)
@@ -67,6 +87,7 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 	anticipate.tween_property(actor.visual_root, "position", home + Vector2(-9 * direction, -7 if hero.classId in ["arcano", "lumi"] else 3), charge_time)
 	await owner.get_tree().create_timer(charge_time).timeout
 	if version != generation or not is_instance_valid(actor): return false
+	if is_instance_valid(ultimate_scene): ultimate_scene.release()
 	var targets: Array = result.events.filter(func(e): return e.type in ["damage", "heal", "shield", "guard", "support"] and not e.get("passive", false) and not e.get("reaction", false) and not e.get("intercepted", false))
 	var primary = fighters[targets[0].target] if not targets.is_empty() else actor
 	var travel: Vector2 = primary.foot_position() - (actor.position + home)
@@ -104,6 +125,7 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 	if version != generation or not is_instance_valid(actor): return false
 	on_impact.call()
 	impact_count += 1
+	if is_instance_valid(ultimate_scene): ultimate_scene.impact()
 	actor.visual_root.modulate.a = 1.0
 	var critical := false
 	var popups := {}
@@ -143,7 +165,7 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 		_number(owner, effects, number_at, {"lines": popups[id]})
 
 	# Hold the contact pose briefly, then show follow-through and travel home.
-	await owner.get_tree().create_timer(0.15 if critical else 0.10).timeout
+	await owner.get_tree().create_timer(0.24 if ultimate else 0.15 if critical else 0.10).timeout
 	if version != generation or not is_instance_valid(actor): return false
 	actor.set_pose(3)
 	var recover := _tween(owner).set_parallel(true)
@@ -151,7 +173,7 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 	recover.tween_property(actor.visual_root, "rotation", 0.0, 0.38)
 	recover.tween_property(actor.visual_root, "scale", Vector2.ONE * actor.depth, 0.38)
 	recover.tween_method(func(v): actor.material_fx.set_shader_parameter("bend", v), -5.0 * direction, 0.0, 0.38)
-	await owner.get_tree().create_timer(0.66).timeout
+	await owner.get_tree().create_timer(0.90 if ultimate else 0.66).timeout
 	if version != generation or not is_instance_valid(actor): return false
 	actor.reset_pose()
 	return true

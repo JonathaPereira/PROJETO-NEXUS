@@ -38,6 +38,15 @@ func _draw() -> void:
 	if not caption.is_empty():
 		var font := get_theme_default_font()
 		var font_size := 12
-		var at := Vector2(5, (size.y + font.get_ascent(font_size) - font.get_descent(font_size)) * 0.5)
-		draw_string(font, at + Vector2(1, 1), caption, HORIZONTAL_ALIGNMENT_LEFT, size.x - 8, font_size, Color("030913"))
-		draw_string(font, at, caption, HORIZONTAL_ALIGNMENT_LEFT, size.x - 8, font_size, Color("f7fbff"))
+		var parts := caption.split(" ", false, 1)
+		var label: String = parts[0]
+		var amount: String = parts[1].strip_edges() if parts.size() > 1 else ""
+		var y := (size.y + font.get_ascent(font_size) - font.get_descent(font_size)) * 0.5
+		var label_width := font.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x
+		while font_size > 9 and label_width + font.get_string_size(amount, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x > size.x - 16:
+			font_size -= 1
+		var at := Vector2(5, y)
+		var numbers_at := Vector2(size.x - 5 - font.get_string_size(amount, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size).x, y)
+		for entry in [[label, at], [amount, numbers_at]]:
+			draw_string(font, entry[1] + Vector2(1, 1), entry[0], HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color("030913"))
+			draw_string(font, entry[1], entry[0], HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color("f7fbff"))

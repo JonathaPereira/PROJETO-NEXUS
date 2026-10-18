@@ -1,4 +1,4 @@
-# NEXUS em Godot — Alpha 0.5
+# NEXUS em Godot — Alpha 0.6
 
 Godot 4.6 Standard / GDScript, gratuito e sem addons pagos. Validado com Godot 4.6.3 em Linux.
 
@@ -7,7 +7,7 @@ Godot 4.6 Standard / GDScript, gratuito e sem addons pagos. Validado com Godot 4
 1. Feche o Godot. Abra a [branch atualizada](https://github.com/JonathaPereira/PROJETO-NEXUS/tree/codex/nexus-jogavel).
 2. Clique em **Code → Download ZIP** e depois **Extrair tudo**, em uma pasta nova.
 3. No gerenciador do Godot, clique em **Importar** e selecione `godot/project.godot` dentro da pasta extraída.
-4. Aguarde a importação, pressione **F5** e confira **ALPHA 0.5** no topo.
+4. Aguarde a importação, pressione **F5** e confira **ALPHA 0.6** no topo.
 5. Experimente **Aprender** para os três treinos guiados, ou **Equipes → Iniciar combate** para jogar livremente.
 
 Sua cópia anterior não atualiza automaticamente. Quem usa Git pode atualizar a branch com `git pull --ff-only`, preservando alterações locais.
@@ -58,23 +58,38 @@ Estas são combinações para testar, sem garantia de vitória. [Kits completos]
 
 **Balanço** mostra aparições e vitórias por herói, dano direto à vida, dano a escudos, cura direta, proteção efetiva, energia e combos. Danos e curas periódicos ainda não entram nos totais individuais. A duração média e a frequência da Fratura ajudam a identificar combates arrastados. Escudo concedido sem ser consumido não conta como proteção útil; a absorção é atribuída ao dono do escudo, e o dano à vida desviado, ao protetor.
 
-As partidas jogadas ficam separadas das **simulações IA × IA**. O botão simula **156 partidas** com sementes fixas. O filtro **formações variadas** mantém 60 partidas com três funções, classes únicas e mistas, em pares espelhados. O filtro **testes de sustentação** separa outras 96: Vesper/Kira/Oren, Saira/Maura/Sylva, trios de suporte, trios de tanque e espelhos que priorizam cura e substituem ataques sem cura por defesa. Assim, a amostra defensiva não distorce as médias da amostra variada. As amostras são limitadas e dependem de composição, dificuldade e decisões; a taxa de vitória não comprova equilíbrio competitivo. Guarda até 500 partidas em `user://balance-0.5.json`; apagar esse arquivo reinicia o histórico. O histórico da Alpha 0.4 permanece no arquivo anterior, sem se misturar aos novos números. Equipes e preferências ficam em `user://preferences.cfg`. Batalhas em andamento não são salvas.
+As partidas jogadas ficam separadas das **simulações IA × IA**. O botão simula **156 partidas** com sementes fixas. O filtro **formações variadas** mantém 60 partidas com três funções, classes únicas e mistas, em pares espelhados. O filtro **testes de sustentação** separa outras 96: Vesper/Kira/Oren, Saira/Maura/Sylva, trios de suporte, trios de tanque e espelhos que priorizam cura e substituem ataques sem cura por defesa. Assim, a amostra defensiva não distorce as médias da amostra variada. As amostras são limitadas e dependem de composição, dificuldade e decisões; a taxa de vitória não comprova equilíbrio competitivo. Guarda até 500 partidas em `user://balance-0.5.json`; apagar esse arquivo reinicia o histórico. As regras e o TTK da Alpha 0.5 foram preservados; suas estatísticas continuam no mesmo arquivo. O histórico da Alpha 0.4 permanece no arquivo anterior. Equipes e preferências ficam em `user://preferences.cfg`. Batalhas em andamento não são salvas.
+
+## Exportar simulações
+
+1. Abra **Balanço** e clique em **Simular 156 partidas**.
+2. Escolha **formações variadas** ou **testes de sustentação**.
+3. Clique em **Exportar logs JSON**, escolha a pasta e salve. O painel mostra o caminho salvo.
+4. Use **Exportar tabela CSV** para abrir os resultados em uma planilha. O CSV usa UTF-8, separador `;` e vírgula decimal.
+
+O JSON é formatado com quebras de linha e inclui versão das regras, filtro, sementes, equipes, estado inicial, alvo e recibos de cada ação, efeitos do próximo turno, vida/energia/escudo/estados após cada ação, vencedor e estatísticas finais. O log completo é do **último lote simulado**, no filtro escolhido. O mesmo arquivo também traz os resumos históricos que compõem a tabela visível. Partidas antigas têm somente resumo; não inventamos ações que não foram armazenadas.
+
+O último lote fica salvo em `user://simulations-0.6.json` e continua exportável depois de fechar o jogo. Simular outro lote substitui esse log detalhado, preservando o histórico compacto até seu limite de 500 partidas. Os JSONs exportados em outra pasta permanecem disponíveis.
+
+A coluna de vitórias agora exibe **vitórias/aparições e porcentagem**; amostras menores que 30 aparições recebem destaque. Os testes dirigidos podem produzir extremos como 100% porque repetem adversários específicos. Compare composição, adversário e N antes de concluir que um tanque está forte ou fraco.
 
 ## Apresentação preservada e refinada
 
-A referência de disposição é o Marvel Avengers Alliance: **um personagem mais próximo do adversário, no centro, e dois atrás, um acima e outro abaixo**. As fichas acompanham cada integrante, com **VIDA**, **ENERGIA** e **ESCUDO** em barras independentes, valores exatos e duração do escudo. O trio padrão novo leva Axion à frente; equipes já salvas são preservadas. Em **Equipes**, use o seletor **Personagem na FRENTE** para ordenar seu trio sem remover integrantes.
+O chão é reenquadrado pela borda inferior para aparecer sob todos os pés. Silhuetas ficam ancoradas ao chão, com sombras de contato; a distância altera escala e altura. É uma apresentação 2.5D com artes em perspectiva, sem modelos 3D. A referência de disposição é o Marvel Avengers Alliance: **um personagem mais próximo do adversário, no centro, e dois atrás, um acima e outro abaixo**. As fichas acompanham cada integrante, com **VIDA**, **ENERGIA** e **ESCUDO** em barras independentes, valores exatos e duração do escudo. O trio padrão novo leva Axion à frente; equipes já salvas são preservadas. Em **Equipes**, use o seletor **Personagem na FRENTE** para ordenar seu trio sem remover integrantes.
 
 **Ataque básico acerta somente UM alvo escolhido**, que pode estar na frente ou atrás. A posição, por si só, não bloqueia ataques nem reduz dano. **Provocação** de Rhazen/Vesper restringe golpes individuais ao provocador enquanto estiver ativa; ataques em área continuam atingindo todos os rivais vivos. Esses avisos aparecem ao selecionar uma ação.
 
-**Escudos não somam e não são permanentes.** Mantém-se o valor maior, limitado a 25% da vida máxima, por duas ações seguintes do protegido. Um escudo menor não renova um maior ainda válido. Um escudo que já chegou à última ação pode ser substituído pelo novo valor; a defesa comum fornece 6%. Expiração, absorção e quebra têm recibos distintos. Oren protege um aliado com desvio de 25%; o dreno Sombrio passou a 15%, e a regeneração, a 4% por ativação. Cura, escudos e atributos dos kits foram revistos; veja a [comparação das simulações](BALANCE.md). Os 15 ativos usam 45 imagens de habilidades, mantendo os atlas completos de 72 imagens. Cinco representantes ativos (Veyra, Sylva, Axion, Astra e Vesper) têm quatro poses desenhadas; os outros dez usam uma ilustração com movimento procedural. As artes de Auren e dos demais arquivados continuam disponíveis no projeto.
+**Escudos não somam e não são permanentes.** Mantém-se o valor maior, limitado a 25% da vida máxima, por duas ações seguintes do protegido. Um escudo menor não renova um maior ainda válido. Um escudo que já chegou à última ação pode ser substituído pelo novo valor; a defesa comum fornece 6%. Expiração, absorção e quebra têm recibos distintos. Oren protege um aliado com desvio de 25%; o dreno Sombrio passou a 15%, e a regeneração, a 4% por ativação. Na Alpha 0.5, cura, escudos e atributos dos kits foram revistos; veja a [comparação das simulações](BALANCE.md). Os dez ativos que dependiam do atlas antigo receberam recortes novos em três folhas com células separadas, preservando as identidades. O atlas anterior continua arquivado. Os 15 ativos usam 45 imagens de habilidades, mantendo os atlas completos de 72 imagens. Cinco representantes ativos (Veyra, Sylva, Axion, Astra e Vesper) têm quatro poses desenhadas; os outros dez usam uma ilustração com movimento procedural. As artes de Auren e dos demais arquivados continuam disponíveis no projeto.
+
+Supremos combinam texturas pintadas com brilho aditivo e distorção animada, junto de uma sequência visual própria: preparação com sigilo no chão, partículas convergentes, condução até os alvos e impacto prolongado. Ígneo usa chuva de brasas e fissuras; Natural, raízes e folhas; Técnico, feixes orbitais e campos hexagonais; Arcano, constelações e portais; Sombrio, eclipse e vórtices. Curas e proteção usam auras restauradoras. Os efeitos respeitam **Reduzir animações** e não alteram dano, recargas ou TTK.
 
 Cada um dos 15 personagens tem coreografia identificada por seu golpe, com preparação, disparo ou avanço, contato, reação e retorno. Há saltos de martelo, cortes duplos, flechas, trilhos de energia, drones, prismas, runas, órbitas e fios. A derrota tem reação própria. As cinco artes com poses e os dez movimentos sobre ilustração continuam distintos: esta atualização não adiciona animação esquelética aos dez restantes. Suportes não avançam sobre o inimigo ao conjurar; escudo e crítico possuem sons próprios. A opção **Reduzir animações** mantém as regras e remove a coreografia.
 
-**Golpes** abre a galeria isolada com seletor para **todos os 15 personagens** e cinco atalhos de classe. Há cenários normal, escudo com crítico demonstrativo e queimadura/sangramento. A técnica de Veyra consome a queimadura para seu combo; use o ataque básico nesse cenário para observar os dois efeitos contínuos. A galeria não altera a partida.
+**Golpes** abre a galeria isolada com seletor para **todos os 15 personagens** e cinco atalhos de classe. Há cenários normal, escudo com crítico demonstrativo e queimadura/sangramento. A técnica de Veyra consome a queimadura para seu combo; use o ataque básico nesse cenário para observar os dois efeitos contínuos. A galeria calcula ações somente para o par exibido, evitando dreno ou cura derivados de figurantes invisíveis. Passe o mouse sobre o resultado para ler todos os recibos. A galeria não altera a partida.
 
 ![HUD nativo](preview/hud.png)
 
-[Escolher a frente](preview/formation.png) · [Galeria](preview/gallery.png) · [Crítico em escudo](preview/shield-critical.png) · [Estados](preview/debuffs.png) · [Cura reduzida](preview/healing.png) · [Laboratório](preview/balance.png) · [Testes de sustentação](preview/balance-stress.png) · [Treino guiado](preview/lesson.png)
+[Artes dos 15](preview/roster-art.png) · [Supremo](preview/ultimate.png) · [Escolher a frente](preview/formation.png) · [Galeria](preview/gallery.png) · [Crítico em escudo](preview/shield-critical.png) · [Estados](preview/debuffs.png) · [Cura reduzida](preview/healing.png) · [Laboratório](preview/balance.png) · [Testes de sustentação](preview/balance-stress.png) · [Treino guiado](preview/lesson.png)
 
 ## Código e validação
 
@@ -90,6 +105,6 @@ npm run test:site
 node scripts/balance-report.mjs
 ```
 
-Godot deve estar no PATH (ou `GODOT_EXECUTABLE`). Os testes verificam kits, sinergias, recursos, estados, término de partidas, paridade entre os motores e interface nativa. Artefatos e preferências de teste ficam isolados em `artifacts/`.
+Godot deve estar no PATH (ou `GODOT_EXECUTABLE`). Os testes verificam kits, sinergias, recursos, estados, término de partidas, paridade entre os motores e interface nativa. Também exportam os dois filtros e reproduzem todas as ações dos JSONs no motor JavaScript, conferindo recibos e estados; verificam o CSV, caminhos de salvamento e erros de destino. Artefatos e preferências de teste ficam isolados em `artifacts/`.
 
-A versão Godot é aberta no editor nesta etapa. **GitHub Pages continua com o protótipo web anterior**; exportar Godot para navegador será outra entrega. Campanha, obtenção de heróis, multiplayer online e integração com A Lei do Trono permanecem em aberto.
+A versão Godot é aberta no editor nesta etapa. **GitHub Pages continua com o protótipo web anterior**; exportar Godot para navegador será outra entrega. Gemas, treinamento de skills e modo história estão registrados no [roteiro de progressão](ROADMAP.md). Campanha, obtenção de heróis, multiplayer online e integração com A Lei do Trono permanecem para etapas futuras.
