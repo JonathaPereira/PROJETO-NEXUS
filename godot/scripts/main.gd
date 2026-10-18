@@ -1,10 +1,11 @@
 extends Control
 const Combat = preload("res://scripts/combat.gd")
 const Fighter = preload("res://scripts/fighter.gd")
-const Impact = preload("res://scripts/impact.gd")
-const Sound = preload("res://scripts/sound.gd")
+const CombatUI = preload("res://scripts/combat_ui.gd")
+const Director = preload("res://scripts/animation_director.gd")
+const Showcase = preload("res://scripts/showcase.gd")
 const GOLD := Color("d5b480")
-const MUTED := Color("a5a2ad")
+const MUTED := Color("9aacbf")
 const ACTIONS := ["basic", "skill", "ultimate", "guard"]
 var combat = Combat.new()
 var catalog = combat.catalog
@@ -47,9 +48,21 @@ var roster_side: OptionButton
 var roster_count: Label
 var hero_detail: Label
 var roster_work: Array = []
-var animation_tweens: Array[Tween] = []
+var director = Director.new()
+var showcase
+var timeline: HBoxContainer
+var backdrop: Control
+var log_dialog: AcceptDialog
+var active_portrait: TextureRect
+var active_class: Label
+var active_numbers: Label
+var active_health: Control
+var active_energy: Control
+var active_energy_label: Label
+var step_label: Label
 
 func _ready() -> void:
+	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	teams = catalog.default_teams.duplicate(true)
 	_load_preferences()
 	_build_theme()
@@ -61,37 +74,37 @@ func _style(color: Color, border: Color = Color("37353f")) -> StyleBoxFlat:
 	box.bg_color = color
 	box.border_color = border
 	box.set_border_width_all(1)
-	box.set_corner_radius_all(7)
-	box.content_margin_left = 14
-	box.content_margin_right = 14
-	box.content_margin_top = 10
-	box.content_margin_bottom = 10
+	box.set_corner_radius_all(8)
+	box.content_margin_left = 10
+	box.content_margin_right = 10
+	box.content_margin_top = 8
+	box.content_margin_bottom = 8
 	return box
 
 func _build_theme() -> void:
 	theme = Theme.new()
 	var body_font := FontVariation.new()
 	body_font.base_font = preload("res://assets/manrope.ttf")
-	body_font.variation_opentype = {"wght": 500.0}
+	body_font.variation_opentype = {TextServerManager.get_primary_interface().name_to_tag("wght"): 600.0}
 	theme.default_font = body_font
 	theme.default_font_size = 15
-	theme.set_color("font_color", "Label", Color("eeece7"))
-	theme.set_color("font_color", "Button", Color("eeece7"))
-	theme.set_color("font_disabled_color", "Button", Color("74717d"))
+	theme.set_color("font_color", "Label", Color("eff4ff"))
+	theme.set_color("font_color", "Button", Color("eff4ff"))
+	theme.set_color("font_disabled_color", "Button", Color("8497b3"))
 	for type in ["Button", "OptionButton"]:
-		theme.set_stylebox("normal", type, _style(Color("202027")))
-		theme.set_stylebox("hover", type, _style(Color("33303a"), GOLD))
-		theme.set_stylebox("pressed", type, _style(Color("40372b"), GOLD))
-		theme.set_stylebox("disabled", type, _style(Color("18181e"), Color("28262f")))
+		theme.set_stylebox("normal", type, _style(Color("152238")))
+		theme.set_stylebox("hover", type, _style(Color("263a55"), GOLD))
+		theme.set_stylebox("pressed", type, _style(Color("3a3540"), GOLD))
+		theme.set_stylebox("disabled", type, _style(Color("0d1828"), Color("1e3047")))
 		theme.set_stylebox("focus", type, _style(Color(0, 0, 0, 0), GOLD))
-	theme.set_stylebox("panel", "PanelContainer", _style(Color("18191fe8")))
-	theme.set_stylebox("panel", "AcceptDialog", _style(Color("18191f"), GOLD))
+	theme.set_stylebox("panel", "PanelContainer", _style(Color("101c2df5")))
+	theme.set_stylebox("panel", "AcceptDialog", _style(Color("101c2d"), GOLD))
 	theme.set_constant("separation", "VBoxContainer", 10)
 	theme.set_constant("separation", "HBoxContainer", 12)
 	theme.set_constant("h_separation", "GridContainer", 10)
 	theme.set_constant("v_separation", "GridContainer", 10)
 
-func _label(text_value: String, font_size := 15, color := Color("eeece7")) -> Label:
+func _label(text_value: String, font_size := 15, color := Color("eff4ff")) -> Label:
 	var label := Label.new()
 	label.text = text_value
 	label.add_theme_font_size_override("font_size", font_size)
@@ -111,163 +124,12 @@ func _clear(node: Node) -> void:
 		child.queue_free()
 
 func _build_interface() -> void:
-	var margin := MarginContainer.new()
-	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "top", "right", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 20)
-	add_child(margin)
-	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 14)
-	margin.add_child(layout)
-	var header := HBoxContainer.new()
-	layout.add_child(header)
-	var brand := VBoxContainer.new()
-	brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(brand)
-	var title := _label("NEXUS", 30, GOLD)
-	title.add_theme_font_override("font", preload("res://assets/cinzel.ttf"))
-	brand.add_child(title)
-	brand.add_child(_label("ECOS DO CREPÚSCULO", 11, MUTED))
-	roster_button = _button("Montar equipes", _open_roster)
-	header.add_child(roster_button)
-	header.add_child(_button("Afinidades", _show_classes))
-	header.add_child(_button("Como jogar", _show_help))
-	sound_button = _button("Som: desligado", _toggle_sound)
-	header.add_child(sound_button)
-	sound = Sound.new()
-	add_child(sound)
-	var brief := PanelContainer.new()
-	layout.add_child(brief)
-	var brief_row := HBoxContainer.new()
-	brief.add_child(brief_row)
-	var brief_text := VBoxContainer.new()
-	brief_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	brief_row.add_child(brief_text)
-	phase_label = _label("", 20, GOLD)
-	brief_text.add_child(phase_label)
-	initiative = _label("", 12, MUTED)
-	brief_text.add_child(initiative)
-	mode_picker = OptionButton.new()
-	mode_picker.add_item("Treino contra IA")
-	mode_picker.add_item("Duelo local · 2 jogadores")
-	mode_picker.select(0 if mode == "training" else 1)
-	mode_picker.item_selected.connect(func(index):
-		mode = "training" if index == 0 else "local"
-		_save_preferences()
-		_new_battle())
-	brief_row.add_child(mode_picker)
-	difficulty_picker = OptionButton.new()
-	for level in ["Iniciante", "Normal", "Desafiador"]: difficulty_picker.add_item(level)
-	difficulty_picker.select(["easy", "normal", "hard"].find(difficulty))
-	difficulty_picker.item_selected.connect(func(index):
-		difficulty = ["easy", "normal", "hard"][index]
-		_save_preferences()
-		_new_battle())
-	brief_row.add_child(difficulty_picker)
-	var battlefield := HBoxContainer.new()
-	battlefield.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	layout.add_child(battlefield)
-	var arena_panel := PanelContainer.new()
-	arena_panel.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	battlefield.add_child(arena_panel)
-	var arena_column := VBoxContainer.new()
-	arena_panel.add_child(arena_column)
-	round_label = _label("", 12, GOLD)
-	arena_column.add_child(round_label)
-	field = Control.new()
-	field.custom_minimum_size = Vector2(0, 345)
-	field.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	arena_column.add_child(field)
-	var background := TextureRect.new()
-	background.texture = preload("res://assets/arena.png")
-	background.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	background.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	background.modulate = Color(0.68, 0.68, 0.72)
-	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	background.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	field.add_child(background)
-	effects = Control.new()
-	effects.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	effects.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	effects.z_index = 20
-	field.add_child(effects)
-	field.resized.connect(_position_fighters)
-	var log_panel := PanelContainer.new()
-	log_panel.custom_minimum_size.x = 250
-	battlefield.add_child(log_panel)
-	var log_column := VBoxContainer.new()
-	log_panel.add_child(log_column)
-	log_column.add_child(_label("REGISTRO DA BATALHA", 12, GOLD))
-	log_view = RichTextLabel.new()
-	log_view.custom_minimum_size.x = 220
-	log_view.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	log_view.scroll_following = true
-	log_view.add_theme_font_size_override("normal_font_size", 13)
-	log_column.add_child(log_view)
-	var commands := PanelContainer.new()
-	layout.add_child(commands)
-	var command_column := VBoxContainer.new()
-	commands.add_child(command_column)
-	active_label = _label("", 18, GOLD)
-	command_column.add_child(active_label)
-	var actions := HBoxContainer.new()
-	command_column.add_child(actions)
-	for index in range(ACTIONS.size()):
-		var id: String = ACTIONS[index]
-		var button := _button("", _select_action.bind(id))
-		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		button.custom_minimum_size.y = 58
-		button.toggle_mode = true
-		actions.add_child(button)
-		action_buttons[id] = button
-	description = _label("", 13, MUTED)
-	description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	description.custom_minimum_size.y = 36
-	command_column.add_child(description)
-	var targets := HBoxContainer.new()
-	command_column.add_child(targets)
-	targets.add_child(_label("ALVO", 12, GOLD))
-	target_buttons = HBoxContainer.new()
-	target_buttons.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	targets.add_child(target_buttons)
-	execute_button = _button("Confirmar ação", _execute)
-	execute_button.custom_minimum_size = Vector2(230, 40)
-	targets.add_child(execute_button)
-	var footer := HBoxContainer.new()
-	layout.add_child(footer)
-	var note := _label("1–4: ação  ·  Enter: confirmar  ·  Passe o cursor para ver os atributos", 12, MUTED)
-	note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	footer.add_child(note)
-	var reduce := CheckButton.new()
-	reduce.text = "Reduzir animações"
-	reduce.button_pressed = reduced_motion
-	reduce.toggled.connect(func(enabled):
-		reduced_motion = enabled
-		_save_preferences())
-	footer.add_child(reduce)
-	footer.add_child(_button("Reiniciar", _ask_restart))
-	start_button = _button("Iniciar combate", _start)
-	start_button.custom_minimum_size.x = 180
-	footer.add_child(start_button)
-	restart_dialog = ConfirmationDialog.new()
-	restart_dialog.title = "Reiniciar batalha?"
-	restart_dialog.dialog_text = "A batalha atual será encerrada. Você poderá alterar as equipes."
-	restart_dialog.ok_button_text = "Reiniciar"
-	restart_dialog.cancel_button_text = "Continuar jogando"
-	restart_dialog.confirmed.connect(_new_battle)
-	add_child(restart_dialog)
-	result_dialog = AcceptDialog.new()
-	result_dialog.title = "Resultado da batalha"
-	result_dialog.ok_button_text = "Jogar novamente"
-	result_dialog.confirmed.connect(_new_battle)
-	add_child(result_dialog)
-	_build_roster()
+	CombatUI.build(self)
 
 func _new_battle() -> void:
 	battle_version += 1
-	for tween in animation_tweens:
-		tween.kill()
-	animation_tweens.clear()
+	director.cancel()
+	if is_instance_valid(sound): sound.stop()
 	started = false
 	busy = false
 	ai_pending = false
@@ -292,11 +154,14 @@ func _new_battle() -> void:
 
 func _position_fighters() -> void:
 	if not is_instance_valid(field): return
-	var positions := [Vector2(0.10, 0.25), Vector2(0.27, 0.8), Vector2(0.41, 0.0), Vector2(0.59, 0.0), Vector2(0.73, 0.8), Vector2(0.90, 0.25)]
+	var padding := 10.0
+	var middle := 56.0
+	var slot := (field.size.x - padding * 2 - middle) / 6.0
 	for index in range(state.get("units", []).size()):
 		var fighter: Control = fighters.get(state.units[index].id)
 		if is_instance_valid(fighter):
-			fighter.position = Vector2(positions[index].x * field.size.x - 87, 8 + positions[index].y * maxf(0, field.size.y - 330))
+			var center := padding + slot * (index + 0.5) + (middle if index >= 3 else 0.0)
+			fighter.position = Vector2(center - fighter.size.x / 2, maxf(0, field.size.y - 350))
 
 func _human_turn() -> bool:
 	return mode == "local" or combat.current(state).get("side", 1) == 0
@@ -305,60 +170,7 @@ func _can_act() -> bool:
 	return started and not busy and state.phase == "playing" and _human_turn()
 
 func _refresh() -> void:
-	var actor := combat.current(state)
-	if actor.is_empty(): return
-	var hero: Dictionary = catalog.hero_by_id[actor.heroId]
-	var action := combat.get_action(actor, selected_action)
-	var targets := combat.legal_targets(state, actor, action)
-	var ids: Array = targets.map(func(u): return u.id)
-	if not target_id in ids: target_id = ids[0] if not ids.is_empty() else ""
-	roster_button.disabled = started and state.phase == "playing"
-	roster_button.tooltip_text = "Reinicie a batalha para mudar a formação." if roster_button.disabled else "Escolha três personagens para cada equipe."
-	mode_picker.disabled = started and state.phase == "playing"
-	difficulty_picker.disabled = (started and state.phase == "playing") or mode == "local"
-	difficulty_picker.tooltip_text = "No duelo local, as duas equipes usam atributos iguais." if mode == "local" else "A dificuldade ajusta somente os atributos da IA."
-	start_button.visible = not started
-	var side_label := ("Sua equipe" if mode == "training" else "Equipe 1") if actor.side == 0 else ("Equipe rival" if mode == "training" else "Equipe 2")
-	phase_label.text = "Escolha sua formação e inicie o combate" if not started else ("Batalha encerrada" if state.phase == "finished" else ("%s · vez de %s" % [side_label, hero.name]))
-	var order: Array = []
-	for id in state.order:
-		var data := combat.unit(state, id)
-		if data.hp > 0: order.append(catalog.hero_by_id[data.heroId].name)
-	initiative.text = "Ordem da rodada: " + "  →  ".join(order)
-	round_label.text = "RODADA %02d    ·    EQUIPE 1  ×  EQUIPE 2" % state.round
-	if state.round >= 12: round_label.text += "    ·    FRATURA DO NEXUS: dano crescente a cada turno"
-	active_label.text = "%s  ·  %s  ·  %d / 100 de energia" % [hero.name, catalog.class_by_id[hero.classId].name, actor.energy]
-	for index in range(ACTIONS.size()):
-		var id: String = ACTIONS[index]
-		var ability := combat.get_action(actor, id)
-		var cooldown: int = actor.cooldowns.get(id, 0)
-		var suffix := "%d energia" % ability.cost if ability.cost > 0 else ("+25 energia" if id == "guard" else "+24 energia")
-		if cooldown > 0: suffix = "Recarga: %d turno(s)" % cooldown
-		var button: Button = action_buttons[id]
-		button.text = "%d · %s\n%s" % [index + 1, ability.name, suffix]
-		button.tooltip_text = ability.description
-		button.set_pressed_no_signal(selected_action == id)
-		button.disabled = not _can_act() or not combat.can_use(actor, id)
-	description.text = action.description
-	if action.kind in ["aoe", "healAll", "shieldAll"]: description.text += "  Atinge todos os alvos válidos."
-	_clear(target_buttons)
-	for target in targets:
-		var target_hero: Dictionary = catalog.hero_by_id[target.heroId]
-		var label: String = target_hero.name
-		if target.side != actor.side:
-			var multiplier := combat.advantage(hero.classId, target_hero.classId)
-			label += " +25%" if multiplier > 1 else (" −15%" if multiplier < 1 else "")
-		var button := _button(label, _select_target.bind(target.id))
-		button.toggle_mode = true
-		button.set_pressed_no_signal(target.id == target_id)
-		button.disabled = not _can_act()
-		target_buttons.add_child(button)
-	execute_button.text = "Usar em %s" % catalog.hero_by_id[combat.unit(state, target_id).heroId].name if not target_id.is_empty() else "Confirmar ação"
-	execute_button.disabled = not _can_act() or not combat.can_use(actor, selected_action) or target_id.is_empty()
-	for data in state.units:
-		var fighter: Button = fighters[data.id]
-		fighter.refresh(data, data.id == actor.id and state.phase == "playing", data.id == target_id, data.id in ids and _can_act())
-		fighter.disabled = not _can_act() or not data.id in ids
+	CombatUI.refresh(self)
 	_update_log()
 	if state.phase == "finished" and not result_shown:
 		result_shown = true
@@ -377,7 +189,7 @@ func _start() -> void:
 	_schedule_ai()
 
 func _select_action(id: String) -> void:
-	if not _can_act() or not combat.can_use(combat.current(state), id): return
+	if not _can_inspect() or not id in ACTIONS: return
 	selected_action = id
 	_refresh()
 
@@ -392,57 +204,43 @@ func _execute() -> void:
 	if _can_act(): _play_turn(selected_action, target_id)
 
 func _play_turn(action_id: String, target: String) -> void:
-	if busy or state.phase != "playing": return
+	if busy or not started or state.phase != "playing": return
 	var version := battle_version
-	var result := combat.act(state, action_id, target)
+	var actor := combat.current(state)
+	var hero: Dictionary = catalog.hero_by_id[actor.heroId]
+	var action := combat.get_action(actor, action_id)
+	# Compute separately: the displayed actor stays stable until the strike lands.
+	var pending := state.duplicate(true)
+	var result := combat.act(pending, action_id, target)
 	if result.has("error"):
 		description.text = result.error
 		return
 	busy = true
-	execute_button.disabled = true
-	for button in action_buttons.values(): button.disabled = true
-	for button in target_buttons.get_children(): button.disabled = true
-	await _animate(result)
-	if version != battle_version: return
+	CombatUI.lock_action(self, hero, action)
+	var hit := func():
+		if version != battle_version: return
+		sound.play_cue(int(catalog.class_by_id[hero.classId].index) if action_id != "guard" else 6)
+		for data in pending.units:
+			fighters[data.id].refresh(data, data.id == actor.id, false, false)
+		CombatUI.update_actor_stats(self, combat.unit(pending, actor.id))
+	var completed: bool = await director.play(self, effects, fighters, hero, action, result, reduced_motion, hit)
+	if version != battle_version or not completed: return
+	state = pending
 	busy = false
 	selected_action = "basic"
 	_refresh()
 	_schedule_ai()
 
-func _animate(result: Dictionary) -> void:
-	var hero: Dictionary = catalog.hero_by_id[result.heroId]
-	var color: Color = catalog.affinity_color(hero.classId)
-	sound.play_cue(int(catalog.class_by_id[hero.classId].index) if result.actionId != "guard" else 6)
-	if reduced_motion:
-		await get_tree().process_frame
-		return
-	var fighter: Control = fighters[result.actor]
-	var home := fighter.position
-	var direction := 1.0 if combat.unit(state, result.actor).side == 0 else -1.0
-	var movement := create_tween()
-	animation_tweens.clear()
-	animation_tweens.append(movement)
-	movement.tween_property(fighter, "position", home + Vector2(direction * 30, -12), 0.14).set_trans(Tween.TRANS_QUAD)
-	movement.tween_property(fighter, "position", home, 0.24)
-	for event in result.events:
-		if not event.has("amount"): continue
-		var target: Control = fighters[event.target]
-		var effect = Impact.new()
-		effect.origin = fighter.position + Vector2(87, 130)
-		effect.destination = target.position + Vector2(87, 130)
-		effect.tint = Color("8cba7a") if event.type == "heal" else color
-		effect.signature = int(hero.index)
-		effect.ultimate = result.actionId == "ultimate"
-		effects.add_child(effect)
-		var number := _label(("+" if event.type in ["heal", "shield", "guard"] else "−") + str(event.amount), 26, effect.tint)
-		number.position = target.position + Vector2(55, 80)
-		effects.add_child(number)
-		var floating := create_tween().set_parallel(true)
-		animation_tweens.append(floating)
-		floating.tween_property(number, "position:y", number.position.y - 50, 0.65)
-		floating.tween_property(number, "modulate:a", 0.0, 0.65)
-		floating.chain().tween_callback(number.queue_free)
-	await get_tree().create_timer(0.7).timeout
+func _can_inspect() -> bool:
+	return not busy and (not started or (state.phase == "playing" and _human_turn()))
+
+func _set_reduced(enabled: bool) -> void:
+	reduced_motion = enabled
+	_save_preferences()
+	backdrop.motion_enabled = not enabled
+	for fighter in fighters.values(): fighter.motion_enabled = not enabled
+	# A preference change must not repaint pre-impact health over a live strike.
+	if not busy: _refresh()
 
 func _schedule_ai() -> void:
 	if ai_pending or busy or not started or mode != "training" or state.phase != "playing" or _human_turn(): return
@@ -450,6 +248,9 @@ func _schedule_ai() -> void:
 	var version := battle_version
 	await get_tree().create_timer(0.45).timeout
 	if version != battle_version: return
+	while _any_dialog():
+		await get_tree().create_timer(0.1).timeout
+		if version != battle_version: return
 	ai_pending = false
 	var choice := combat.choose_ai(state)
 	if not choice.is_empty(): _play_turn(choice.actionId, choice.targetId)
@@ -513,6 +314,7 @@ func _build_roster() -> void:
 	roster_dialog.confirmed.connect(_save_roster)
 	add_child(roster_dialog)
 	var content := VBoxContainer.new()
+	content.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
 	content.custom_minimum_size = Vector2(960, 560)
 	roster_dialog.add_child(content)
 	var toolbar := HBoxContainer.new()
@@ -607,12 +409,36 @@ func _save_preferences() -> void:
 	var error := config.save("user://preferences.cfg")
 	if error != OK: push_warning("Não foi possível salvar as preferências: %s" % error_string(error))
 
-func _unhandled_key_input(event: InputEvent) -> void:
-	if not event is InputEventKey or not event.pressed or event.echo: return
-	if roster_dialog.visible or restart_dialog.visible or result_dialog.visible: return
+func _any_dialog() -> bool:
+	return get_children().any(func(child): return child is Window and child.visible)
+
+func _open_showcase() -> void:
+	if not is_instance_valid(showcase):
+		showcase = Showcase.new()
+		showcase.catalog = catalog
+		showcase.audio = sound
+		showcase.reduced_motion = reduced_motion
+		add_child(showcase)
+	else:
+		showcase.reduced_motion = reduced_motion
+		showcase._select_hero(showcase.selected_hero)
+	showcase.popup_centered_clamped(Vector2i(1080, 740), 0.95)
+
+func _input(event: InputEvent) -> void:
+	if not event is InputEventKey or not event.pressed or event.echo or _any_dialog(): return
+	var focused := get_viewport().gui_get_focus_owner()
+	if focused is LineEdit or focused is TextEdit: return
 	if event.keycode >= KEY_1 and event.keycode <= KEY_4:
 		_select_action(ACTIONS[event.keycode - KEY_1])
 		get_viewport().set_input_as_handled()
-	elif event.keycode == KEY_ENTER and not get_viewport().gui_get_focus_owner() is Button:
-		_execute()
+	elif event.keycode in [KEY_LEFT, KEY_RIGHT] and _can_act():
+		var targets := combat.legal_targets(state, combat.current(state), combat.get_action(combat.current(state), selected_action))
+		var ids: Array = targets.map(func(u): return u.id)
+		var index: int = ids.find(target_id)
+		_select_target(ids[posmod(index + (-1 if event.keycode == KEY_LEFT else 1), ids.size())])
 		get_viewport().set_input_as_handled()
+	elif event.keycode in [KEY_ENTER, KEY_KP_ENTER]:
+		var battle_focus: bool = focused == null or focused == execute_button or focused in action_buttons.values() or focused in fighters.values() or focused in target_buttons.get_children()
+		if battle_focus and _can_act():
+			_execute()
+			get_viewport().set_input_as_handled()

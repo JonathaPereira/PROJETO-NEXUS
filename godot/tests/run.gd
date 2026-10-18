@@ -90,7 +90,8 @@ func _ui() -> void:
 	await process_frame
 	check(app.fighters.size() == 6, "Six illustrated fighters")
 	for fighter in app.fighters.values():
-		check(fighter.health.size.y == 11 and fighter.energy.size.y == 5, "Health and energy bars do not overlap the stats")
+		check(fighter.health.size.y == 8 and fighter.energy.size.y == 4, "Health and energy bars do not overlap the stats")
+	await _layout(app)
 	check(app.sound.cues.size() == 7 and app.sound.cues[0].data.size() > 0, "Synthesized audio cues loaded")
 	app.roster_button.pressed.emit()
 	check(app.hero_grid.get_child_count() == 24, "Roster contains 24 heroes")
@@ -123,7 +124,10 @@ func _ui() -> void:
 	app._new_battle()
 	await click(app.start_button)
 	check(app.started, "Viewport pointer input can start the battle")
-	check(app.action_buttons.ultimate.disabled, "Ultimate disabled until enough energy")
+	app.action_buttons.ultimate.pressed.emit()
+	check(app.selected_action == "ultimate" and not app.action_buttons.ultimate.available, "Unavailable ultimate can be inspected")
+	check(app.execute_button.disabled and app.description.text.contains("Faltam"), "Insufficient energy is explained and blocks execution")
+	app._select_action("basic")
 	app.fighters["1-vesper"].pressed.emit()
 	app.execute_button.pressed.emit()
 	var first_turns: int = app.state.turns
@@ -132,6 +136,14 @@ func _ui() -> void:
 	await wait_idle(app, 2)
 	check(app.combat.unit(app.state, "1-vesper").hp < app.combat.unit(app.state, "1-vesper").maxHp, "Player attack damaged selected rival")
 	check(app.combat.current(app.state).heroId == "astra", "AI took a valid turn before next ally")
+	app._select_action("guard")
+	app.action_buttons.guard.grab_focus()
+	var confirm := InputEventKey.new()
+	confirm.keycode = KEY_ENTER
+	confirm.pressed = true
+	root.push_input(confirm, true)
+	await wait_idle(app, 3)
+	check(app.combat.unit(app.state, "0-astra").energy == 65, "Enter confirms the action even while its skill card has focus")
 	check(app.roster_button.disabled, "Team edit locked while battle is running")
 	app._new_battle()
 	app._start()
@@ -164,13 +176,23 @@ func _ui() -> void:
 	app._start()
 	app._execute()
 	await process_frame
+	check(app.fighters["0-veyra"].posing, "Normal action starts an anticipation pose")
+	check(app.state.turns == 0, "Turn state does not advance before impact and recovery")
+	await create_timer(0.22).timeout
 	check(app.effects.get_child_count() > 0, "Normal action creates procedural visual effects")
+	check(app.fighters["1-vesper"].health.value == app.combat.unit(app.state, "1-vesper").hp, "Health does not change during anticipation")
+	await create_timer(0.2).timeout
+	check(app.fighters["1-vesper"].health.value < app.combat.unit(app.state, "1-vesper").hp and app.state.turns == 0, "Health updates at impact while the same actor is presented until recovery")
+	app._set_reduced(true)
+	check(app.fighters["1-vesper"].health.value < app.combat.unit(app.state, "1-vesper").hp, "Changing animation preference during impact cannot restore old health")
+	app._set_reduced(false)
 	await wait_idle(app, 1)
 	app._execute()
 	await process_frame
 	app._new_battle()
 	await create_timer(0.8).timeout
 	check(not app.busy and app.state.turns == 0 and app.effects.get_child_count() == 0, "Restart during animation cancels stale effects and actions")
+	await _gallery(app)
 	var config := ConfigFile.new()
 	config.set_value("teams", "0", ["unknown", "veyra", "veyra"])
 	config.set_value("game", "mode", "local")
@@ -185,4 +207,62 @@ func _ui() -> void:
 	check(malformed.combat.unit(malformed.state, "1-vesper").maxHp == malformed.catalog.hero_by_id.vesper.hp, "Saved local mode retains equal attributes")
 	malformed.queue_free()
 	app.queue_free()
+	await process_frame
+
+func _layout(app) -> void:
+	var original := root.size
+	for dimensions in [Vector2i(960, 640), Vector2i(1280, 800), Vector2i(1600, 1000), Vector2i(1874, 1048)]:
+		root.size = dimensions
+		await process_frame
+		await process_frame
+		var bounds: Rect2 = app.field.get_global_rect()
+		var plates: Array[Rect2] = []
+		for data in app.state.units:
+			var fighter = app.fighters[data.id]
+			var sample: Dictionary = data.duplicate(true)
+			sample.shield = 300
+			sample.statuses = ["burn", "regen", "weaken", "expose"].map(func(type): return {"type": type, "turns": 2})
+			fighter.refresh(sample, false, false, false)
+			var rect: Rect2 = fighter.plate.get_global_rect()
+			check(bounds.encloses(rect), "Status nameplate stays inside arena at %s" % dimensions)
+			for other in plates: check(not rect.intersects(other), "Nameplates never overlap at %s" % dimensions)
+			plates.append(rect)
+		check(root.get_visible_rect().encloses(app.execute_button.get_global_rect()), "Confirmation stays visible at %s" % dimensions)
+		check(root.get_visible_rect().encloses(app.start_button.get_global_rect()), "Start button stays visible at %s" % dimensions)
+	root.size = original
+	await process_frame
+	await process_frame
+	app._refresh()
+
+func _gallery(app) -> void:
+	app._open_showcase()
+	await process_frame
+	await process_frame
+	var gallery = app.showcase
+	var preserved: Dictionary = app.state.duplicate(true)
+	check(gallery.hero_buttons.size() == 6, "Gallery exposes one representative per class")
+	check(gallery.size.y <= root.get_visible_rect().size.y, "Gallery window fits the viewport instead of inflating during text wrapping")
+	var content := Rect2(Vector2.ZERO, Vector2(gallery.size))
+	for button in gallery.action_buttons: check(content.encloses(button.get_global_rect()), "Gallery action buttons stay visible")
+	var profiles: Array = []
+	for id in gallery.HEROES:
+		gallery._select_hero(id)
+		await process_frame
+		var baseline: int = gallery.director.impact_count
+		await gallery._play("skill")
+		check(not gallery.playing and gallery.director.impact_count == baseline + 1, "%s technique lands once and finishes" % id)
+		check(gallery.fighters.actor.visual_root.position == Vector2(93, 257), "%s recovers the home pose" % id)
+		check(gallery.stage.get_global_rect().encloses(gallery.fighters.actor.plate.get_global_rect()), "%s preview nameplate stays visible inside the stage" % id)
+		profiles.append(gallery.director.last_profile)
+		await gallery._play("basic")
+		check(not gallery.playing, "%s basic attack completes" % id)
+		await gallery._play("ultimate")
+		check(not gallery.playing, "%s supreme completes" % id)
+	check(profiles.size() == 6 and profiles.all(func(profile): return profiles.count(profile) == 1), "All six classes have distinct choreography profiles")
+	check(app.state == preserved, "The gallery does not mutate the live battle")
+	gallery.reduced_motion = true
+	gallery._select_hero("veyra")
+	await gallery._play("skill")
+	check(gallery.effects.get_child_count() == 0 and not gallery.fighters.actor.motion_enabled, "Reduced motion is honored inside the gallery")
+	gallery.hide()
 	await process_frame

@@ -1,0 +1,307 @@
+extends RefCounted
+const Fighter = preload("res://scripts/fighter.gd")
+const Card = preload("res://scripts/skill_card.gd")
+const Meter = preload("res://scripts/meter.gd")
+const Backdrop = preload("res://scripts/arena_backdrop.gd")
+const Sound = preload("res://scripts/sound.gd")
+
+static func build(app) -> void:
+	var margin := MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	for side in ["left", "right"]: margin.add_theme_constant_override("margin_" + side, 18)
+	for side in ["top", "bottom"]: margin.add_theme_constant_override("margin_" + side, 12)
+	app.add_child(margin)
+	var layout := VBoxContainer.new()
+	layout.add_theme_constant_override("separation", 9)
+	margin.add_child(layout)
+	var header := HBoxContainer.new()
+	header.custom_minimum_size.y = 48
+	layout.add_child(header)
+	var brand := VBoxContainer.new()
+	brand.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	brand.add_theme_constant_override("separation", 0)
+	header.add_child(brand)
+	var title = app._label("NEXUS", 28, app.GOLD)
+	title.add_theme_font_override("font", preload("res://assets/cinzel.ttf"))
+	brand.add_child(title)
+	brand.add_child(app._label("ECOS DO CREPÚSCULO  /  ALPHA 0.2", 10, app.MUTED))
+	app.roster_button = app._button("Equipes", app._open_roster)
+	header.add_child(app.roster_button)
+	header.add_child(app._button("Afinidades", app._show_classes))
+	header.add_child(app._button("Ajuda", app._show_help))
+	header.add_child(app._button("Galeria de golpes", app._open_showcase))
+	app.log_dialog = AcceptDialog.new()
+	app.log_dialog.title = "Registro da batalha"
+	app.add_child(app.log_dialog)
+	app.log_view = RichTextLabel.new()
+	app.log_view.custom_minimum_size = Vector2(650, 420)
+	app.log_view.scroll_following = true
+	app.log_view.add_theme_font_size_override("normal_font_size", 15)
+	app.log_dialog.add_child(app.log_view)
+	header.add_child(app._button("Registro", func(): app.log_dialog.popup_centered()))
+	app.sound_button = app._button("Som: desligado", app._toggle_sound)
+	header.add_child(app.sound_button)
+	app.sound = Sound.new()
+	app.add_child(app.sound)
+	var brief := PanelContainer.new()
+	layout.add_child(brief)
+	var brief_row := HBoxContainer.new()
+	brief_row.add_theme_constant_override("separation", 18)
+	brief.add_child(brief_row)
+	var turn_text := VBoxContainer.new()
+	turn_text.custom_minimum_size.x = 260
+	turn_text.add_theme_constant_override("separation", 2)
+	brief_row.add_child(turn_text)
+	app.phase_label = app._label("", 18, Color("f4e1b8"))
+	turn_text.add_child(app.phase_label)
+	app.initiative = app._label("PRÓXIMOS TURNOS →", 11, app.MUTED)
+	turn_text.add_child(app.initiative)
+	app.timeline = HBoxContainer.new()
+	app.timeline.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	app.timeline.add_theme_constant_override("separation", 6)
+	brief_row.add_child(app.timeline)
+	app.mode_picker = OptionButton.new()
+	app.mode_picker.add_item("Treino contra IA")
+	app.mode_picker.add_item("Duelo local")
+	app.mode_picker.select(0 if app.mode == "training" else 1)
+	app.mode_picker.item_selected.connect(func(index):
+		app.mode = "training" if index == 0 else "local"
+		app._save_preferences()
+		app._new_battle())
+	brief_row.add_child(app.mode_picker)
+	app.difficulty_picker = OptionButton.new()
+	for level in ["Iniciante", "Normal", "Desafiador"]: app.difficulty_picker.add_item(level)
+	app.difficulty_picker.select(["easy", "normal", "hard"].find(app.difficulty))
+	app.difficulty_picker.item_selected.connect(func(index):
+		app.difficulty = ["easy", "normal", "hard"][index]
+		app._save_preferences()
+		app._new_battle())
+	brief_row.add_child(app.difficulty_picker)
+	var arena := PanelContainer.new()
+	arena.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	arena.add_theme_stylebox_override("panel", app._style(Color("0a1422"), Color("293b50")))
+	layout.add_child(arena)
+	var arena_column := VBoxContainer.new()
+	arena_column.add_theme_constant_override("separation", 2)
+	arena.add_child(arena_column)
+	var arena_header := HBoxContainer.new()
+	arena_column.add_child(arena_header)
+	var left = app._label("SUA EQUIPE", 11, Color("93c7e9"))
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	arena_header.add_child(left)
+	app.round_label = app._label("", 11, app.GOLD)
+	arena_header.add_child(app.round_label)
+	var right = app._label("EQUIPE RIVAL", 11, Color("dfa1b0"))
+	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	right.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	arena_header.add_child(right)
+	app.field = Control.new()
+	app.field.clip_contents = true
+	app.field.custom_minimum_size = Vector2(0, 356)
+	app.field.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	arena_column.add_child(app.field)
+	app.backdrop = Backdrop.new()
+	app.field.add_child(app.backdrop)
+	app.effects = Control.new()
+	app.effects.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	app.effects.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	app.effects.z_index = 60
+	app.field.add_child(app.effects)
+	app.field.resized.connect(app._position_fighters)
+	var commands := PanelContainer.new()
+	commands.add_theme_stylebox_override("panel", app._style(Color("0c1727"), Color("31435b")))
+	layout.add_child(commands)
+	var commands_row := HBoxContainer.new()
+	commands_row.add_theme_constant_override("separation", 18)
+	commands.add_child(commands_row)
+	var identity := VBoxContainer.new()
+	identity.custom_minimum_size.x = 204
+	identity.add_theme_constant_override("separation", 7)
+	commands_row.add_child(identity)
+	var portrait_row := HBoxContainer.new()
+	identity.add_child(portrait_row)
+	app.active_portrait = TextureRect.new()
+	app.active_portrait.custom_minimum_size = Vector2(56, 62)
+	app.active_portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	app.active_portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	portrait_row.add_child(app.active_portrait)
+	var identity_text := VBoxContainer.new()
+	identity_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	identity_text.add_theme_constant_override("separation", 2)
+	portrait_row.add_child(identity_text)
+	app.active_label = app._label("", 21, Color("f1ddb8"))
+	identity_text.add_child(app.active_label)
+	app.active_class = app._label("", 12, app.MUTED)
+	identity_text.add_child(app.active_class)
+	app.active_numbers = app._label("", 13, Color("c4dfd0"))
+	identity.add_child(app.active_numbers)
+	app.active_health = Meter.new()
+	app.active_health.custom_minimum_size.y = 7
+	identity.add_child(app.active_health)
+	app.active_energy_label = app._label("", 13, Color("a0d3f2"))
+	identity.add_child(app.active_energy_label)
+	app.active_energy = Meter.new()
+	app.active_energy.custom_minimum_size.y = 6
+	app.active_energy.fill = Color("60bcea")
+	identity.add_child(app.active_energy)
+	app.step_label = app._label("", 11, app.MUTED)
+	app.step_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	app.step_label.custom_minimum_size.x = 200
+	identity.add_child(app.step_label)
+	var command_column := VBoxContainer.new()
+	command_column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	command_column.add_theme_constant_override("separation", 7)
+	commands_row.add_child(command_column)
+	var actions := HBoxContainer.new()
+	command_column.add_child(actions)
+	for id in app.ACTIONS:
+		var card := Card.new()
+		card.name = id
+		card.pressed.connect(app._select_action.bind(id))
+		actions.add_child(card)
+		app.action_buttons[id] = card
+	app.description = app._label("", 13, Color("c1cfe3"))
+	app.description.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	app.description.custom_minimum_size.y = 38
+	command_column.add_child(app.description)
+	var targets := HBoxContainer.new()
+	command_column.add_child(targets)
+	targets.add_child(app._label("ALVO", 11, app.GOLD))
+	app.target_buttons = HBoxContainer.new()
+	app.target_buttons.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	app.target_buttons.add_theme_constant_override("separation", 6)
+	targets.add_child(app.target_buttons)
+	app.execute_button = app._button("Confirmar ação", app._execute)
+	app.execute_button.custom_minimum_size = Vector2(195, 34)
+	app.execute_button.add_theme_stylebox_override("normal", app._style(Color("d2b17b"), Color("e8d4a8")))
+	app.execute_button.add_theme_color_override("font_color", Color("151a24"))
+	targets.add_child(app.execute_button)
+	var footer := HBoxContainer.new()
+	layout.add_child(footer)
+	var note = app._label("1–4  Habilidades     ← →  Alvo     Enter  Confirmar", 12, app.MUTED)
+	note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	footer.add_child(note)
+	var reduce := CheckButton.new()
+	reduce.text = "Reduzir animações"
+	reduce.button_pressed = app.reduced_motion
+	reduce.toggled.connect(app._set_reduced)
+	footer.add_child(reduce)
+	footer.add_child(app._button("Reiniciar", app._ask_restart))
+	app.start_button = app._button("INICIAR COMBATE", app._start)
+	app.start_button.custom_minimum_size.x = 186
+	app.start_button.add_theme_stylebox_override("normal", app._style(Color("d2b17b"), Color("f2deb5")))
+	app.start_button.add_theme_color_override("font_color", Color("111a28"))
+	footer.add_child(app.start_button)
+	app.restart_dialog = ConfirmationDialog.new()
+	app.restart_dialog.title = "Reiniciar batalha?"
+	app.restart_dialog.dialog_text = "A batalha atual será encerrada. Você poderá alterar as equipes."
+	app.restart_dialog.ok_button_text = "Reiniciar"
+	app.restart_dialog.cancel_button_text = "Continuar jogando"
+	app.restart_dialog.confirmed.connect(app._new_battle)
+	app.add_child(app.restart_dialog)
+	app.result_dialog = AcceptDialog.new()
+	app.result_dialog.title = "Resultado da batalha"
+	app.result_dialog.ok_button_text = "Jogar novamente"
+	app.result_dialog.confirmed.connect(app._new_battle)
+	app.add_child(app.result_dialog)
+	app._build_roster()
+
+static func refresh(app) -> void:
+	var actor: Dictionary = app.combat.current(app.state)
+	if actor.is_empty(): return
+	var hero: Dictionary = app.catalog.hero_by_id[actor.heroId]
+	var action: Dictionary = app.combat.get_action(actor, app.selected_action)
+	var targets: Array = app.combat.legal_targets(app.state, actor, action)
+	var ids: Array = targets.map(func(u): return u.id)
+	if not app.target_id in ids: app.target_id = ids[0] if not ids.is_empty() else ""
+	app.roster_button.disabled = app.started and app.state.phase == "playing"
+	app.roster_button.tooltip_text = "Reinicie para alterar as equipes." if app.roster_button.disabled else "Escolha três personagens por equipe."
+	app.mode_picker.disabled = app.started and app.state.phase == "playing"
+	app.difficulty_picker.disabled = (app.started and app.state.phase == "playing") or app.mode == "local"
+	app.start_button.visible = not app.started
+	app.phase_label.text = "Prepare sua equipe" if not app.started else ("Batalha encerrada" if app.state.phase == "finished" else "%s · %s" % [hero.name, "sua vez" if app._human_turn() else "vez do rival"])
+	app.round_label.text = "RODADA %02d   /   RUÍNAS DE ASTERION" % app.state.round
+	if app.state.round >= 12: app.round_label.text = "RODADA %02d   /   FRATURA ATIVA" % app.state.round
+	app.active_label.text = hero.name
+	app.active_class.text = "%s\n%s" % [app.catalog.class_by_id[hero.classId].name, hero.role]
+	app.active_portrait.texture = Fighter.portrait(int(hero.index))
+	update_actor_stats(app, actor)
+	app.step_label.text = "Escolha a habilidade, o alvo e confirme." if app._can_act() else ("Consulte as habilidades e inicie o combate." if not app.started else "Aguarde a ação terminar." if app.busy else "Aguarde o próximo turno.")
+	for index in range(app.ACTIONS.size()):
+		var id: String = app.ACTIONS[index]
+		var card = app.action_buttons[id]
+		card.configure(app.combat.get_action(actor, id), id, index + 1, app.catalog.affinity_color(hero.classId), int(actor.energy), int(actor.cooldowns.get(id, 0)), app._can_inspect())
+		if id == "skill":
+			card.glyph.symbol = hero.classId
+			card.glyph.queue_redraw()
+		card.set_pressed_no_signal(app.selected_action == id)
+	app.description.text = action.description
+	var selected = app.action_buttons[app.selected_action]
+	if not selected.reason.is_empty(): app.description.text += "  " + selected.reason
+	app._clear(app.target_buttons)
+	for target in targets:
+		var target_hero: Dictionary = app.catalog.hero_by_id[target.heroId]
+		var label: String = target_hero.name
+		if target.side != actor.side:
+			var multiplier: float = app.combat.advantage(hero.classId, target_hero.classId)
+			label += " +25%" if multiplier > 1 else (" −15%" if multiplier < 1 else "")
+		var button = app._button(label, app._select_target.bind(target.id))
+		button.toggle_mode = true
+		button.set_pressed_no_signal(target.id == app.target_id)
+		button.disabled = not app._can_act()
+		button.add_theme_font_size_override("font_size", 13)
+		app.target_buttons.add_child(button)
+	var all_targets: bool = action.kind in ["aoe", "healAll", "shieldAll"]
+	app.execute_button.text = "Confirmar em todos" if all_targets else "Usar em %s" % app._unit_name(app.target_id)
+	if not app.started: app.execute_button.text = "Inicie o combate"
+	elif not selected.available: app.execute_button.text = "Em recarga" if actor.cooldowns.get(app.selected_action, 0) > 0 else "Energia insuficiente"
+	app.execute_button.disabled = not app._can_act() or not app.combat.can_use(actor, app.selected_action) or app.target_id.is_empty()
+	for data in app.state.units:
+		var fighter = app.fighters[data.id]
+		fighter.motion_enabled = not app.reduced_motion
+		fighter.refresh(data, app.started and data.id == actor.id and app.state.phase == "playing", data.id == app.target_id, data.id in ids and app._can_act())
+		fighter.disabled = not app._can_act() or not data.id in ids
+	app.backdrop.motion_enabled = not app.reduced_motion
+	_timeline(app)
+
+static func update_actor_stats(app, actor: Dictionary) -> void:
+	app.active_numbers.text = "VIDA   %d / %d" % [actor.hp, actor.maxHp]
+	app.active_health.max_value = actor.maxHp
+	app.active_health.value = actor.hp
+	app.active_health.shield_value = actor.shield
+	app.active_energy_label.text = "ENERGIA   %d / 100" % actor.energy
+	app.active_energy.value = actor.energy
+
+static func _timeline(app) -> void:
+	app._clear(app.timeline)
+	var order: Array = app.state.order.slice(app.state.cursor) + app.state.order.slice(0, app.state.cursor)
+	var index := 0
+	for id in order:
+		var data: Dictionary = app.combat.unit(app.state, id)
+		if data.hp <= 0: continue
+		var hero: Dictionary = app.catalog.hero_by_id[data.heroId]
+		var frame := PanelContainer.new()
+		frame.custom_minimum_size = Vector2(46, 44)
+		var box := StyleBoxFlat.new()
+		box.bg_color = Color("101d30")
+		box.border_color = app.GOLD if index == 0 else app.catalog.affinity_color(hero.classId).darkened(0.55)
+		box.set_border_width_all(2 if index == 0 else 1)
+		box.set_corner_radius_all(5)
+		frame.add_theme_stylebox_override("panel", box)
+		frame.tooltip_text = "%d. %s · velocidade %d" % [index + 1, hero.name, data.speed]
+		var portrait := TextureRect.new()
+		portrait.texture = Fighter.portrait(int(hero.index))
+		portrait.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		portrait.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		frame.add_child(portrait)
+		app.timeline.add_child(frame)
+		index += 1
+
+static func lock_action(app, hero: Dictionary, action: Dictionary) -> void:
+	app.phase_label.text = "%s · %s" % [hero.name, action.name]
+	app.step_label.text = "Golpe em execução…"
+	app.execute_button.disabled = true
+	app.execute_button.text = "Em execução…"
+	for card in app.action_buttons.values(): card.disabled = true
+	for button in app.target_buttons.get_children(): button.disabled = true
+	for fighter in app.fighters.values(): fighter.disabled = true
