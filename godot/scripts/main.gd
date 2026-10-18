@@ -63,6 +63,12 @@ var step_label: Label
 var active_shield: Control
 var active_shield_label: Label
 var feedback: RichTextLabel
+var screen_button: Button
+var display_mode := "windowed"
+var display_resolution := Vector2i(1280, 720)
+var windowed_resolution := Vector2i(1280, 720)
+var inspected_hero := ""
+var roster_front_picker: OptionButton
 var feedback_panel: PanelContainer
 var preview_requested := true
 var tutorial_index := -1
@@ -79,6 +85,7 @@ func _ready() -> void:
 	_build_theme()
 	_build_interface()
 	_new_battle()
+	if DisplayServer.get_name() != "headless": _apply_display.call_deferred()
 
 func _style(color: Color, border: Color = Color("37353f")) -> StyleBoxFlat:
 	var box := StyleBoxFlat.new()
@@ -174,15 +181,19 @@ func _position_fighters() -> void:
 		var data: Dictionary = state.units[index]
 		var fighter = fighters.get(data.id)
 		if is_instance_valid(fighter):
-			# Slot 0 is the vanguard; slots 1 and 2 form the back of the triangle.
-			var x: float = [0.36, 0.10, 0.23][int(data.slot)]
+			# MAA reference: the vanguard is at center/inward, rear units above and below.
+			var slot: int = data.slot
+			var x: float = [0.29, 0.12, 0.12][slot]
 			if data.side == 1: x = 1.0 - x
-			var foot := Vector2(field.size.x * x, field.size.y - [140, 175, 130][int(data.slot)])
+			var foot := Vector2(field.size.x * x, field.size.y * [0.73, 0.40, 0.95][slot])
+			if slot == 1: foot.y = maxf(174, foot.y)
 			fighter.position = foot - Vector2(93, 257)
-			fighter.set_depth([1.0, 0.80, 0.91][int(data.slot)])
-			fighter.z_index = int(data.slot) + 3 if data.slot == 0 else int(data.slot)
-			# Information cards stay in their own row and retain a readable size.
-			fighter.plate.position = Vector2(foot.x - 88, field.size.y - 128) - fighter.position
+			fighter.set_depth([0.95, 0.82, 0.95][slot])
+			fighter.set_formation(slot)
+			fighter.z_index = [2, 1, 3][slot]
+			var plate_x: float = foot.x + 92 if data.side == 0 else foot.x - 92 - fighter.plate.size.x
+			var plate_y: float = [foot.y - 110, maxf(4, foot.y - 200 * fighter.depth - 10), foot.y - 88][slot]
+			fighter.plate.position = Vector2(plate_x, plate_y) - fighter.position
 
 func _human_turn() -> bool:
 	return mode == "local" or combat.current(state).get("side", 1) == 0
@@ -315,7 +326,7 @@ func _update_log() -> void:
 		var message := ""
 		match entry.type:
 			"action": message = "%s usou %s." % [actor, entry.name]
-			"damage", "heal", "shield", "guard", "burn", "bleed", "fracture", "energy", "status", "support", "converted": message = "%s: %s" % [target, CombatUI._plain(CombatUI.event_detail(entry))]
+			"damage", "heal", "shield", "guard", "burn", "bleed", "fracture", "energy", "status", "support", "converted", "shieldExpired": message = "%s: %s" % [target, CombatUI._plain(CombatUI.event_detail(entry))]
 			"defeated": message = "%s foi derrotado." % target
 		if not message.is_empty(): lines.append("[R%d] %s" % [entry.round, message])
 	log_view.text = "\n\n".join(lines) if not lines.is_empty() else "Escolha três personagens para cada equipe.\n\nVocê pode enfrentar a IA ou jogar com outra pessoa neste dispositivo."
@@ -355,7 +366,7 @@ func _show_classes() -> void:
 func _show_help() -> void:
 	var dialog := AcceptDialog.new()
 	dialog.title = "Como jogar"
-	dialog.dialog_text = "1. Monte duas equipes de três personagens diferentes.\n2. Escolha treino contra IA ou duelo no mesmo dispositivo.\n3. Inicie o combate e acompanhe a ordem dos turnos.\n4. Escolha uma ação, depois o alvo e confirme.\n5. Derrote os três rivais.\n\nAtaque: recupera 24 de energia.\nTécnica: custa 30; recarga de dois turnos pessoais.\nSupremo: custa 80; o alcance varia por personagem.\nDefesa: reduz dano, concede escudo e recupera 25 de energia.\nCuras e escudos escolhem aliados.\n\nVerde = vida; azul = escudo; violeta = energia.\nOs números separam vida perdida, escudo absorvido e escudo restante.\nCrítico: 10% de chance, +40% de dano, inclusive contra escudos.\nQueimadura e sangramento: 6,5% da vida máxima no início de 2 turnos.\nAtravessam escudos; reaplicar renova a duração. Purificação remove ambos.\nRegen: +7% da vida máxima no início de 2 turnos.\nATQ↓ = enfraquecimento (−20%); DEF↓ = exposição (−25%).\nPasse o mouse sobre a ficha para consultar nomes e duração dos estados.\nVulnerável: +25% de dano; Resistente: −15%, em relação ao herói que age.\nA formação triangular é visual; a posição não altera defesa nem seleção.\n\nFratura: começa na rodada 12 com 4% da vida máxima antes de cada ação pessoal. Cresce 2,5 pontos percentuais por rodada (limite 85%) e ignora escudos. Evita combates sem fim.\nProvocação limita ataques individuais ao tanque; ataques em área ignoram isso.\nProteção de Oren desvia 35% de um ataque individual ao protetor vivo.\nFortificação reduz dano em 20%; inspiração aumenta ATQ em 20%.\nSemente cura o próximo atacante aliado; Foco amplia o próximo golpe em 25%.\nCombos e condições próprias aparecem na descrição de cada habilidade.\nA formação fica salva; a batalha em andamento não.\nDuelo local usa atributos iguais para os dois lados."
+	dialog.dialog_text = "1. Monte duas equipes de três personagens diferentes.\n2. Escolha treino contra IA ou duelo no mesmo dispositivo.\n3. Inicie o combate e acompanhe a ordem dos turnos.\n4. Escolha uma ação, depois o alvo e confirme.\n5. Derrote os três rivais.\n\nAtaque básico: acerta UM inimigo escolhido, na frente ou atrás, e recupera 24 de energia.\nTécnica: custa 30; recarga de dois turnos pessoais.\nSupremo: custa 80; o alcance varia por personagem.\nDefesa: reduz dano, concede escudo e recupera 25 de energia.\nCuras e escudos escolhem aliados.\n\nVerde = vida; azul = escudo; violeta = energia.\nOs números separam vida perdida, escudo absorvido e escudo restante.\nCrítico: 10% de chance, +40% de dano, inclusive contra escudos.\nQueimadura e sangramento: 6,5% da vida máxima no início de 2 turnos.\nAtravessam escudos; reaplicar renova a duração. Sangramento reduz TODA cura recebida em 35%, inclusive regeneração, Semente e dreno. Purificação remove ambos. Curas com purificação curam antes de remover o efeito.\nRegen: +4% da vida máxima no início de 2 turnos.\nATQ↓ = enfraquecimento (−20%); DEF↓ = exposição (−25%).\nPasse o mouse sobre a ficha para consultar nomes e duração dos estados.\nVulnerável: +25% de dano; Resistente: −15%, em relação ao herói que age.\nFRENTE: centro do trio, mais perto do adversário. ATRÁS: alto e baixo da lateral.\nA posição é visual: qualquer inimigo vivo pode ser escolhido. Provocação restringe ataques individuais ao provocador; área atinge todos.\nEscudos não somam: mantém o maior, até 25% da vida, por 2 ações do protegido. Aplicar um menor não renova a duração do maior.\nSombrio drena 15% do dano direto à vida; escudo absorvido não gera cura.\nTela: escolha 1920×1080 e tela cheia. F11 alterna; Esc volta à janela.\n\nFratura: começa na rodada 12 com 4% da vida máxima antes de cada ação pessoal. Cresce 2,5 pontos percentuais por rodada (limite 85%) e ignora escudos. Também reduz TODA cura recebida: −10% na rodada 12, −20% na 13, até −100% na 21. O valor aparece no alto da arena; não pode ser purificado. A redução de Sangramento é multiplicada pela da Fratura. Evita esperar pela Fratura apenas se curando.\nProvocação limita ataques individuais ao tanque; ataques em área ignoram isso.\nProteção de Oren desvia 25% de um ataque individual ao protetor vivo.\nFortificação reduz dano em 15%; inspiração aumenta ATQ em 20%.\nSemente cura o próximo atacante aliado; Foco amplia o próximo golpe em 25%.\nCombos e condições próprias aparecem na descrição de cada habilidade.\nA formação fica salva; a batalha em andamento não.\nDuelo local usa atributos iguais para os dois lados."
 	add_child(dialog)
 	var help_text: String = dialog.dialog_text
 	dialog.dialog_text = ""
@@ -404,6 +415,16 @@ func _build_roster() -> void:
 	hero_detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	hero_detail.custom_minimum_size = Vector2(940, 135)
 	content.add_child(hero_detail)
+	var formation_row := HBoxContainer.new()
+	content.add_child(formation_row)
+	formation_row.add_child(_label("Personagem na FRENTE:", 14, GOLD))
+	roster_front_picker = OptionButton.new()
+	roster_front_picker.custom_minimum_size.x = 180
+	roster_front_picker.item_selected.connect(func(index):
+		inspected_hero = roster_work[roster_side.selected][index]
+		_move_to_front())
+	formation_row.add_child(roster_front_picker)
+	formation_row.add_child(_label("Posição visual; qualquer inimigo pode ser alvo.", 13, MUTED))
 
 func _open_roster() -> void:
 	if tutorial_index >= 0 or (started and state.phase == "playing"): return
@@ -416,11 +437,14 @@ func _open_roster() -> void:
 func _refresh_roster() -> void:
 	_clear(hero_grid)
 	var selected: Array = roster_work[roster_side.selected]
+	roster_front_picker.clear()
+	for id in selected: roster_front_picker.add_item(catalog.hero_by_id[id].name)
+	roster_front_picker.disabled = selected.size() < 2
 	var team_names: Array = selected.map(func(id): return catalog.hero_by_id[id].name)
 	roster_count.text = "%d/3 · Frente: %s · Atrás: %s" % [selected.size(), team_names[0] if not team_names.is_empty() else "—", ", ".join(team_names.slice(1))]
 	for hero in catalog.heroes:
 		if roster_filter.selected > 0 and hero.classId != catalog.classes[roster_filter.selected - 1].id: continue
-		var button := _button("%s%s\n%s · %s" % ["✓ " if hero.id in selected else "", hero.name, catalog.class_by_id[hero.classId].name, hero.role], _toggle_hero.bind(hero.id))
+		var button := _button("%s%s\n%s · %s" % [(str(selected.find(hero.id) + 1) + "· " + ("FRENTE · " if selected.find(hero.id) == 0 else "ATRÁS · ")) if hero.id in selected else "", hero.name, catalog.class_by_id[hero.classId].name, hero.role], _toggle_hero.bind(hero.id))
 		button.name = hero.id
 		button.icon = Fighter.portrait(int(hero.index))
 		button.expand_icon = true
@@ -438,6 +462,7 @@ func _toggle_hero(id: String) -> void:
 	if id in selected: selected.erase(id)
 	elif selected.size() < 3: selected.append(id)
 	var hero: Dictionary = catalog.hero_by_id[id]
+	inspected_hero = id
 	hero_detail.text = "%s · %s\nPV %d · ATQ %d · DEF %d · VEL %d\n%s\nTécnica — %s: %s\nSupremo — %s: %s" % [hero.name, hero.title, hero.hp, hero.attack, hero.defense, hero.speed, hero.identity + " · Sinergia: " + hero.synergy, hero.skill.name, hero.skill.description, hero.ultimate.name, hero.ultimate.description]
 	_refresh_roster()
 
@@ -457,6 +482,10 @@ func _load_preferences() -> void:
 	if saved_mode in ["training", "local"]: mode = saved_mode
 	var saved_difficulty: Variant = config.get_value("game", "difficulty", "normal")
 	if saved_difficulty in ["easy", "normal", "hard"]: difficulty = saved_difficulty
+	var saved_display: Variant = config.get_value("display", "mode", "windowed")
+	if saved_display in ["windowed", "fullscreen"]: display_mode = saved_display
+	var saved_resolution: Variant = config.get_value("display", "resolution", Vector2i(1280, 720))
+	if saved_resolution in [Vector2i(1280, 720), Vector2i(1600, 900), Vector2i(1920, 1080)]: display_resolution = saved_resolution
 	var saved_motion: Variant = config.get_value("game", "reduced_motion", false)
 	if saved_motion is bool: reduced_motion = saved_motion
 
@@ -467,6 +496,8 @@ func _save_preferences() -> void:
 	config.set_value("game", "mode", free_settings.get("mode", mode))
 	config.set_value("game", "difficulty", free_settings.get("difficulty", difficulty))
 	config.set_value("game", "reduced_motion", reduced_motion)
+	config.set_value("display", "mode", display_mode)
+	config.set_value("display", "resolution", display_resolution)
 	var error := config.save("user://preferences.cfg")
 	if error != OK: push_warning("Não foi possível salvar as preferências: %s" % error_string(error))
 
@@ -486,7 +517,16 @@ func _open_showcase() -> void:
 	showcase.popup_centered_clamped(Vector2i(1080, 740), 0.95)
 
 func _input(event: InputEvent) -> void:
-	if not event is InputEventKey or not event.pressed or event.echo or _any_dialog(): return
+	if not event is InputEventKey or not event.pressed or event.echo: return
+	if event.keycode == KEY_F11:
+		_toggle_fullscreen()
+		get_viewport().set_input_as_handled()
+		return
+	if _any_dialog(): return
+	if event.keycode == KEY_ESCAPE and display_mode == "fullscreen":
+		_toggle_fullscreen()
+		get_viewport().set_input_as_handled()
+		return
 	var focused := get_viewport().gui_get_focus_owner()
 	if focused is LineEdit or focused is TextEdit: return
 	if event.keycode >= KEY_1 and event.keycode <= KEY_4:
@@ -552,3 +592,55 @@ func _end_lesson() -> void:
 	mode_picker.select(0 if mode == "training" else 1)
 	difficulty_picker.select(["easy", "normal", "hard"].find(difficulty))
 	_new_battle()
+
+func _move_to_front() -> void:
+	var ids: Array = roster_work[roster_side.selected]
+	if not inspected_hero in ids: return
+	ids.erase(inspected_hero)
+	ids.push_front(inspected_hero)
+	_refresh_roster()
+
+func _apply_display() -> void:
+	if DisplayServer.get_name() == "headless": return
+	if display_mode == "fullscreen":
+		get_window().mode = Window.MODE_EXCLUSIVE_FULLSCREEN
+		get_window().size = Vector2i(1920, 1080)
+	else:
+		get_window().mode = Window.MODE_WINDOWED
+		get_window().size = display_resolution
+		var screen := DisplayServer.screen_get_usable_rect()
+		get_window().position = screen.position + (screen.size - display_resolution) / 2
+
+func _toggle_fullscreen() -> void:
+	if display_mode == "fullscreen":
+		display_mode = "windowed"
+		display_resolution = windowed_resolution
+	else:
+		windowed_resolution = display_resolution
+		display_mode = "fullscreen"
+		display_resolution = Vector2i(1920, 1080)
+	_apply_display()
+	_save_preferences()
+
+func _show_display() -> void:
+	var dialog := AcceptDialog.new()
+	dialog.title = "Tela · Full HD"
+	dialog.ok_button_text = "Aplicar"
+	add_child(dialog)
+	var column := VBoxContainer.new()
+	column.custom_minimum_size.x = 430
+	dialog.add_child(column)
+	column.add_child(_label("F11: alterna tela cheia · Esc: volta à janela", 14, MUTED))
+	var picker := OptionButton.new()
+	for text in ["Janela 1280×720", "Janela 1600×900", "Janela Full HD 1920×1080", "Tela cheia Full HD 1920×1080"]: picker.add_item(text)
+	picker.select(3 if display_mode == "fullscreen" else [Vector2i(1280,720), Vector2i(1600,900), Vector2i(1920,1080)].find(display_resolution))
+	column.add_child(picker)
+	dialog.confirmed.connect(func():
+		display_mode = "fullscreen" if picker.selected == 3 else "windowed"
+		display_resolution = [Vector2i(1280,720), Vector2i(1600,900), Vector2i(1920,1080), Vector2i(1920,1080)][picker.selected]
+		if display_mode == "windowed": windowed_resolution = display_resolution
+		_apply_display()
+		_save_preferences())
+	dialog.visibility_changed.connect(func():
+		if not dialog.visible: dialog.queue_free())
+	dialog.popup_centered()

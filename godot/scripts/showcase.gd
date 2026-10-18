@@ -5,7 +5,9 @@ const Backdrop = preload("res://scripts/arena_backdrop.gd")
 const Art = preload("res://scripts/ability_art.gd")
 const Combat = preload("res://scripts/combat.gd")
 const CombatUI = preload("res://scripts/combat_ui.gd")
-const HEROES = ["veyra", "sylva", "axion", "astra", "vesper"]
+const HEROES = ["veyra", "rhazen", "cindra", "sylva", "oren", "nima", "axion", "kira", "vektor", "astra", "elun", "saira", "vesper", "maura", "riven"]
+const REPRESENTATIVES = ["veyra", "sylva", "axion", "astra", "vesper"]
+var hero_picker: OptionButton
 var catalog
 var audio
 var director = Director.new()
@@ -25,7 +27,7 @@ var report: RichTextLabel
 var preview_state: Dictionary = {}
 
 func _ready() -> void:
-	title = "Galeria de golpes · um personagem de cada classe"
+	title = "Galeria de golpes · todos os 15 personagens"
 	ok_button_text = "Voltar ao combate"
 	visibility_changed.connect(func():
 		if not visible:
@@ -48,9 +50,15 @@ func _ready() -> void:
 	for label in ["Cenário: normal", "Escudo + crítico (exemplo)", "Queimadura + sangramento"]: scenario.add_item(label)
 	scenario.tooltip_text = "Cenários de demonstração. Os valores são calculados pelo motor; o crítico deste exemplo usa uma semente fixa."
 	hint_row.add_child(scenario)
+	hero_picker = OptionButton.new()
+	for id in HEROES:
+		var hero: Dictionary = catalog.hero_by_id[id]
+		hero_picker.add_item("%s · %s · %s" % [hero.name, catalog.class_by_id[hero.classId].name, hero.role])
+	hero_picker.item_selected.connect(func(index): _select_hero(HEROES[index]))
+	content.add_child(hero_picker)
 	var heroes := HBoxContainer.new()
 	content.add_child(heroes)
-	for id in HEROES:
+	for id in REPRESENTATIVES:
 		var hero: Dictionary = catalog.hero_by_id[id]
 		var button := Button.new()
 		button.text = "%s\n%s" % [hero.name, catalog.class_by_id[hero.classId].name]
@@ -112,6 +120,7 @@ func _select_hero(id: String) -> void:
 	playing = false
 	if is_instance_valid(scenario): scenario.disabled = false
 	selected_hero = id
+	if is_instance_valid(hero_picker): hero_picker.select(HEROES.find(id))
 	for fighter in fighters.values():
 		stage.remove_child(fighter)
 		fighter.queue_free()
@@ -127,12 +136,12 @@ func _select_hero(id: String) -> void:
 		fighter.disabled = true
 		fighter.motion_enabled = not reduced_motion
 		stage.add_child(fighter)
-		fighter.refresh({"hp": entry[0].hp, "maxHp": entry[0].hp, "energy": 100, "shield": 0, "statuses": [], "guarding": false}, entry[1] == "actor", false, false)
+		fighter.refresh({"hp": entry[0].hp, "maxHp": entry[0].hp, "energy": 100, "shield": 0, "shieldTurns": 0, "statuses": [], "guarding": false}, entry[1] == "actor", false, false)
 		if entry[1] == "target":
 			fighter.title.text = "Alvo de treino"
 			fighter.artwork.flip_h = true
 		fighters[entry[1]] = fighter
-	for index in range(HEROES.size()): hero_buttons[index].set_pressed_no_signal(HEROES[index] == id)
+	for index in range(REPRESENTATIVES.size()): hero_buttons[index].set_pressed_no_signal(REPRESENTATIVES[index] == id)
 	for index in range(action_buttons.size()):
 		var button: Button = action_buttons[index]
 		button.disabled = false
@@ -150,7 +159,7 @@ func _position() -> void:
 		var fighter = fighters[pair[0]]
 		fighter.position = Vector2(stage.size.x * pair[1] - 93, stage.size.y - 132 - 257)
 		fighter.set_depth(0.95)
-		fighter.plate.position = Vector2(5, stage.size.y - 128 - fighter.position.y)
+		fighter.plate.position = Vector2(-5, stage.size.y - 104 - fighter.position.y)
 
 func _play(action_id: String) -> void:
 	if playing: return
@@ -175,7 +184,9 @@ func _play(action_id: String) -> void:
 	actor.energy = 100
 	actor.hp = combat.rounded(actor.maxHp * 0.75)
 	target.hp = combat.rounded(target.maxHp * 0.70)
-	if scenario.selected == 1 and not friendly: target.shield = 240
+	if scenario.selected == 1 and not friendly:
+		target.shield = combat.rounded(target.maxHp * 0.25)
+		target.shieldTurns = 2
 	if scenario.selected == 2:
 		target.statuses = [{"type": "burn", "turns": 2}, {"type": "bleed", "turns": 2}]
 	# Explicit two-person preview order; the real battle and its RNG stay untouched.
@@ -193,7 +204,7 @@ func _play(action_id: String) -> void:
 		copy.target = "actor" if event.target == actor_id else "target"
 		mapped.append(copy)
 	var presentation := {"actor": "actor", "actionId": action_id, "events": mapped}
-	report.text = "Preparação…" + (" Crítico demonstrativo; escudo inicial de 240." if scenario.selected == 1 and not friendly else "")
+	report.text = "Preparação…" + (" Crítico demonstrativo; escudo inicial de 25% da vida." if scenario.selected == 1 and not friendly else "")
 	var completed: bool = await director.play(self, effects, fighters, hero, action, presentation, reduced_motion, func():
 		if is_instance_valid(audio): audio.play_cue(int(catalog.class_by_id[hero.classId].index))
 		for pair in [["actor", actor_id], ["target", target_id]]:

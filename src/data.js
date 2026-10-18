@@ -612,10 +612,10 @@ export const ALL_HEROES = roster.map((r, index) => {
 function skillDescription(kind, effect, power) {
   const statuses = {
     burn: "Queimadura: perde 6,5% da vida máxima no início de 2 turnos, atravessando escudos.",
-    bleed: "Sangramento: perde 6,5% da vida máxima no início de 2 turnos, atravessando escudos.",
+    bleed: "Sangramento: perde 6,5% da vida máxima no início de 2 turnos, atravessando escudos. Reduz toda cura recebida em 35% enquanto durar.",
     weaken: "Reduz o ataque do alvo em 20% por 2 turnos.",
     expose: "Reduz a defesa do alvo em 25% por 2 turnos.",
-    regen: "Regeneração: recupera 7% da vida máxima no início de 2 turnos.",
+    regen: "Regeneração: recupera 4% da vida máxima no início de 2 turnos.",
     cleanse: "Remove efeitos negativos.",
   };
   return (
@@ -635,7 +635,7 @@ export const HEROES = ALL_HEROES.filter(h => KITS[h.id]).map(applyKit);
 export const ARCHIVED_HEROES = ALL_HEROES.filter(h => !KITS[h.id]);
 export const HERO_BY_ID = Object.fromEntries(HEROES.map((h) => [h.id, h]));
 export const DEFAULT_TEAMS = [
-  ["veyra", "astra", "axion"],
+  ["axion", "veyra", "astra"],
   ["vesper", "oren", "kira"],
 ];
 export const GUARD = {
@@ -645,5 +645,5 @@ export const GUARD = {
   cost: 0,
   cooldown: 0,
   description:
-    "Recebe 35% menos dano até seu próximo turno, ganha barreira de 12% da vida máxima e recupera 25 de energia.",
+    "Recebe 35% menos dano até seu próximo turno, ganha escudo de 6% da vida máxima por 2 ações e recupera 25 de energia. Escudos não somam.",
 };

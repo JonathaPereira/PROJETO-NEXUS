@@ -8,7 +8,7 @@ Protótipo jogável de RPG tático original: equipes de três, cinco afinidades 
 
 O projeto Godot está em **[godot/](godot/README.md)**. Use **Godot 4.6 Standard**, gratuito, sem a edição .NET. Importe [godot/project.godot](godot/project.godot), aguarde a importação dos recursos e pressione **F5**.
 
-A **Alpha 0.4** traz **15 kits distintos: tanque, suporte e dano em cada uma das cinco classes**. Lumi e nove personagens ficam arquivados com seus recursos preservados. Há combos entre aliados, provocação, proteção, penetração de escudos, prévias de ações, três batalhas guiadas e um laboratório com dados locais e simulações de IA separados. A formação triangular, artes de habilidades, poses e HUD da versão anterior foram preservados. Campanha e integração com A Lei do Trono continuam para etapas futuras.
+A **Alpha 0.5** traz **15 kits distintos: tanque, suporte e dano em cada uma das cinco classes**. Lumi e nove personagens ficam arquivados com seus recursos preservados. Há combos entre aliados, provocação, proteção, penetração de escudos, prévias de ações, três batalhas guiadas e um laboratório com dados locais e simulações de IA separados. A arena agora distribui frente e retaguarda em três alturas, com barras identificadas junto de cada integrante, coreografias para todos e tela cheia Full HD por F11. Escudos têm duração e não acumulam; sangramento reduz cura recebida, e a Fratura diminui a recuperação progressivamente. A montagem permanece livre, incluindo trios da mesma função; [as simulações](godot/BALANCE.md) medem o efeito dos ajustes. Campanha e integração com A Lei do Trono continuam para etapas futuras.
 
 O endereço atual do GitHub Pages continua executando o protótipo JavaScript. A versão Godot é aberta pelo editor nesta etapa; sua exportação para navegador será uma entrega separada. Veja [godot/README.md](godot/README.md) para instruções, estrutura e testes.
 
@@ -75,10 +75,10 @@ Os nove restantes estão em `ARCHIVED_HEROES`, sem entrar na seleção ou nas si
 ## Regras do modelo inicial
 
 - **Energia:** começa em 40/100. Ataque básico recupera 24; defesa recupera 25; técnica custa 30 e fica indisponível por dois turnos pessoais; supremo custa 80.
-- **Defesa:** barreira de 12% da vida máxima e redução de 35% do dano até o próximo turno. Barreiras absorvem dano antes da vida e acumulam até 60% da vida máxima.
-- **Estados:** queimadura e sangramento tiram 6,5% da vida máxima por turno e atravessam escudos; regeneração cura 7%; exposição reduz defesa em 25%; enfraquecimento reduz ataque em 20%. Duram dois turnos do alvo; aplicações renovam a duração, sem acumular duplicatas. Cura não excede a vida máxima nem ressuscita.
+- **Defesa:** escudo de 6% da vida máxima e redução de 35% do dano até o próximo turno. Escudos não somam: mantém o maior, até 25% da vida máxima, por duas ações seguintes do protegido.
+- **Estados:** queimadura e sangramento tiram 6,5% da vida máxima por turno e atravessam escudos; sangramento também reduz toda cura recebida em 35%; regeneração cura 4%; exposição reduz defesa em 25%; enfraquecimento reduz ataque em 20%. Duram dois turnos do alvo; aplicações renovam a duração, sem acumular duplicatas. Cura não excede a vida máxima nem ressuscita.
 - **Crítico:** chance de 10%, dano multiplicado por 1,4. O motor usa aleatoriedade com semente para permitir simulações reproduzíveis.
-- **Fratura do Nexus:** a partir da rodada 12, cada herói sofre dano direto antes de agir. Começa em 4% da vida máxima e sobe 2,5 pontos percentuais por rodada, até 85%. Ignora barreiras e impede impasses de cura/defesa. Cada ocorrência aparece no registro.
+- **Fratura do Nexus:** a partir da rodada 12, cada herói sofre dano direto antes de agir. Começa em 4% da vida máxima e sobe 2,5 pontos percentuais por rodada, até 85%. Ignora barreiras e reduz toda cura recebida em 10 pontos percentuais por rodada (−10% na 12, até −100% na 21), multiplicando a redução do sangramento. Impede impasses de cura/defesa. Cada ocorrência aparece no registro.
 - **Dificuldade:** Iniciante usa 82% da vida/ataque da IA; Desafiador usa 115%. Normal e Duelo local usam atributos iguais nos dois lados.
 
 ```text

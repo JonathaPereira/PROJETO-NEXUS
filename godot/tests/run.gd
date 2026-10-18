@@ -73,6 +73,20 @@ func _run() -> void:
 	for affinity in combat.catalog.classes:
 		check(combat.advantage(affinity.id, affinity.strongAgainst) == 1.25, "Forward affinity edge")
 		check(combat.advantage(affinity.id, affinity.weakAgainst) == 0.85, "Reverse affinity edge")
+	for round_value in [11, 12, 16, 21, 24]:
+		var healing := combat.new_battle(["saira", "maura", "sylva"], ["nima", "riven", "kira"])
+		healing.round = round_value
+		healing.order = ["0-saira", "0-maura", "0-sylva", "1-nima", "1-riven", "1-kira"]
+		healing.cursor = 0
+		var support := combat.current(healing)
+		support.hp = 100
+		support.energy = 100
+		support.statuses = [{"type": "bleed", "turns": 2}]
+		var expected: int = combat.rounded(support.maxHp * 0.12 * 0.65 * maxf(0, 1 - maxi(0, round_value - 11) * 0.1))
+		var result := combat.act(healing, "skill", support.id, false)
+		var heal: Dictionary = result.events.filter(func(e): return e.type == "heal" and e.target == support.id)[0]
+		check(heal.amount == expected, "Native healing respects bleeding and progressive Fracture, including zero healing")
+		check(heal.cleansed == ["bleed"] and not combat.has_status(support, "bleed"), "Native purifying heal records its penalty before removing bleeding")
 	var before_ui := checks
 	await _ui()
 	if not failures.is_empty():
@@ -91,7 +105,7 @@ func _ui() -> void:
 	await process_frame
 	check(app.fighters.size() == 6, "Six illustrated fighters")
 	for fighter in app.fighters.values():
-		check(fighter.health.size.y == 8 and fighter.energy.size.y == 4, "Health and energy bars do not overlap the stats")
+		check(fighter.health.size.y >= 16 and fighter.energy.size.y >= 13, "Health and energy bars do not overlap the stats")
 	await _layout(app)
 	check(app.fighters["1-oren"].relationship.visible and app.fighters["1-oren"].relationship.text.contains("VULNERÁVEL"), "Weak opponent is explicitly labeled relative to current attacker")
 	check(app.fighters["1-vesper"].relationship.visible and app.fighters["1-vesper"].relationship.text.contains("RESISTENTE"), "Resistant opponent is explicitly labeled")
@@ -108,6 +122,10 @@ func _ui() -> void:
 	check(app.sound.cues.size() == 10 and app.sound.cues[0].data.size() > 0, "Synthesized audio cues loaded")
 	app.roster_button.pressed.emit()
 	check(app.hero_grid.get_child_count() == 15, "Roster contains 15 active heroes")
+	var original_members: Array = app.roster_work[0].duplicate()
+	app.roster_front_picker.select(2)
+	app.roster_front_picker.item_selected.emit(2)
+	check(app.roster_work[0][0] == original_members[2] and app.roster_work[0].size() == 3, "Front picker reorders the trio without removing a hero")
 	app.hero_grid.get_node("veyra").pressed.emit()
 	check(app.roster_dialog.get_ok_button().disabled, "Incomplete team cannot be confirmed")
 	app.hero_grid.get_node("sylva").pressed.emit()
@@ -141,6 +159,8 @@ func _ui() -> void:
 	check(app.selected_action == "ultimate" and not app.action_buttons.ultimate.available, "Unavailable ultimate can be inspected")
 	check(app.execute_button.disabled and app.description.text.contains("Faltam"), "Insufficient energy is explained and blocks execution")
 	app._select_action("basic")
+	await click(app.fighters["1-kira"].plate)
+	check(app.target_id == "1-kira", "An opponent in the rear can be selected by clicking its floating vital card")
 	app.fighters["1-vesper"].pressed.emit()
 	app.execute_button.pressed.emit()
 	var first_turns: int = app.state.turns
@@ -232,25 +252,33 @@ func _ui() -> void:
 
 func _layout(app) -> void:
 	var original := root.size
-	for dimensions in [Vector2i(960, 640), Vector2i(1280, 800), Vector2i(1600, 1000), Vector2i(1874, 1048)]:
+	for dimensions in [Vector2i(960, 540), Vector2i(960, 640), Vector2i(1920,1080), Vector2i(1280, 800), Vector2i(1600, 1000), Vector2i(1874, 1048)]:
 		root.size = dimensions
 		await process_frame
 		await process_frame
 		var bounds: Rect2 = app.field.get_global_rect()
 		var plates: Array[Rect2] = []
+		var bodies: Array[Rect2] = []
+		for member in app.state.units:
+			var actor = app.fighters[member.id]
+			var foot: Vector2 = bounds.position + actor.foot_position()
+			bodies.append(Rect2(foot - Vector2(94, 200) * actor.depth, Vector2(188, 200) * actor.depth))
+		for body in bodies: check(bounds.encloses(body), "Idle character body stays inside the battlefield")
 		for data in app.state.units:
 			var fighter = app.fighters[data.id]
 			var sample: Dictionary = data.duplicate(true)
-			sample.shield = 300
+			sample.shield = 250
+			sample.shieldTurns = 2
 			sample.guarding = true
 			sample.statuses = ["burn", "bleed", "regen", "weaken", "expose"].map(func(type): return {"type": type, "turns": 2})
 			fighter.refresh(sample, false, false, false)
 			var rect: Rect2 = fighter.plate.get_global_rect()
 			check(bounds.encloses(rect), "Status nameplate stays inside arena at %s" % dimensions)
 			for other in plates: check(not rect.intersects(other), "Nameplates never overlap at %s" % dimensions)
+			for body in bodies: check(not rect.intersects(body), "Vital cards do not cover resting character bodies at %s" % dimensions)
 			plates.append(rect)
-			check(is_equal_approx(rect.get_center().x, bounds.position.x + fighter.foot_position().x), "Nameplate remains under its own character at %s" % dimensions)
-			check(fighter.shield.value == 300 and fighter.shield_label.text.contains("300"), "Shield has its own meter and exact number")
+			check(fighter.title.text.contains("FRENTE" if data.slot == 0 else "ATRÁS"), "Each character has an explicit formation label at %s" % dimensions)
+			check(fighter.shield.value == 250 and fighter.shield.caption.contains("250"), "Shield has its own meter and exact number")
 			for line in fighter.status_label.text.split("\n"):
 				check(fighter.status_label.get_theme_font("font").get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x <= fighter.status_label.size.x, "All simultaneous status labels fit their allocated row")
 		for side in range(2):
@@ -258,8 +286,8 @@ func _layout(app) -> void:
 			var front = app.fighters[team[0].id]
 			var rear_a = app.fighters[team[1].id]
 			var rear_b = app.fighters[team[2].id]
-			check(front.foot_position().y > rear_a.foot_position().y and front.foot_position().y < rear_b.foot_position().y, "One vanguard and two rear positions form a triangle")
-			check(front.depth > rear_a.depth and front.depth > rear_b.depth, "Vanguard is visually closer than the rear line")
+			check(front.foot_position().y - rear_a.foot_position().y > 90 and rear_b.foot_position().y - front.foot_position().y > 70, "One vanguard and two rear positions form a triangle")
+			check(front.depth > rear_a.depth and is_equal_approx(front.depth, rear_b.depth), "Vanguard is visually closer than the rear line")
 		for fighter in app.fighters.values():
 			if fighter.relationship.visible: check(bounds.encloses(fighter.relationship.get_global_rect()), "Weakness badge remains inside arena")
 		check(root.get_visible_rect().encloses(app.execute_button.get_global_rect()), "Confirmation stays visible at %s" % dimensions)
@@ -275,7 +303,7 @@ func _gallery(app) -> void:
 	await process_frame
 	var gallery = app.showcase
 	var preserved: Dictionary = app.state.duplicate(true)
-	check(gallery.hero_buttons.size() == 5, "Gallery exposes one representative per class")
+	check(gallery.hero_buttons.size() == 5 and gallery.hero_picker.item_count == 15, "Gallery exposes all fifteen heroes and five quick class buttons")
 	check(gallery.size.y <= root.get_visible_rect().size.y, "Gallery window fits the viewport instead of inflating during text wrapping")
 	var content := Rect2(Vector2.ZERO, Vector2(gallery.size))
 	for button in gallery.action_buttons: check(content.encloses(button.get_global_rect()), "Gallery action buttons stay visible")
@@ -293,7 +321,7 @@ func _gallery(app) -> void:
 		check(not gallery.playing, "%s basic attack completes" % id)
 		await gallery._play("ultimate")
 		check(not gallery.playing, "%s supreme completes" % id)
-	check(profiles.size() == 5 and profiles.all(func(profile): return profiles.count(profile) == 1), "All five active classes have distinct choreography profiles")
+	check(profiles.size() == 15 and profiles.all(func(profile): return profiles.count(profile) == 1), "All fifteen active heroes have distinct choreography profiles")
 	check(app.state == preserved, "The gallery does not mutate the live battle")
 	gallery.scenario.select(1)
 	gallery._select_hero("veyra")
@@ -318,7 +346,8 @@ func _feedback(app) -> void:
 	app.teams = app.catalog.default_teams.duplicate(true)
 	app._new_battle()
 	var target: Dictionary = app.combat.unit(app.state, "1-vesper")
-	target.shield = 600
+	target.shield = 300
+	target.shieldTurns = 2
 	target.statuses = [{"type": "burn", "turns": 2}, {"type": "bleed", "turns": 2}]
 	app.state.random = 1972
 	app.state.order = ["0-veyra", "1-vesper", "1-kira", "0-astra", "0-axion", "1-oren"]
@@ -328,7 +357,7 @@ func _feedback(app) -> void:
 	var deadline := Time.get_ticks_msec() + 2500
 	while app.director.impact_count == baseline and Time.get_ticks_msec() < deadline: await process_frame
 	check(app.director.impact_count == baseline + 1, "Shielded attack applies exactly one logical impact")
-	check(app.fighters["1-vesper"].health.value == target.maxHp and app.fighters["1-vesper"].shield.value < 600, "Shield hit updates shield independently while preserving protected HP")
+	check(app.fighters["1-vesper"].health.value == target.maxHp and app.fighters["1-vesper"].shield.value < 300, "Shield hit updates shield independently while preserving protected HP")
 	check(app.feedback.text.contains("CRÍTICO") and app.feedback.text.contains("resta"), "Persistent damage HUD explains critical absorption and remaining shield")
 	check(app.director.last_numbers.has("CRÍTICO!") and app.director.last_numbers.has("VIDA PROTEGIDA"), "Fully shielded critical remains explicit in floating damage HUD")
 	check(app.busy and app.state.turns == 0 and app.execute_button.disabled, "Turn remains locked until recovery and periodic damage finish")
@@ -340,9 +369,33 @@ func _feedback(app) -> void:
 	check(app.log_view.text.contains("CRÍTICO") and app.log_view.text.contains("SANGRAMENTO") and app.log_view.text.contains("resta"), "Detailed battle log preserves shield, critical and debuff evidence")
 	app._new_battle()
 	await create_timer(1.2).timeout
+	app.teams = [["saira", "maura", "sylva"], ["nima", "riven", "kira"]]
+	app._new_battle()
+	app.state.round = 16
+	app.state.order = ["0-saira", "0-maura", "0-sylva", "1-nima", "1-riven", "1-kira"]
+	app.state.cursor = 0
+	var support: Dictionary = app.combat.current(app.state)
+	support.hp = 100
+	support.energy = 100
+	support.statuses = [{"type": "bleed", "turns": 2}]
+	app._start()
+	app._select_action("skill")
+	check(app.round_label.text.contains("CURA −50%"), "Fracture banner exposes the current healing reduction")
+	check(app.feedback.tooltip_text.contains("CURA −68%"), "Preview details expose combined healing reduction before cleanse")
+	app._execute()
+	await wait_idle(app, 1)
+	check(app.log_view.text.contains("CURA −68%") and app.director.last_numbers.has("CURA −68%"), "Healing receipts and floating numbers explain reduced healing")
+	app.teams = app.catalog.default_teams.duplicate(true)
+	app._new_battle()
 
 func _new_features(app) -> void:
 	app._new_battle()
+	var previous_display: String = app.display_mode
+	app._toggle_fullscreen()
+	check(app.display_mode == "fullscreen" and app.display_resolution == Vector2i(1920,1080), "F11 configuration selects Full HD fullscreen")
+	app._toggle_fullscreen()
+	check(app.display_mode == "windowed", "Fullscreen can return to the previous window")
+	app.display_mode = previous_display
 	var before: Dictionary = app.state.duplicate(true)
 	app._select_action("skill")
 	check(app.feedback.text.contains("PRÉVIA"), "Selecting an available ability shows exact preview")
@@ -392,11 +445,18 @@ func _new_features(app) -> void:
 	check(Rect2(Vector2.ZERO, Vector2(app.lab.size)).encloses(app.lab.get_ok_button().get_global_rect()), "Balance close button remains visible")
 	await app.lab._simulate()
 	check(app.lab.rows.size() == 60, "Lab stores exactly sixty AI matches in its own dataset")
+	check(app.lab.rows.filter(func(m): return m.fracture).size() < 30, "Most varied AI matches end without Fracture after shield tuning")
 	check(app.lab.table.get_root().get_child_count() == 15, "Lab reports all fifteen active heroes")
 	var compositions := {}
 	for match_data in app.lab.rows:
 		compositions[str(match_data.units.slice(0, 3).map(func(u): return u.heroId))] = true
 	check(compositions.size() >= 20, "AI sample includes varied compositions rather than repeating fixed trios")
+	app.lab.source.select(2)
+	app.lab.refresh()
+	check(app.lab.rows.size() == 96, "Lab separates ninety-six sustain stress matches from the varied sample")
+	var healing_only: Array = app.lab.rows.filter(func(m): return m.mode == "stress-healing-only")
+	check(healing_only.size() == 6 and healing_only.all(func(m): return m.rounds <= 21), "Reported healer mirrors cannot outheal Fracture indefinitely")
+	check(app.lab.rows.filter(func(m): return m.mode == "stress-healers").size() == 30, "Reported Saira Maura Sylva trio tested against varied trios on both sides")
 	check(app.state.turns == 0, "Balance simulations cannot change the real battle")
 	app.lab.source.select(0)
 	app.lab.refresh()

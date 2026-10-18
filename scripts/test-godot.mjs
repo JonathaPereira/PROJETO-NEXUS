@@ -4,7 +4,7 @@ import { mkdir, mkdtemp, readFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { HEROES, ARCHIVED_HEROES, CLASS_BY_ID, DEFAULT_TEAMS, GUARD } from "../src/data.js";
-import { createBattle, chooseAI, act, currentUnit, preview } from "../src/engine.js";
+import { createBattle, chooseAI, act, currentUnit, preview, getAction } from "../src/engine.js";
 
 const root = fileURLToPath(new URL("../", import.meta.url));
 assert.deepEqual(JSON.parse(await readFile(resolve(root, "godot/data/catalog.json"), "utf8")), {
@@ -20,7 +20,9 @@ function scenario(name, teams, difficulty, seed, patch = {}, defensive = false) 
   const commands = [];
   while (state.phase === "playing" && state.turns < 400) {
     const choice = chooseAI(state);
-    const command = defensive ? { actionId: "guard", targetId: currentUnit(state).id } : choice;
+    const action = getAction(currentUnit(state), choice.actionId);
+    const forceGuard = defensive === true || (defensive === 'healers' && !/^(heal|shield|support)/.test(action.kind) && action.secondary?.kind !== 'heal');
+    const command = forceGuard ? { actionId: "guard", targetId: currentUnit(state).id } : choice;
     const prediction = commands.length === 0 ? preview(state, command.actionId, command.targetId) : null;
     const result = act(state, command.actionId, command.targetId);
     commands.push({ ...command, choice, result, prediction });
@@ -38,10 +40,15 @@ scenario('cleanse-and-energy', [['vektor','sylva','saira'],['rhazen','vesper','a
  '0-vektor':{energy:100}
 });
 scenario('all-status-combos-and-shields', DEFAULT_TEAMS, 'normal',1972, Object.fromEntries(
- DEFAULT_TEAMS.flatMap((team,side)=>team.map(id=>[`${side}-${id}`,{energy:100,shield:250,statuses:['burn','bleed','expose','seed','focus','empower','fortify','mirror','riposte','emberguard'].map(type=>({type,turns:2}))}]))
+ DEFAULT_TEAMS.flatMap((team,side)=>team.map(id=>[`${side}-${id}`,{energy:100,shield:250,shieldTurns:2,statuses:['burn','bleed','expose','seed','focus','empower','fortify','mirror','riposte','emberguard'].map(type=>({type,turns:2}))}]))
 ));
 scenario('cover-guardian', DEFAULT_TEAMS, 'normal',127, {'1-kira':{statuses:[{type:'cover',owner:'1-oren',turns:2}]}});
 scenario('fracture-stalemate',DEFAULT_TEAMS,'normal',73,{},true);
+for (const [index,foe] of [['saira','maura','sylva'],['nima','riven','kira'],['vesper','oren','elun']].entries())
+  scenario(`reported-healers-${index}`, [['saira','maura','sylva'],foe], 'normal',229+index*173,{},index===0?'healers':false);
+scenario('bleeding-heals-and-cleanses', [['saira','maura','sylva'],['nima','riven','kira']], 'normal',331, Object.fromEntries(
+ ['saira','maura','sylva'].map(id=>[`0-${id}`,{hp:400,energy:100,statuses:['bleed','regen'].map(type=>({type,turns:2}))}])
+));
 const fixturePath = resolve(scratch, "cases.json");
 const outputPath = resolve(scratch, "results.json");
 await writeFile(fixturePath, JSON.stringify(fixtures));
@@ -50,7 +57,7 @@ const env = { ...process.env,
   XDG_CACHE_HOME: resolve(scratch, "cache"),
 };
 const executable = process.env.GODOT_EXECUTABLE || "godot";
-function run(args, timeout = 120000) {
+function run(args, timeout = 180000) {
   const result = spawnSync(executable, args, { cwd: root, env, encoding: "utf8", timeout, maxBuffer: 4 * 1024 * 1024 });
   const log = (result.stdout || "") + (result.stderr || "");
   if (result.error || result.status !== 0 || /SCRIPT ERROR|Parse Error|ERROR:/i.test(log))

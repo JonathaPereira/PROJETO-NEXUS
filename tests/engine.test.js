@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {HEROES,ARCHIVED_HEROES,CLASSES,CLASS_BY_ID,HERO_BY_ID,DEFAULT_TEAMS} from '../src/data.js';
-import {createBattle,currentUnit,advantage,canUse,legalTargets,getAction,act,chooseAI,validateTeam,preview} from '../src/engine.js';
+import {createBattle,currentUnit,advantage,canUse,legalTargets,getAction,act,chooseAI,validateTeam,preview,healingMultiplier} from '../src/engine.js';
 function scene(id='veyra') {
  const rest=HEROES.map(h=>h.id).filter(h=>h!==id);
  const s=createBattle([id,...rest.slice(0,2)],rest.slice(2,5));
@@ -49,7 +49,7 @@ test('taunt constrains single-target damage but area attacks still reach all ene
  assert.equal(legalTargets(s,a,getAction(a,'ultimate')).length,3);
  const q=scene('rhazen');assert.deepEqual(legalTargets(q.s,q.a,getAction(q.a,'skill')).map(u=>u.id),[q.a.id]);
 });
-test('a live cover guardian receives 35% of a single hit; a dead guardian cannot protect',()=>{
+test('a live cover guardian receives 25% of a single hit; a dead guardian cannot protect',()=>{
  const {s,t}=scene();const g=s.units[4];t.statuses=[{type:'cover',turns:2,owner:g.id}];
  const r=act(s,'basic',t.id,false);const intercept=r.events.find(e=>e.intercepted);assert(intercept.amount>0);assert.equal(g.stats.protected,intercept.amount);
  assert.equal(intercept.total+damage(r).total,damage(act(scene().s,'basic',scene().t.id,false)).total);
@@ -69,8 +69,8 @@ test('mirror and riposte react once, and do not trigger infinite counter chains'
  const r=act(s,'basic',t.id,false);assert.equal(r.events.filter(e=>e.reaction).length,1);assert(a.hp<a.maxHp);
 });
 test('Kira pierces shield while Elun spends his stored shield once for an area supreme',()=>{
- const q=scene('kira');q.t.shield=500;const d=damage(act(q.s,'skill',q.t.id,false));assert(d.amount>0&&d.absorbed>0);
- const {s,a,t}=scene('elun');a.shield=400;const r=act(s,'ultimate',t.id,false);assert.equal(r.impactUnits[0].shield,0);assert.equal(r.events.filter(e=>e.type==='converted').length,1);assert.equal(r.events.filter(e=>e.type==='damage').length,3);
+ const q=scene('kira');q.t.shield=300;q.t.shieldTurns=2;const d=damage(act(q.s,'skill',q.t.id,false));assert(d.amount>0&&d.absorbed>0);
+ const {s,a,t}=scene('elun');a.shield=300;a.shieldTurns=2;const r=act(s,'ultimate',t.id,false);assert.equal(r.impactUnits[0].shield,0);assert.equal(r.events.filter(e=>e.type==='converted').length,1);assert.equal(r.events.filter(e=>e.type==='damage').length,3);
 });
 test('Vektor restores only available energy and purification preserves positive statuses',()=>{
  const {s,a}=scene('vektor');const ally=s.units[1];ally.energy=90;ally.statuses=['burn','bleed','expose','regen','fortify','empower'].map(type=>({type,turns:2}));
@@ -78,16 +78,16 @@ test('Vektor restores only available energy and purification preserves positive 
 });
 test('Maura benefits from allied bleeding to heal the most wounded ally',()=>{
  const {s,a,t}=scene('maura');a.hp=100;t.statuses=[{type:'bleed',turns:2}];
- const r=act(s,'skill',t.id,false);assert.equal(r.events.find(e=>e.source==='secondary').amount,Math.round(a.maxHp*.18*1.5));
+ const r=act(s,'skill',t.id,false);assert.equal(r.events.find(e=>e.source==='secondary').amount,Math.round(a.maxHp*.14*1.5));
 });
 test('critical against shield reports exact remaining barrier and useful protection',()=>{
- const {s,t}=scene();t.shield=600;const d=damage(act(s,'basic',t.id,true));assert(d.critical);assert.equal(d.amount,0);assert.equal(t.shield,600-d.absorbed);assert.equal(t.stats.shieldAbsorbed,d.absorbed);
+ const {s,t}=scene();t.shield=300;t.shieldTurns=2;const d=damage(act(s,'basic',t.id,true));assert(d.critical);assert.equal(d.amount,0);assert.equal(t.shield,300-d.absorbed);assert.equal(t.stats.shieldAbsorbed,d.absorbed);
 });
 test('damage is capped at remaining HP and shield; attacks cannot revive defeated targets',()=>{
  const {s,t}=scene();t.hp=10;t.shield=40;const d=damage(act(s,'skill',t.id,true));assert.equal(d.amount,10);assert.equal(d.absorbed,40);assert.equal(d.hpAfter,0);
 });
 test('burn and bleeding tick separately after impact and bypass shields; regeneration never revives',()=>{
- const {s,a,t}=scene();s.order=[a.id,t.id,...s.units.filter(u=>![a,t].includes(u)).map(u=>u.id)];t.shield=600;t.statuses=['burn','bleed'].map(type=>({type,turns:2}));
+ const {s,a,t}=scene();s.order=[a.id,t.id,...s.units.filter(u=>![a,t].includes(u)).map(u=>u.id)];t.shield=300;t.shieldTurns=2;t.statuses=['burn','bleed'].map(type=>({type,turns:2}));
  const r=act(s,'basic',t.id,false);assert.deepEqual(r.turnEvents.map(e=>e.type),['burn','bleed']);assert.equal(r.turnEvents[0].remaining,1);assert.equal(t.hp,t.maxHp-2*Math.round(t.maxHp*.065));
  const q=scene();q.s.order=[q.a.id,q.t.id];q.t.hp=1;q.t.statuses=[{type:'burn',turns:2},{type:'regen',turns:2}];act(q.s,'guard',q.a.id);assert.equal(q.t.hp,0);
 });
@@ -98,7 +98,7 @@ test('Fracture starts at round 12 with 4% max HP, bypasses barriers and ends def
 test('deterministic AI exercises all fifteen kits and keeps resources bounded through complete matches',()=>{
  for(let i=0;i<15;i++){
  const teams=[0,5].map(offset=>[0,1,2].map(j=>HEROES[(i+offset+j)%15].id));const s=createBattle(...teams,{seed:i+1});
- while(s.phase==='playing'&&s.turns<400){const m=chooseAI(s);assert(m);assert(canUse(currentUnit(s),m.actionId));act(s,m.actionId,m.targetId);for(const u of s.units){assert(u.hp>=0&&u.hp<=u.maxHp);assert(u.shield>=0&&u.shield<=Math.round(u.maxHp*.6));assert(u.energy>=0&&u.energy<=100);}}
+ while(s.phase==='playing'&&s.turns<400){const m=chooseAI(s);assert(m);assert(canUse(currentUnit(s),m.actionId));act(s,m.actionId,m.targetId);for(const u of s.units){assert(u.hp>=0&&u.hp<=u.maxHp);assert(u.shield>=0&&u.shield<=Math.round(u.maxHp*.25));assert(u.energy>=0&&u.energy<=100);}}
  assert.equal(s.phase,'finished',`match ${i}`);
  }
 });
@@ -110,8 +110,65 @@ test('difficulty scales enemy HP and attack, while roles and speeds are persiste
 test('periodic burn, bleeding and regeneration activate exactly twice per target',()=>{
  const s=createBattle(...DEFAULT_TEAMS),a=currentUnit(s);a.hp-=400;
  a.statuses=['burn','bleed','regen'].map(type=>({type,turns:2}));
- const initial=a.hp,delta=2*Math.round(a.maxHp*.065)-Math.round(a.maxHp*.07);
+ const initial=a.hp,delta=2*Math.round(a.maxHp*.065)-Math.round(a.maxHp*.04*.65);
  act(s,'guard',a.id);let visits=0;
  while(visits<3){const u=currentUnit(s);if(u.id===a.id){visits++;assert.equal(a.hp,initial-delta*Math.min(2,visits));if(visits===3)break;}act(s,'guard',u.id);}
  assert.equal(a.statuses.length,0);
+});
+
+test('shields replace by the stronger value, never add, and weaker applications cannot renew them',()=>{
+ const {s,a}=scene('rhazen');a.shield=100;a.shieldTurns=1;
+ const r=act(s,'skill',a.id);const shield=r.events.find(e=>e.type==='shield');
+ const expected=Math.round(a.maxHp*.16);assert.equal(shield.shieldAfter,expected);assert.equal(shield.amount,expected-100);assert.equal(a.shieldTurns,2);
+ const q=scene('veyra');q.a.shield=200;q.a.shieldTurns=1;const receipt=act(q.s,'guard',q.a.id).events.find(e=>e.type==='guard');
+ assert.equal(receipt.shieldAfter,200);assert.equal(receipt.amount,0);assert.equal(receipt.shieldTurns,1);
+});
+test('an untouched shield expires after two further actions and a fresh guard replaces a due shield',()=>{
+ for(const refresh of [false,true]){
+  const {s,a,t}=scene();act(s,'guard',a.id);let visits=0,expired=false;
+  while(visits<2){const actor=currentUnit(s);if(actor.id===a.id){visits++;assert.equal(actor.shieldTurns,2-visits);const r=act(s,visits===2&&refresh?'guard':'basic',visits===2&&refresh?a.id:t.id,false);expired ||= r.events.some(e=>e.type==='shieldExpired');}else act(s,'guard',actor.id);}
+  assert.equal(expired,!refresh);assert.equal(a.shield,refresh?Math.round(a.maxHp*.06):0);if(refresh)assert.equal(a.shieldTurns,2);
+ }
+});
+test('basic attacks can target front or rear unless a live enemy is provoking',()=>{
+ const {s,a}=scene();assert.equal(legalTargets(s,a,getAction(a,'basic')).length,3);
+ for(const slot of [0,1,2])assert(legalTargets(s,a,getAction(a,'basic')).some(u=>u.slot===slot));
+ const tank=s.units[3];tank.statuses=[{type:'taunt',turns:2}];assert.deepEqual(legalTargets(s,a,getAction(a,'basic')).map(u=>u.id),[tank.id]);tank.hp=0;assert.equal(legalTargets(s,a,getAction(a,'basic')).length,2);
+});
+
+test('bleeding reduces direct, secondary, seed and drain healing; previews report the actual reduction',()=>{
+ const direct=scene('sylva');direct.a.hp=200;direct.a.statuses=[{type:'bleed',turns:2}];
+ const before=structuredClone(direct.s),p=preview(direct.s,'skill',direct.a.id);
+ assert.deepEqual(direct.s,before);const heal=p.normal.events.find(e=>e.type==='heal');
+ assert.equal(heal.amount,Math.round(direct.a.maxHp*.2*.65));assert.equal(heal.healingPenalty,35);
+ assert.deepEqual(act(direct.s,'skill',direct.a.id,false),p.normal);
+ const q=scene('riven');q.a.hp=200;q.a.statuses=[{type:'bleed',turns:2}];q.t.statuses=[{type:'seed',turns:2}];
+ const r=act(q.s,'basic',q.t.id,false),seed=r.events.find(e=>e.source==='seed'),drain=r.events.find(e=>e.source==='drain');
+ assert.equal(seed.amount,Math.round(q.a.maxHp*.1*.65));assert.equal(drain.amount,Math.round(damage(r).amount*.15*.65));
+ assert.equal(seed.healingPenalty,35);assert.equal(drain.healingPenalty,35);assert.equal(q.a.stats.healing,seed.amount+drain.amount);
+ const m=scene('maura');m.a.hp=100;m.a.statuses=[{type:'bleed',turns:2}];m.t.statuses=[{type:'bleed',turns:2}];
+ const secondary=act(m.s,'skill',m.t.id,false).events.find(e=>e.source==='secondary');
+ assert.equal(secondary.amount,Math.round(m.a.maxHp*.14*1.5*.65));assert.equal(secondary.healingPenalty,35);
+});
+test('purifying heals apply before cleanse; cleanse removes bleeding but cannot remove Fracture',()=>{
+ const {s,a}=scene('saira');a.hp=100;a.statuses=[{type:'bleed',turns:2}];s.round=16;
+ const r=act(s,'skill',a.id,false),h=r.events.find(e=>e.type==='heal'&&e.target===a.id);
+ assert.equal(h.amount,Math.round(a.maxHp*.12*.65*.5));assert.equal(h.healingPenalty,68);
+ assert.deepEqual(h.cleansed,['bleed']);assert(!a.statuses.some(st=>st.type==='bleed'));assert.equal(healingMultiplier(s,a),.5);
+});
+test('Fracture reduces every healing source progressively from round 12 and blocks healing from round 21',()=>{
+ for(const round of [11,12,16,20,21,24]){
+  const {s,a}=scene('sylva');s.round=round;a.hp=100;
+  const multiplier=Math.max(0,1-Math.max(0,round-11)*.1);
+  const h=act(s,'skill',a.id,false).events.find(e=>e.type==='heal');
+  assert.equal(h.amount,Math.round(a.maxHp*.2*multiplier));assert.equal(h.healingPenalty,Math.min(100,Math.max(0,round-11)*10));
+  if(round>=21){
+   const q=scene('riven');q.s.round=round;q.a.hp=100;q.t.statuses=[{type:'seed',turns:2}];
+   const result=act(q.s,'basic',q.t.id,false);assert.equal(q.a.hp,100);assert.equal(q.a.stats.healing,0);
+   assert.equal(result.events.find(e=>e.source==='seed').amount,0);assert(!result.events.some(e=>e.source==='drain'));
+   const m=scene('maura');m.s.round=round;m.a.hp=100;assert.equal(act(m.s,'skill',m.t.id,false).events.find(e=>e.source==='secondary').amount,0);
+  }
+ }
+ const {s,a,t}=scene();s.round=21;s.order=[a.id,t.id];t.hp=t.maxHp;t.statuses=[{type:'regen',turns:2}];
+ const events=act(s,'guard',a.id).turnEvents;assert.equal(events.find(e=>e.type==='heal').amount,0);assert.equal(events.find(e=>e.type==='heal').healingPenalty,100);
 });

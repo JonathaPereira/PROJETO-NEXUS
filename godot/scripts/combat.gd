@@ -26,7 +26,7 @@ func new_battle(team_a: Array, team_b: Array, difficulty: String = "normal", see
 				"id": "%d-%s" % [side, hero.id], "heroId": hero.id, "side": side, "slot": slot,
 				"hp": rounded(hero.hp * scale_factor), "maxHp": rounded(hero.hp * scale_factor),
 				"attack": rounded(hero.attack * scale_factor), "defense": hero.defense, "speed": hero.speed,
-				"energy": 40, "shield": 0, "guarding": false, "statuses": [], "cooldowns": {},
+				"energy": 40, "shield": 0, "shieldTurns": 0, "guarding": false, "statuses": [], "cooldowns": {},
 				"stats": {"damage": 0, "healing": 0, "actions": 0, "shieldDamage": 0, "shieldGranted": 0, "protected": 0, "energyGiven": 0, "combos": 0, "shieldAbsorbed": 0},
 			})
 	var state := {"units": units, "order": [], "cursor": 0, "round": 1, "phase": "playing", "winner": null, "log": [], "random": seed_value & 0xffffffff, "turns": 0}
@@ -91,10 +91,17 @@ func _victory(state: Dictionary) -> bool:
 			return true
 	return false
 
-func _heal(target: Dictionary, amount: float) -> int:
-	var healed: int = mini(target.maxHp - target.hp, rounded(amount))
+func healing_multiplier(state: Dictionary, target: Dictionary) -> float:
+	var fracture := maxf(0.0, 1.0 - maxi(0, state.round - 11) * 0.1)
+	return fracture * (0.65 if has_status(target, "bleed") else 1.0)
+
+func _heal(state: Dictionary, target: Dictionary, amount: float, metadata: Dictionary = {}) -> Dictionary:
+	var multiplier := healing_multiplier(state, target)
+	var healed: int = mini(target.maxHp - target.hp, rounded(amount * multiplier)) if target.hp > 0 else 0
 	target.hp += healed
-	return healed
+	var receipt := {"type": "heal", "target": target.id, "amount": healed, "healingPenalty": rounded((1 - multiplier) * 100)}
+	receipt.merge(metadata, true)
+	return receipt
 
 func has_status(target: Dictionary, type: String) -> bool:
 	return target.statuses.any(func(s): return s.type == type)
@@ -132,12 +139,13 @@ func _begin_turn(state: Dictionary, turn_events: Array = []) -> void:
 			state.cursor += 1
 			continue
 		actor.guarding = false
+		if actor.shield > 0 and actor.shieldTurns > 0: actor.shieldTurns -= 1
 		for id in actor.cooldowns:
 			actor.cooldowns[id] = maxi(0, actor.cooldowns[id] - 1)
 		if state.round >= 12:
 			var amount: int = mini(actor.hp, int(ceil(actor.maxHp * minf(0.85, 0.04 + (state.round - 12) * 0.025))))
 			actor.hp -= amount
-			_turn_event(state, turn_events, actor, {"type": "fracture", "actor": actor.id, "target": actor.id, "amount": amount})
+			_turn_event(state, turn_events, actor, {"type": "fracture", "actor": actor.id, "target": actor.id, "amount": amount, "healingPenalty": mini(100, (state.round - 11) * 10)})
 			if actor.hp <= 0: _turn_event(state, turn_events, actor, {"type": "defeated", "actor": actor.id, "target": actor.id})
 		for status in actor.statuses:
 			if actor.hp <= 0: break
@@ -150,8 +158,8 @@ func _begin_turn(state: Dictionary, turn_events: Array = []) -> void:
 					_turn_event(state, turn_events, actor, {"type": "defeated", "actor": actor.id, "target": actor.id})
 					break
 			if status.type == "regen":
-				var amount := _heal(actor, actor.maxHp * 0.07)
-				_turn_event(state, turn_events, actor, {"type": "heal", "actor": actor.id, "target": actor.id, "amount": amount, "passive": true, "remaining": status.turns - 1})
+				var receipt := _heal(state, actor, actor.maxHp * 0.04, {"actor": actor.id, "passive": true, "remaining": status.turns - 1})
+				_turn_event(state, turn_events, actor, receipt)
 			status.turns -= 1
 		actor.statuses = actor.statuses.filter(func(s): return s.turns > 0 or (s.turns == 0 and not s.type in ["burn", "bleed", "regen"]))
 		if _victory(state): return
@@ -160,15 +168,21 @@ func _begin_turn(state: Dictionary, turn_events: Array = []) -> void:
 			continue
 		return
 
+const SHIELD_CAP := 0.25
+
 func _shield(target: Dictionary, power: float) -> Dictionary:
 	var before: int = target.shield
-	target.shield = mini(rounded(target.maxHp * 0.6), before + rounded(target.maxHp * power))
-	return {"type": "shield", "target": target.id, "amount": target.shield - before, "shieldBefore": before, "shieldAfter": target.shield}
+	var grant: int = mini(rounded(target.maxHp * SHIELD_CAP), rounded(target.maxHp * power))
+	var remaining: int = 0 if target.shieldTurns == 0 else before
+	if grant >= remaining: target.shieldTurns = 2
+	target.shield = maxi(remaining, grant)
+	return {"type": "shield", "target": target.id, "amount": target.shield - remaining, "shieldBefore": before, "shieldAfter": target.shield, "shieldTurns": target.shieldTurns}
 
 func _hit(target: Dictionary, total: int, pierce: float = 0.0, metadata: Dictionary = {}) -> Dictionary:
 	var before: int = target.shield
 	var absorbed: int = mini(before, total - rounded(total * pierce))
 	target.shield -= absorbed
+	if target.shield == 0: target.shieldTurns = 0
 	target.stats.shieldAbsorbed += absorbed
 	var amount: int = mini(target.hp, total - absorbed)
 	target.hp -= amount
@@ -205,10 +219,11 @@ func act(state: Dictionary, action_id: String, target_id: String, critical_overr
 	var stored_shield: int = actor.shield if action.has("shieldScale") else 0
 	if stored_shield > 0:
 		actor.shield = 0
+		actor.shieldTurns = 0
 		_emit(state, events, actor, {"type": "converted", "target": actor.id, "shieldSpent": stored_shield})
 	if action.kind == "guard":
 		actor.guarding = true
-		var event := _shield(actor, 0.12)
+		var event := _shield(actor, 0.06)
 		event.type = "guard"
 		_emit(state, events, actor, event)
 		actor.stats.shieldGranted += event.amount
@@ -217,9 +232,8 @@ func act(state: Dictionary, action_id: String, target_id: String, critical_overr
 		for target in recipients:
 			var event: Dictionary
 			if action.kind.begins_with("heal"):
-				var amount := _heal(target, target.maxHp * action.power)
-				actor.stats.healing += amount
-				event = {"type": "heal", "target": target.id, "amount": amount}
+				event = _heal(state, target, target.maxHp * action.power)
+				actor.stats.healing += event.amount
 			elif action.kind.begins_with("shield"):
 				event = _shield(target, action.power)
 				actor.stats.shieldGranted += event.amount
@@ -248,11 +262,11 @@ func act(state: Dictionary, action_id: String, target_id: String, critical_overr
 					bonus *= action.executeMultiplier
 					if combo.is_empty(): combo = "execute"
 					actor.stats.combos += 1
-				var total: int = maxi(1, rounded((actor.attack * weak * empowered * action.power + stored_shield * action.get("shieldScale", 0)) * 100.0 / (100 + defense * 0.5) * multiplier * (0.65 if target.guarding else 1.0) * (0.8 if has_status(target, "fortify") else 1.0) * bonus * (1.4 if critical else 1.0)))
+				var total: int = maxi(1, rounded((actor.attack * weak * empowered * action.power + stored_shield * action.get("shieldScale", 0)) * 100.0 / (100 + defense * 0.5) * multiplier * (0.65 if target.guarding else 1.0) * (0.85 if has_status(target, "fortify") else 1.0) * bonus * (1.4 if critical else 1.0)))
 				var protections: Array = target.statuses.filter(func(s): return s.type == "cover") if action.kind == "damage" else []
 				var guardian: Dictionary = unit(state, protections[0].owner) if not protections.is_empty() else {}
 				if not guardian.is_empty() and guardian.hp > 0 and guardian.side == target.side and guardian.id != target.id:
-					var share := rounded(total * 0.35)
+					var share := rounded(total * 0.25)
 					total -= share
 					var receipt := _hit(guardian, share, action.get("pierce", 0), {"intercepted": true})
 					_emit(state, events, actor, receipt)
@@ -266,14 +280,14 @@ func act(state: Dictionary, action_id: String, target_id: String, critical_overr
 				actor.stats.shieldDamage += event.absorbed
 				if has_status(target, "seed") and actor.hp > 0:
 					_remove(target, "seed")
-					var amount := _heal(actor, actor.maxHp * 0.1)
-					_emit(state, events, actor, {"type": "heal", "target": actor.id, "amount": amount, "passive": true, "source": "seed"})
-					actor.stats.healing += amount
+					var receipt := _heal(state, actor, actor.maxHp * 0.1, {"passive": true, "source": "seed"})
+					_emit(state, events, actor, receipt)
+					actor.stats.healing += receipt.amount
 				if hero.classId == "sombrio" and event.amount > 0 and actor.hp > 0:
-					var amount := _heal(actor, event.amount * 0.25)
-					if amount > 0:
-						_emit(state, events, actor, {"type": "heal", "target": actor.id, "amount": amount, "passive": true, "source": "drain"})
-						actor.stats.healing += amount
+					var receipt := _heal(state, actor, event.amount * 0.15, {"passive": true, "source": "drain"})
+					if receipt.amount > 0:
+						_emit(state, events, actor, receipt)
+						actor.stats.healing += receipt.amount
 				if target.hp > 0 and actor.hp > 0:
 					var retaliation: int = (rounded(event.amount * 0.2) if has_status(target, "mirror") else 0) + (rounded(target.attack * 0.4) if has_status(target, "riposte") else 0)
 					if retaliation > 0:
@@ -312,9 +326,9 @@ func act(state: Dictionary, action_id: String, target_id: String, critical_overr
 				var power: float = extra.get("power", 0) * (extra.multiplier if boosted_secondary else 1.0)
 				match extra.kind:
 					"heal":
-						var amount := _heal(target, target.maxHp * power)
-						actor.stats.healing += amount
-						_emit(state, events, actor, {"type": "heal", "target": target.id, "amount": amount, "source": "secondary"})
+						var receipt := _heal(state, target, target.maxHp * power, {"source": "secondary"})
+						actor.stats.healing += receipt.amount
+						_emit(state, events, actor, receipt)
 					"shield":
 						var receipt := _shield(target, power)
 						actor.stats.shieldGranted += receipt.amount
@@ -325,6 +339,10 @@ func act(state: Dictionary, action_id: String, target_id: String, critical_overr
 						actor.stats.energyGiven += amount
 						_emit(state, events, actor, {"type": "energy", "target": target.id, "amount": amount, "energyAfter": target.energy})
 		if action_id == "basic": actor.energy = mini(100, actor.energy + 24)
+	if actor.shield > 0 and actor.shieldTurns == 0:
+		var expired: int = actor.shield
+		actor.shield = 0
+		_emit(state, events, actor, {"type": "shieldExpired", "target": actor.id, "amount": expired, "shieldAfter": 0})
 	actor.statuses = actor.statuses.filter(func(s): return s.turns > 0)
 	var impact_units: Array = state.units.duplicate(true)
 	var turn_events: Array = []
@@ -349,7 +367,8 @@ func choose_ai(state: Dictionary) -> Dictionary:
 			if action.kind.begins_with("heal"):
 				for candidate in targets:
 					if float(candidate.hp) / candidate.maxHp < float(target.hp) / target.maxHp: target = candidate
-				if float(target.hp) / target.maxHp >= 0.78 and not (action.get("effect") == "cleanse" and targets.any(func(t): return t.statuses.any(func(s): return not s.type in POSITIVE))): continue
+				var cleansing: bool = action.get("effect") == "cleanse" and targets.any(func(t): return t.statuses.any(func(s): return not s.type in POSITIVE))
+				if (float(target.hp) / target.maxHp >= 0.78 or healing_multiplier(state, target) == 0) and not cleansing: continue
 			elif action.kind.begins_with("shield"):
 				target = {}
 				for candidate in targets:

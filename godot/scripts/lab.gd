@@ -1,7 +1,7 @@
 extends AcceptDialog
 ## Two bounded, independent local datasets: played matches and deterministic AI samples.
 const Combat = preload("res://scripts/combat.gd")
-const STORE := "user://balance.json"
+const STORE := "user://balance-0.5.json"
 var catalog
 var source: OptionButton
 var summary: Label
@@ -33,7 +33,7 @@ static func record(state: Dictionary, mode: String, difficulty: String) -> void:
 	persist(data)
 
 func _ready() -> void:
-	title = "Laboratório de balanceamento · Alpha 0.4"
+	title = "Laboratório de balanceamento · Alpha 0.5"
 	ok_button_text = "Voltar"
 	var column := VBoxContainer.new()
 	column.custom_minimum_size = Vector2(1060, 530)
@@ -45,11 +45,11 @@ func _ready() -> void:
 	var toolbar := HBoxContainer.new()
 	column.add_child(toolbar)
 	source = OptionButton.new()
-	for text in ["Partidas jogadas", "Simulações IA × IA"]: source.add_item(text)
+	for text in ["Partidas jogadas", "IA × IA · formações variadas", "IA × IA · testes de sustentação"]: source.add_item(text)
 	source.item_selected.connect(func(_i): refresh())
 	toolbar.add_child(source)
 	simulate = Button.new()
-	simulate.text = "Simular 60 partidas"
+	simulate.text = "Simular 156 partidas"
 	simulate.pressed.connect(_simulate)
 	toolbar.add_child(simulate)
 	summary = Label.new()
@@ -68,14 +68,14 @@ func _ready() -> void:
 		table.set_column_custom_minimum_width(i, 160 if i == 0 else 80)
 	column.add_child(table)
 	var foot := Label.new()
-	foot.text = "Dano e cura diretos (sem ticks). Valores por aparição, exceto N e vitória. *Escudo efetivamente consumido + dano desviado pelo protetor.\nTrês funções por equipe; classes únicas e mistas, pares espelhados, dificuldade normal, sementes fixas. Até 500 partidas locais."
+	foot.text = "Dano e cura diretos (sem ticks). Valores por aparição, exceto N e vitória. *Escudo efetivamente consumido + dano desviado pelo protetor.\nAmostras separadas: 60 variadas + 96 testes de suporte/tanque, incluindo Saira/Maura/Sylva. Pares espelhados, sementes fixas. Até 500 partidas locais."
 	foot.add_theme_font_size_override("font_size", 12)
 	column.add_child(foot)
 	refresh()
 
 func refresh() -> void:
 	if not is_instance_valid(table): return
-	rows = read_records().filter(func(m): return m.source == ("played" if source.selected == 0 else "ai"))
+	rows = read_records().filter(func(m): return m.source == "played" if source.selected == 0 else (m.source == "ai" and (m.mode == "simulation" if source.selected == 1 else m.mode != "simulation")))
 	table.clear()
 	var root := table.create_item()
 	var rounds := 0.0
@@ -109,35 +109,63 @@ func refresh() -> void:
 		for i in range(values.size()): item.set_text(i + 4, "%.1f" % (values[i] / n) if n else "—")
 		for i in range(10): item.set_tooltip_text(i, hero.identity + "\nSinergia: " + hero.synergy)
 
+func _sample_teams(pair: int) -> Array:
+	var teams: Array = [[], []]
+	var roles := ["Tanque", "Suporte", "Dano"]
+	for side in range(2):
+		for role in range(3):
+			var group: int = pair / 5
+			var base: int = pair % 5
+			var offsets: Array = [side * 2, group + side, group * 2 + side * 3]
+			var class_index: int = (base + side) % 5 if pair < 5 else (base + offsets[role]) % 5
+			var affinity: String = catalog.classes[class_index].id
+			teams[side].append(catalog.heroes.filter(func(h): return h.classId == affinity and h.role == roles[role])[0].id)
+	return teams
+
+func _samples() -> Array:
+	var samples: Array = []
+	for pair in range(30):
+		var teams := _sample_teams(pair)
+		for swap in range(2): samples.append({"teams": [teams[swap], teams[1 - swap]], "seed": 73 + pair * 113, "group": "simulation"})
+	var healers := ["saira", "maura", "sylva"]
+	for index in range(2):
+		var team: Array = ["vesper", "kira", "oren"] if index == 0 else healers
+		for pair in range(15):
+			var foe: Array = _sample_teams(pair)[0]
+			for swap in range(2): samples.append({"teams": [team, foe] if swap == 0 else [foe, team], "seed": (137 + pair * 139) if index == 0 else (229 + pair * 173), "group": "stress-shields" if index == 0 else "stress-healers"})
+	for role in ["Suporte", "Tanque", "Dano"]:
+		var ids: Array = catalog.heroes.filter(func(h): return h.role == role).map(func(h): return h.id)
+		for pair in range(5):
+			var foe: Array = [0, 1, 3].map(func(i): return ids[(pair + i) % 5])
+			var team: Array = ["vesper", "oren", "elun"] if role == "Tanque" else healers
+			for swap in range(2): samples.append({"teams": [team, foe] if swap == 0 else [foe, team], "seed": 331 + pair * 181, "group": "stress-" + role})
+	for seed_value in range(1, 7): samples.append({"teams": [healers, healers], "seed": seed_value * 197, "group": "stress-healing-only", "defensive": true})
+	return samples
+
 func _simulate() -> void:
 	if running: return
 	running = true
 	simulate.disabled = true
 	var engine = Combat.new()
 	var data: Array = []
-	var roles := ["Tanque", "Suporte", "Dano"]
-	for pair in range(30):
-		var teams: Array = [[], []]
-		for side in range(2):
-			for role in range(3):
-				var group: int = pair / 5
-				var base: int = pair % 5
-				var offsets: Array = [side * 2, group + side, group * 2 + side * 3]
-				var class_index: int = (base + side) % 5 if pair < 5 else (base + offsets[role]) % 5
-				var affinity: String = catalog.classes[class_index].id
-				teams[side].append(catalog.heroes.filter(func(h): return h.classId == affinity and h.role == roles[role])[0].id)
-		for swap in range(2):
-			var state := engine.new_battle(teams[swap], teams[1 - swap], "normal", 73 + pair * 113)
-			while state.phase == "playing" and state.turns < 400:
-				var choice := engine.choose_ai(state)
-				engine.act(state, choice.actionId, choice.targetId)
-			if state.phase == "finished": data.append(receipt(state, "ai", "simulation", "normal"))
-		simulate.text = "Simulando %d / 60" % ((pair + 1) * 2)
+	var samples := _samples()
+	for index in range(samples.size()):
+		var sample: Dictionary = samples[index]
+		var state := engine.new_battle(sample.teams[0], sample.teams[1], "normal", sample.seed)
+		while state.phase == "playing" and state.turns < 400:
+			var choice := engine.choose_ai(state)
+			var actor := engine.current(state)
+			var action := engine.get_action(actor, choice.actionId)
+			if sample.get("defensive", false) and not engine.friendly(action) and action.get("secondary", {}).get("kind") != "heal":
+				choice = {"actionId": "guard", "targetId": actor.id}
+			engine.act(state, choice.actionId, choice.targetId)
+		if state.phase == "finished": data.append(receipt(state, "ai", sample.group, "normal"))
+		simulate.text = "Simulando %d / %d" % [index + 1, samples.size()]
 		await get_tree().process_frame
 	# A live battle may finish while the simulation yields frames. Preserve it.
 	persist(read_records() + data)
 	source.select(1)
 	refresh()
-	simulate.text = "Simular 60 partidas"
+	simulate.text = "Simular 156 partidas"
 	simulate.disabled = false
 	running = false

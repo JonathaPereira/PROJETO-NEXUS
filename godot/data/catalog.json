@@ -9,7 +9,7 @@
       "title": "Duelista da aurora",
       "lore": "Sua dança mantém acesas as últimas luzes de uma cidade perdida.",
       "hp": 1080,
-      "attack": 193,
+      "attack": 251,
       "defense": 78,
       "speed": 112,
       "weapon": "dual",
@@ -62,9 +62,9 @@
       "classId": "igneo",
       "title": "Guardião da fornalha",
       "lore": "Carrega uma fornalha antiga onde antes havia um coração.",
-      "hp": 1540,
-      "attack": 144,
-      "defense": 136,
+      "hp": 1390,
+      "attack": 180,
+      "defense": 116,
       "speed": 69,
       "weapon": "hammer",
       "animation": "crater",
@@ -76,22 +76,22 @@
         "power": 0.8,
         "cost": 0,
         "cooldown": 0,
-        "description": "80% do ataque e ganha escudo de 4% da própria vida máxima. Recupera 24 de energia.",
+        "description": "80% do ataque e ganha escudo de 2% da própria vida máxima. Recupera 24 de energia. Escudo dura 2 ações do protegido; não soma com outro escudo.",
         "secondary": {
           "kind": "shield",
           "target": "actor",
-          "power": 0.04
+          "power": 0.02
         }
       },
       "skill": {
         "id": "skill",
         "name": "Coração de ferro",
         "kind": "shield",
-        "power": 0.24,
+        "power": 0.16,
         "effect": "taunt",
         "cost": 30,
         "cooldown": 2,
-        "description": "Escudo de 24% em si. Provoca ataques individuais e queima quem o atingir por 2 turnos.",
+        "description": "Escudo de 16% em si. Provoca ataques individuais e queima quem o atingir por 2 turnos. Escudo dura 2 ações do protegido; não soma com outro escudo.",
         "self": true,
         "extraEffect": "emberguard"
       },
@@ -103,11 +103,11 @@
         "effect": "burn",
         "cost": 80,
         "cooldown": 0,
-        "description": "110% do ataque em área, queimadura por 2 turnos e escudo próprio de 18%.",
+        "description": "110% do ataque em área, queimadura por 2 turnos e escudo próprio de 8%. Escudo dura 2 ações do protegido; não soma com outro escudo.",
         "secondary": {
           "kind": "shield",
           "target": "actor",
-          "power": 0.18
+          "power": 0.08
         }
       },
       "identity": "Fornalha que atrai e pune ataques",
@@ -121,7 +121,7 @@
       "title": "Artilheira de cinzas",
       "lore": "Conta histórias desenhando constelações com flechas em chamas.",
       "hp": 1100,
-      "attack": 151,
+      "attack": 189,
       "defense": 86,
       "speed": 102,
       "weapon": "bow",
@@ -141,11 +141,11 @@
         "id": "skill",
         "name": "Sinal escarlate",
         "kind": "shieldAll",
-        "power": 0.12,
+        "power": 0.08,
         "effect": "empower",
         "cost": 30,
         "cooldown": 2,
-        "description": "Escudo de 12% da vida máxima e ataque +20% para a equipe por 2 turnos."
+        "description": "Escudo de 8% da vida máxima e ataque +20% para a equipe por 2 turnos. Escudo dura 2 ações do protegido; não soma com outro escudo."
       },
       "ultimate": {
         "id": "ultimate",
@@ -173,7 +173,7 @@
       "title": "Guardiã das sementes",
       "lore": "Protege a última semente capaz de florescer na escuridão.",
       "hp": 1180,
-      "attack": 150,
+      "attack": 188,
       "defense": 103,
       "speed": 94,
       "weapon": "staff",
@@ -193,21 +193,21 @@
         "id": "skill",
         "name": "Jardim suspenso",
         "kind": "heal",
-        "power": 0.25,
+        "power": 0.2,
         "effect": "regen",
         "cost": 30,
         "cooldown": 2,
-        "description": "Cura 25% da vida máxima de um aliado e concede regeneração por 2 turnos."
+        "description": "Cura 20% da vida máxima de um aliado e concede regeneração por 2 turnos."
       },
       "ultimate": {
         "id": "ultimate",
         "name": "Primavera eterna",
         "kind": "healAll",
-        "power": 0.3,
+        "power": 0.22,
         "effect": "cleanse",
         "cost": 80,
         "cooldown": 0,
-        "description": "Cura 30% da vida máxima da equipe e remove todos os efeitos negativos."
+        "description": "Cura 22% da vida máxima da equipe; depois remove todos os efeitos negativos."
       },
       "identity": "Semeadora de cura por agressão",
       "synergy": "Sua Semente cura o próximo aliado que atingir o alvo; combina com tanques e finalizadores."
@@ -219,9 +219,9 @@
       "classId": "natural",
       "title": "Colosso de musgo",
       "lore": "Sob a armadura, vive uma floresta que já não existe nos mapas.",
-      "hp": 1540,
-      "attack": 143,
-      "defense": 140,
+      "hp": 1380,
+      "attack": 179,
+      "defense": 118,
       "speed": 66,
       "weapon": "hammer",
       "animation": "roots",
@@ -240,21 +240,21 @@
         "id": "skill",
         "name": "Raízes entrelaçadas",
         "kind": "shield",
-        "power": 0.24,
+        "power": 0.14,
         "effect": "cover",
         "cost": 30,
         "cooldown": 2,
-        "description": "Escudo de 24% em um aliado. Oren recebe 35% dos golpes individuais desse aliado por 2 turnos."
+        "description": "Escudo de 14% em um aliado. Oren recebe 25% dos golpes individuais desse aliado por 2 turnos. Escudo dura 2 ações do protegido; não soma com outro escudo."
       },
       "ultimate": {
         "id": "ultimate",
         "name": "Despertar da floresta",
         "kind": "shieldAll",
-        "power": 0.2,
+        "power": 0.1,
         "effect": "regen",
         "cost": 80,
         "cooldown": 0,
-        "description": "Escudo de 20% e regeneração para todos os aliados por 2 turnos."
+        "description": "Escudo de 10% e regeneração para todos os aliados por 2 turnos. Escudo dura 2 ações do protegido; não soma com outro escudo."
       },
       "identity": "Colosso que divide o peso do golpe",
       "synergy": "Cobre um aliado frágil; escudo e regeneração sustentam essa proteção."
@@ -267,7 +267,7 @@
       "title": "Caçadora do orvalho",
       "lore": "Segue rastros que só aparecem sob o orvalho da manhã.",
       "hp": 1050,
-      "attack": 194,
+      "attack": 252,
       "defense": 75,
       "speed": 114,
       "weapon": "bow",
@@ -280,7 +280,7 @@
         "power": 0.8,
         "cost": 0,
         "cooldown": 0,
-        "description": "80% do ataque e sangramento por 2 turnos. Recupera 24 de energia.",
+        "description": "80% do ataque e sangramento por 2 turnos. Recupera 24 de energia. Sangramento reduz toda cura recebida em 35% enquanto durar.",
         "effect": "bleed"
       },
       "skill": {
@@ -306,7 +306,7 @@
         "effect": "bleed",
         "cost": 80,
         "cooldown": 0,
-        "description": "165% do ataque em área e sangramento por 2 turnos."
+        "description": "165% do ataque em área e sangramento por 2 turnos. Sangramento reduz toda cura recebida em 35% enquanto durar."
       },
       "identity": "Caçadora que abre feridas e armaduras",
       "synergy": "Sangramento de Nima ou Riven prepara o disparo que expõe a defesa para outros atacantes."
@@ -318,9 +318,9 @@
       "classId": "tecnico",
       "title": "Sentinela da última torre",
       "lore": "Continua protegendo uma torre que ninguém se lembra de construir.",
-      "hp": 1440,
-      "attack": 149,
-      "defense": 132,
+      "hp": 1340,
+      "attack": 186,
+      "defense": 114,
       "speed": 80,
       "weapon": "sword",
       "animation": "hex",
@@ -339,21 +339,21 @@
         "id": "skill",
         "name": "Campo de contenção",
         "kind": "shieldAll",
-        "power": 0.16,
+        "power": 0.08,
         "effect": "fortify",
         "cost": 30,
         "cooldown": 2,
-        "description": "Escudo de 16% para a equipe e Fortificação: recebe 20% menos dano por 2 turnos."
+        "description": "Escudo de 8% para a equipe e Fortificação: recebe 15% menos dano por 2 turnos. Escudo dura 2 ações do protegido; não soma com outro escudo."
       },
       "ultimate": {
         "id": "ultimate",
         "name": "Protocolo zero",
         "kind": "shieldAll",
-        "power": 0.3,
+        "power": 0.16,
         "effect": "fortify",
         "cost": 80,
         "cooldown": 0,
-        "description": "Escudo de 30%, Fortificação por 2 turnos e +10 de energia para cada aliado.",
+        "description": "Escudo de 16%, Fortificação por 2 turnos e +10 de energia para cada aliado. Escudo dura 2 ações do protegido; não soma com outro escudo.",
         "secondary": {
           "kind": "energy",
           "target": "allies",
@@ -371,7 +371,7 @@
       "title": "Engenheira de pulsos",
       "lore": "Transforma sucata das ruínas em máquinas que desafiam o impossível.",
       "hp": 1030,
-      "attack": 204,
+      "attack": 265,
       "defense": 73,
       "speed": 108,
       "weapon": "gun",
@@ -422,7 +422,7 @@
       "title": "Arquiteto de drones",
       "lore": "Seus pequenos autômatos conhecem o caminho de volta para casa.",
       "hp": 1120,
-      "attack": 150,
+      "attack": 188,
       "defense": 96,
       "speed": 98,
       "weapon": "orb",
@@ -479,7 +479,7 @@
       "title": "Cartógrafa do vazio",
       "lore": "Desenha mapas de lugares que ainda não existem.",
       "hp": 1040,
-      "attack": 212,
+      "attack": 276,
       "defense": 70,
       "speed": 104,
       "weapon": "orb",
@@ -528,9 +528,9 @@
       "classId": "arcano",
       "title": "Tecelão de ecos",
       "lore": "Costura fragmentos de realidades que o Nexus deixou para trás.",
-      "hp": 1430,
-      "attack": 146,
-      "defense": 126,
+      "hp": 1340,
+      "attack": 183,
+      "defense": 110,
       "speed": 78,
       "weapon": "sword",
       "animation": "prism",
@@ -549,11 +549,11 @@
         "id": "skill",
         "name": "Trama impossível",
         "kind": "shield",
-        "power": 0.3,
+        "power": 0.18,
         "effect": "mirror",
         "cost": 30,
         "cooldown": 2,
-        "description": "Escudo próprio de 30% e Espelho por 2 turnos: devolve 20% do dano sofrido à vida.",
+        "description": "Escudo próprio de 18% e Espelho por 2 turnos: devolve 20% do dano sofrido à vida. Escudo dura 2 ações do protegido; não soma com outro escudo.",
         "self": true
       },
       "ultimate": {
@@ -578,7 +578,7 @@
       "title": "Voz das estrelas",
       "lore": "Sua voz ainda chega de estrelas que se apagaram há séculos.",
       "hp": 1140,
-      "attack": 145,
+      "attack": 181,
       "defense": 100,
       "speed": 101,
       "weapon": "staff",
@@ -598,21 +598,21 @@
         "id": "skill",
         "name": "Maré de éter",
         "kind": "healAll",
-        "power": 0.16,
+        "power": 0.12,
         "effect": "cleanse",
         "cost": 30,
         "cooldown": 2,
-        "description": "Cura 16% da vida máxima de toda a equipe e remove efeitos negativos."
+        "description": "Cura 12% da vida máxima de toda a equipe; depois remove efeitos negativos."
       },
       "ultimate": {
         "id": "ultimate",
         "name": "Coro das constelações",
         "kind": "healAll",
-        "power": 0.3,
+        "power": 0.22,
         "effect": "empower",
         "cost": 80,
         "cooldown": 0,
-        "description": "Cura 30% da vida máxima e concede ataque +20% por 2 turnos para a equipe."
+        "description": "Cura 22% da vida máxima e concede ataque +20% por 2 turnos para a equipe."
       },
       "identity": "Voz que purifica e prepara ofensivas",
       "synergy": "Remove queimadura, sangramento e marcas. Seu supremo fortalece aliados já preparados para atacar."
@@ -624,9 +624,9 @@
       "classId": "sombrio",
       "title": "Lâmina do eclipse",
       "lore": "Caça os ecos que escapam pela borda de cada eclipse.",
-      "hp": 1430,
-      "attack": 156,
-      "defense": 121,
+      "hp": 1320,
+      "attack": 195,
+      "defense": 108,
       "speed": 76,
       "weapon": "scythe",
       "animation": "crescent",
@@ -645,11 +645,11 @@
         "id": "skill",
         "name": "Guarda do eclipse",
         "kind": "shield",
-        "power": 0.28,
+        "power": 0.14,
         "effect": "taunt",
         "cost": 30,
         "cooldown": 2,
-        "description": "Escudo próprio de 28%, Provocação e Riposta por 2 turnos. Ao ser atingido, contra-ataca com 40% do ataque.",
+        "description": "Escudo próprio de 14%, Provocação e Riposta por 2 turnos. Ao ser atingido, contra-ataca com 40% do ataque. Escudo dura 2 ações do protegido; não soma com outro escudo.",
         "self": true,
         "extraEffect": "riposte"
       },
@@ -661,11 +661,11 @@
         "effect": "weaken",
         "cost": 80,
         "cooldown": 0,
-        "description": "110% do ataque em área, ataque inimigo −20% por 2 turnos e cura própria de 18%.",
+        "description": "110% do ataque em área, ataque inimigo −20% por 2 turnos e cura própria de 8%.",
         "secondary": {
           "kind": "heal",
           "target": "actor",
-          "power": 0.18
+          "power": 0.08
         }
       },
       "identity": "Duelista que protege por contra-ataques",
@@ -679,7 +679,7 @@
       "title": "Dama dos sussurros",
       "lore": "Conhece todos os nomes que as ruínas tentaram esquecer.",
       "hp": 1190,
-      "attack": 150,
+      "attack": 188,
       "defense": 101,
       "speed": 93,
       "weapon": "orb",
@@ -703,11 +703,11 @@
         "effect": "weaken",
         "cost": 30,
         "cooldown": 2,
-        "description": "90% do ataque e enfraquecimento por 2 turnos. Cura o aliado mais ferido em 18%; contra sangramento, cura 27%.",
+        "description": "90% do ataque e enfraquecimento por 2 turnos. Cura o aliado mais ferido em 14%; contra sangramento, cura 21%.",
         "secondary": {
           "kind": "heal",
           "target": "lowestAlly",
-          "power": 0.18,
+          "power": 0.14,
           "whenStatus": "bleed",
           "multiplier": 1.5
         }
@@ -738,7 +738,7 @@
       "title": "Mercador de memórias",
       "lore": "Vende lembranças alheias para comprar o próprio passado.",
       "hp": 1060,
-      "attack": 202,
+      "attack": 263,
       "defense": 76,
       "speed": 107,
       "weapon": "dual",
@@ -751,7 +751,7 @@
         "power": 0.8,
         "cost": 0,
         "cooldown": 0,
-        "description": "80% do ataque e sangramento por 2 turnos. Recupera 24 de energia.",
+        "description": "80% do ataque e sangramento por 2 turnos. Recupera 24 de energia. Sangramento reduz toda cura recebida em 35% enquanto durar.",
         "effect": "bleed"
       },
       "skill": {
@@ -864,7 +864,7 @@
         "effect": "regen",
         "cost": 30,
         "cooldown": 2,
-        "description": "Recupera 20% da vida máxima da equipe. Regeneração: recupera 7% da vida máxima no início de 2 turnos."
+        "description": "Recupera 20% da vida máxima da equipe. Regeneração: recupera 4% da vida máxima no início de 2 turnos."
       },
       "ultimate": {
         "id": "ultimate",
@@ -908,7 +908,7 @@
         "effect": "regen",
         "cost": 30,
         "cooldown": 2,
-        "description": "Protege um aliado com barreira de 30% da vida máxima. Regeneração: recupera 7% da vida máxima no início de 2 turnos."
+        "description": "Protege um aliado com barreira de 30% da vida máxima. Regeneração: recupera 4% da vida máxima no início de 2 turnos."
       },
       "ultimate": {
         "id": "ultimate",
@@ -996,7 +996,7 @@
         "effect": "regen",
         "cost": 30,
         "cooldown": 2,
-        "description": "Protege um aliado com barreira de 25% da vida máxima. Regeneração: recupera 7% da vida máxima no início de 2 turnos."
+        "description": "Protege um aliado com barreira de 25% da vida máxima. Regeneração: recupera 4% da vida máxima no início de 2 turnos."
       },
       "ultimate": {
         "id": "ultimate",
@@ -1250,9 +1250,9 @@
   ],
   "defaultTeams": [
     [
+      "axion",
       "veyra",
-      "astra",
-      "axion"
+      "astra"
     ],
     [
       "vesper",
@@ -1266,6 +1266,6 @@
     "kind": "guard",
     "cost": 0,
     "cooldown": 0,
-    "description": "Recebe 35% menos dano até seu próximo turno, ganha barreira de 12% da vida máxima e recupera 25 de energia."
+    "description": "Recebe 35% menos dano até seu próximo turno, ganha escudo de 6% da vida máxima por 2 ações e recupera 25 de energia. Escudos não somam."
   }
 }

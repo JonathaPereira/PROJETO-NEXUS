@@ -59,6 +59,9 @@ func _draw() -> void:
 			draw_circle(point, 5 * scale_factor, Color(tint.lightened(0.5), fade))
 			_polygon(point, 18 * scale_factor, 5 if affinity == "natural" else 4, color, p * 4)
 		return
+	if kind == "shieldExpired":
+		draw_arc(at, 45 * (1 + p), 0, TAU * (1 - p), 32, Color("83d8ff", 1 - p), 2, true)
+		return
 	if kind in ["shieldHit", "shieldBreak"]:
 		var shield_color := Color("83d8ff", fade)
 		for i in range(6):
@@ -68,10 +71,65 @@ func _draw() -> void:
 		_particles(at, p, Color("9be8ff"), 16, scale_factor)
 		if kind == "shieldHit": return
 	if kind in ["shield", "shieldAll", "guard"]:
-		for radius in [40.0, 52.0]: _polygon(at, radius * scale_factor, 6, color, p * 0.2)
+		var sides := 4 if signature == "prism" else 3 if signature == "crescent" else 5 if signature == "roots" else 8 if signature in ["crater", "volley"] else 6
+		for radius in [40.0, 52.0]: _polygon(at, radius * scale_factor, sides, color, p * 0.2)
 		for i in range(4):
 			var from := at + Vector2(-35 + i * 24, 50)
 			draw_line(from, from - Vector2(0, 100), Color(tint, fade * 0.25), 2, true)
+		return
+	# Each active hero has a distinct impact silhouette, rather than a recolored class burst.
+	if kind in ["heal", "support", "supportAll", "energy"]:
+		var healing := Color("9ce5bd", fade)
+		for i in range(5):
+			var point := at + Vector2((i - 2) * 20, -p * 60 + sin(i) * 18)
+			draw_line(point - Vector2(5, 0), point + Vector2(5, 0), healing, 2, true)
+			draw_line(point - Vector2(0, 5), point + Vector2(0, 5), healing, 2, true)
+		_polygon(at, (30 + p * 45) * scale_factor, 6 if signature == "drones" else 5 if signature == "bloom" else 3, color, p)
+		return
+	if signature in ["crater", "roots"]:
+		draw_set_transform(at + Vector2(0, 65), 0, Vector2(1, 0.30))
+		for i in range(3): draw_arc(Vector2.ZERO, (20 + p * 100 + i * 12) * scale_factor, 0, TAU, 48, color, 3, true)
+		draw_set_transform(Vector2.ZERO)
+		for i in range(7):
+			var bottom := at + Vector2((i - 3) * 20, 55)
+			var tip := bottom - Vector2(sin(i) * 15, (25 + i % 3 * 18) * sin(p * PI))
+			draw_line(bottom, tip, color, 5 if signature == "roots" else 3, true)
+		_particles(at, p, tint, 14, scale_factor)
+		return
+	if signature in ["volley", "thorns"]:
+		for i in range(5):
+			var direction := Vector2.from_angle(-PI * 0.7 + i * 0.35)
+			var tip := at + direction * (15 + p * 65) * scale_factor
+			draw_line(at + direction * 10, tip, color, 3, true)
+			_polygon(tip, 6, 3, color, direction.angle())
+		_particles(at, p, tint, 9, scale_factor)
+		return
+	if signature == "rail":
+		var direction := (at - origin).normalized()
+		draw_line(origin, at + direction * p * 130, Color(tint, fade * 0.35), 18 * scale_factor, true)
+		draw_line(origin, at + direction * p * 130, Color("e8f9ff", fade), 3, true)
+		draw_arc(at, (14 + p * 35) * scale_factor, 0, TAU, 32, color, 2, true)
+		return
+	if signature in ["hex", "drones", "prism", "runes"]:
+		var sides := 6 if signature == "hex" else 4 if signature == "drones" else 3
+		for i in range(3 if signature != "runes" else 7):
+			var node := at + Vector2.from_angle(i * TAU / (7 if signature == "runes" else 3) + p) * (18 + p * 45)
+			_polygon(node, (13 if signature != "runes" else 7) * scale_factor, sides, color, -p)
+			if signature == "drones": draw_line(node, at, color, 2, true)
+		_polygon(at, (24 + p * 34) * scale_factor, sides, color, p)
+		return
+	if signature == "threads":
+		for i in range(6):
+			var offset := Vector2(0, (i - 2.5) * 13)
+			draw_line(origin + offset, at - offset + Vector2(sin(p * PI) * 30, 0), color, 2, true)
+		draw_arc(at, 34 * scale_factor, 0, TAU, 36, color, 2, true)
+		return
+	if signature == "daggers":
+		for i in range(2):
+			var direction := Vector2(1, 1 if i == 0 else -1).normalized()
+			var span := (20 + p * 70) * scale_factor
+			draw_line(at - direction * span, at + direction * span, color, 5, true)
+			draw_line(at - direction * span, at + direction * span, Color("eadfff", fade), 2, true)
 		return
 	match affinity:
 		"igneo":

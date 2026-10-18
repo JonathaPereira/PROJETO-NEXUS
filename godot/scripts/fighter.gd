@@ -5,7 +5,7 @@ const Glyph = preload("res://scripts/glyph.gd")
 const ATLAS = preload("res://assets/clean-atlas.png")
 const CHARACTER_SHADER = preload("res://shaders/character.gdshader")
 const SPECIAL = {0: "veyra", 4: "sylva", 8: "axion", 12: "astra", 16: "vesper", 20: "auren"}
-const STATUS_NAMES = {"burn": "Queimadura", "bleed": "Sangramento", "regen": "Regeneração", "weaken": "Ataque −20%", "expose": "Defesa −25%", "empower": "Ataque +20%", "fortify": "Dano recebido −20%", "cover": "Proteção: desvia 35%", "mirror": "Reflete 20% do dano à vida", "riposte": "Contra-ataca: 40% ATQ", "taunt": "Provocação", "emberguard": "Retalia com queimadura", "focus": "Próximo golpe +25%", "seed": "Semente: próximo atacante cura 10%"}
+const STATUS_NAMES = {"burn": "Queimadura", "bleed": "Sangramento: cura −35%", "regen": "Regeneração", "weaken": "Ataque −20%", "expose": "Defesa −25%", "empower": "Ataque +20%", "fortify": "Dano recebido −15%", "cover": "Proteção: desvia 25%", "mirror": "Reflete 20% do dano à vida", "riposte": "Contra-ataca: 40% ATQ", "taunt": "Provocação", "emberguard": "Retalia com queimadura", "focus": "Próximo golpe +25%", "seed": "Semente: próximo atacante cura 10%"}
 static var texture_cache: Dictionary = {}
 static var region_cache: Dictionary = {}
 static var pose_regions: Dictionary = {}
@@ -27,6 +27,11 @@ var visual_root: Node2D
 var artwork: TextureRect
 var resting_art: Texture2D
 var material_fx: ShaderMaterial
+var formation_slot := -1
+var hero_name := ""
+var role_name := ""
+var position_label: Label
+var reaction_until := 0
 var title: Label
 var health: Control
 var energy: Control
@@ -59,6 +64,8 @@ static func portrait(index: int, full_body: bool = false) -> Texture2D:
 func setup(hero: Dictionary, id: String, color: Color) -> void:
 	unit_id = id
 	hero_id = hero.id
+	hero_name = hero.name
+	role_name = hero.role
 	tint = color
 	name = id
 	flat = true
@@ -103,65 +110,76 @@ func setup(hero: Dictionary, id: String, color: Color) -> void:
 	relationship.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	add_child(relationship)
 	plate = Panel.new()
-	plate.position = Vector2(5, 264)
-	plate.size = Vector2(176, 128)
+	plate.position = Vector2(-5, 264)
+	plate.size = Vector2(196, 102)
 	plate.clip_contents = true
 	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	plate.z_index = 20
+	plate.z_index = 50
 	var box := StyleBoxFlat.new()
-	box.bg_color = Color("091321f5")
-	box.border_color = color.darkened(0.5)
+	box.bg_color = Color("07111bf2")
+	box.border_color = color.darkened(0.4)
 	box.set_border_width_all(1)
-	box.set_corner_radius_all(7)
+	box.set_corner_radius_all(5)
 	plate.add_theme_stylebox_override("panel", box)
 	add_child(plate)
-	# Keep the turn/target marker in the card header, clear of feet and bars.
 	remove_child(indicator)
 	plate.add_child(indicator)
-	indicator.position = Vector2(125, 4)
+	indicator.position = Vector2(154, 2)
 	indicator.size = Vector2(14, 18)
-	title = _label(hero.name, 15, Color("f0f4ff"))
-	title.position = Vector2(9, 1)
-	title.size = Vector2(136, 23)
+	title = _label(hero.name, 14, Color("f0f4ff"))
+	title.position = Vector2(8, 1)
+	title.size = Vector2(146, 20)
 	plate.add_child(title)
 	var glyph = Glyph.new()
 	glyph.symbol = hero.classId
 	glyph.tint = color
-	glyph.position = Vector2(146, 5)
-	glyph.size = Vector2(20, 20)
+	glyph.position = Vector2(173, 3)
+	glyph.size = Vector2(17, 17)
 	plate.add_child(glyph)
-	var class_caption := _label(affinity_label.text, 10, color)
-	class_caption.position = Vector2(9, 23)
-	class_caption.size = Vector2(158, 16)
-	plate.add_child(class_caption)
+	# Affinity/relationship share one fixed line, keeping all three meters legible.
+	remove_child(affinity_label)
+	plate.add_child(affinity_label)
+	affinity_label.position = Vector2(8, 21)
+	affinity_label.size = Vector2(180, 14)
+	affinity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	affinity_label.add_theme_font_size_override("font_size", 11)
+	affinity_label.text += " · " + hero.role
+	remove_child(relationship)
+	plate.add_child(relationship)
+	relationship.position = Vector2(8, 21)
+	relationship.size = Vector2(180, 14)
+	relationship.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
+	relationship.add_theme_font_size_override("font_size", 11)
 	health = Meter.new()
-	health.position = Vector2(9, 42)
-	health.size = Vector2(158, 8)
+	health.position = Vector2(8, 38)
+	health.size = Vector2(180, 16)
 	plate.add_child(health)
 	energy = Meter.new()
-	energy.fill = Color("9586dc")
-	energy.position = Vector2(9, 53)
-	energy.size = Vector2(158, 4)
+	energy.fill = Color("8c76d9")
+	energy.position = Vector2(8, 57)
+	energy.size = Vector2(180, 13)
 	plate.add_child(energy)
+	shield = Meter.new()
+	shield.fill = Color("328fbd")
+	shield.position = Vector2(8, 73)
+	shield.size = Vector2(180, 13)
+	plate.add_child(shield)
 	stats = _label("", 11, Color("cedaee"))
-	stats.position = Vector2(9, 59)
-	stats.size = Vector2(158, 16)
+	stats.visible = false
 	plate.add_child(stats)
 	shield_label = _label("", 11, Color("83d8ff"))
-	shield_label.position = Vector2(9, 76)
-	shield_label.size = Vector2(158, 16)
+	shield_label.visible = false
 	plate.add_child(shield_label)
-	shield = Meter.new()
-	shield.fill = Color("62d0ff")
-	shield.position = Vector2(9, 93)
-	shield.size = Vector2(158, 4)
-	plate.add_child(shield)
 	status_label = _label("", 10, Color("f2c59c"))
-	status_label.position = Vector2(9, 101)
-	status_label.size = Vector2(158, 26)
-	status_label.text_overrun_behavior = TextServer.OVERRUN_NO_TRIMMING
-	status_label.max_lines_visible = 2
+	status_label.position = Vector2(8, 88)
+	status_label.size = Vector2(180, 14)
+	status_label.max_lines_visible = 1
 	plate.add_child(status_label)
+	position_label = _label("", 11, Color("d9d7c1"))
+	position_label.position = Vector2(-5, 259)
+	position_label.size = Vector2(196, 18)
+	position_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	add_child(position_label)
 	pressed.connect(func(): targeted.emit(unit_id))
 	base_tooltip = "%s · %s\nPV %d · ATQ %d · DEF %d · VEL %d" % [hero.name, hero.role, hero.hp, hero.attack, hero.defense, hero.speed]
 	tooltip_text = base_tooltip
@@ -181,13 +199,12 @@ func _label(text_value: String, font_size: int, color: Color) -> Label:
 func set_depth(value: float) -> void:
 	depth = value
 	visual_root.scale = Vector2.ONE * depth
-	var top := 257 - 200 * depth
-	affinity_label.position = Vector2(0, top - 23)
-	relationship.position = Vector2(0, top - 44)
+	position_label.position.y = 260
 
 func set_relationship(multiplier: float, relevant: bool) -> void:
 	relationship.visible = relevant and not dead and multiplier != 1.0
-	relationship.text = "VULNERÁVEL +25%" if multiplier > 1 else "RESISTENTE −15%"
+	affinity_label.visible = not relationship.visible
+	relationship.text = affinity_label.text.split(" · ")[0] + " · " + ("VULNERÁVEL +25%" if multiplier > 1 else "RESISTENTE −15%")
 	relationship.add_theme_color_override("font_color", Color("ffb998") if multiplier > 1 else Color("a6d9fa"))
 
 func foot_position() -> Vector2:
@@ -232,7 +249,7 @@ func _has_point(point: Vector2) -> bool:
 func _process(delta: float) -> void:
 	if not is_instance_valid(visual_root): return
 	elapsed += delta
-	if not posing:
+	if not posing and Time.get_ticks_msec() >= reaction_until:
 		visual_root.scale = Vector2(1, 1 + sin(elapsed * 1.8 + hero_id.length()) * 0.006) * depth if motion_enabled and not dead else Vector2.ONE * depth
 		material_fx.set_shader_parameter("bend", sin(elapsed * 1.4) * 1.8 if motion_enabled and not dead else 0.0)
 	queue_redraw()
@@ -258,9 +275,12 @@ func refresh(data: Dictionary, is_active: bool, is_chosen: bool, can_target: boo
 	health.max_value = data.maxHp
 	health.value = data.hp
 	energy.value = data.energy
-	shield.max_value = round(data.maxHp * 0.6)
+	shield.max_value = round(data.maxHp * 0.25)
 	shield.value = data.shield
 	shield_label.text = "ESCUDO  %d" % data.shield
+	health.caption = "VIDA  %d / %d" % [data.hp, data.maxHp]
+	energy.caption = "ENERGIA  %d / 100" % data.energy
+	shield.caption = "ESCUDO  %d / %d%s" % [data.shield, int(shield.max_value), (" · %dT" % data.get("shieldTurns", 0)) if data.shield > 0 and data.get("shieldTurns", 0) > 0 else " · expira após agir" if data.shield > 0 else ""]
 	shield_label.modulate.a = 1.0 if data.shield > 0 else 0.55
 	stats.text = "%d/%d PV · %d EN" % [data.hp, data.maxHp, data.energy]
 	var states: Array = []
@@ -271,12 +291,11 @@ func refresh(data: Dictionary, is_active: bool, is_chosen: bool, can_target: boo
 	for status in data.statuses:
 		var duration: int = int(status.turns)
 		states.append("%s · %s" % [STATUS_NAMES.get(status.type, status.type), "%d turno(s) restante(s)" % duration if duration > 0 else "expira após esta ação"])
-		compact.append("%s %s" % [{"burn": "Queima", "bleed": "Sangra", "regen": "Regen", "weaken": "ATQ↓", "expose": "DEF↓", "empower": "ATQ↑", "fortify": "Fortif.", "cover": "Proteg.", "mirror": "Reflexo", "riposte": "Contra", "taunt": "Provoca", "emberguard": "Brasa", "focus": "Foco", "seed": "Semente"}.get(status.type, status.type), "%dT" % duration if duration > 0 else "•"])
-	if compact.size() > 4: compact = compact.slice(0, 3) + ["+%d estados" % (compact.size() - 3)]
-	var split := ceili(compact.size() / 2.0) if compact.size() > 2 else compact.size()
-	status_label.text = "DERROTADO" if dead else (" · ".join(compact.slice(0, split)) + ("\n" + " · ".join(compact.slice(split)) if compact.size() > 2 else ""))
+		compact.append("%s %s" % [{"burn": "Queima", "bleed": "Sangra/Cura↓", "regen": "Regen", "weaken": "ATQ↓", "expose": "DEF↓", "empower": "ATQ↑", "fortify": "Fortif.", "cover": "Proteg.", "mirror": "Reflexo", "riposte": "Contra", "taunt": "Provoca", "emberguard": "Brasa", "focus": "Foco", "seed": "Semente"}.get(status.type, status.type), "%dT" % duration if duration > 0 else "•"])
+	if compact.size() > 2: compact = compact.slice(0, 1) + ["+%d estados" % (compact.size() - 1)]
+	status_label.text = "DERROTADO" if dead else " · ".join(compact)
 	status_label.tooltip_text = "\n".join(states)
-	tooltip_text = base_tooltip + "\nEscudo: %d / %d máximo" % [data.shield, int(shield.max_value)] + ("\n\nESTADOS\n" + "\n".join(states) if not states.is_empty() else "")
+	tooltip_text = base_tooltip + "\nEscudo único; dura 2 ações do protegido. Não acumula.\nEscudo: %d / %d máximo" % [data.shield, int(shield.max_value)] + ("\n\nESTADOS\n" + "\n".join(states) if not states.is_empty() else "")
 	artwork.modulate = Color(0.35, 0.4, 0.5, 0.4) if dead else Color.WHITE
 	indicator.text = "◆" if chosen and available else "●"
 	indicator.visible = (active or (chosen and available)) and not dead
@@ -308,3 +327,11 @@ func _draw() -> void:
 		var ring := tint if active else Color("e5c38c")
 		ring.a = 0.9 if active or chosen else 0.25
 		draw_polyline(points, ring, 2 if active or chosen else 1, true)
+
+func set_formation(slot: int) -> void:
+	formation_slot = slot
+	var caption: String = ["FRENTE", "ATRÁS ↑", "ATRÁS ↓"][slot] if slot >= 0 else ""
+	title.text = hero_name + (" · " + caption if slot >= 0 else "")
+	position_label.text = caption
+	position_label.visible = slot >= 0
+	position_label.tooltip_text = "Posição visual. Qualquer inimigo pode ser escolhido, salvo Provocação."

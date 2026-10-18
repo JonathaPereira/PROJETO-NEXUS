@@ -127,7 +127,7 @@ test(
       const prefs = await page.evaluate(() =>
         JSON.parse(localStorage.getItem("nexus-v1")),
       );
-      assert.deepEqual(prefs.teams[0], ["astra", "axion", "sylva"]);
+      assert.deepEqual(prefs.teams[0], ["axion", "astra", "sylva"]);
       assert.deepEqual(prefs.teams[1], ["vesper", "oren", "saira"]);
       // Remove only the test initializer so reload actually exercises the saved data.
       const persistedContext = await browser.newContext();

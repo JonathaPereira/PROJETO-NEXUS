@@ -40,7 +40,7 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 	cancel()
 	last_numbers.clear()
 	var version := generation
-	last_profile = PROFILES[hero.classId]
+	last_profile = hero.animation
 	var actor = fighters[result.actor]
 	if reduced:
 		await owner.get_tree().process_frame
@@ -58,6 +58,7 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 	var ultimate: bool = result.actionId == "ultimate"
 	var charge_time := (0.48 if ultimate else (0.34 if result.actionId == "skill" else 0.24)) + (0.12 if hero.animation in ["crater", "roots"] else 0.0)
 	var support: bool = action.kind.begins_with("heal") or action.kind.begins_with("shield") or action.kind == "guard" or action.kind.begins_with("support")
+	var melee: bool = not support and hero.animation in ["sweep", "crater", "roots", "prism", "crescent", "daggers"]
 	var origin: Vector2 = actor.hit_position()
 	_effect(effects, origin, origin, art_hero, action.kind, "charge", ultimate, charge_time + 0.05)
 	var anticipate := _tween(owner).set_parallel(true)
@@ -71,32 +72,41 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 	var travel: Vector2 = primary.foot_position() - (actor.position + home)
 	actor.set_pose(3 if ultimate else 2)
 	var strike := _tween(owner).set_parallel(true)
-	match hero.classId:
-		"igneo":
-			strike.tween_property(actor.visual_root, "position", home + travel * (0.72 if not support and hero.role != "Suporte" else 0.0) - Vector2(0, 8), 0.20).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
-			strike.tween_property(actor.visual_root, "rotation", 0.10 * direction, 0.20)
-		"sombrio":
-			strike.tween_property(actor.visual_root, "modulate:a", 0.18, 0.10)
-			strike.tween_property(actor.visual_root, "position", home + travel * (0.78 if not support and hero.role != "Suporte" else 0.0), 0.18)
-		"tecnico":
-			strike.tween_property(actor.visual_root, "position", home + Vector2(-13 * direction, 0), 0.16)
-			strike.tween_property(actor.visual_root, "rotation", 0.05 * direction, 0.16)
-		"arcano": strike.tween_property(actor.visual_root, "position", home - Vector2(0, 20), 0.20)
-		"natural":
-			if hero.animation == "roots" and not support:
-				strike.tween_property(actor.visual_root, "position", home + Vector2(14 * direction, -12), 0.20)
-			else: strike.tween_property(actor.visual_root, "rotation", 0.04 * direction, 0.20)
-		"lumi":
-			strike.tween_property(actor.visual_root, "rotation", -0.06 * direction, 0.20)
-			strike.tween_method(func(v): actor.material_fx.set_shader_parameter("flash", v), 0.0, 0.30, 0.20)
+	var contact := travel - Vector2(120 * direction, 0)
+	if melee:
+		if hero.animation in ["crater", "roots"]:
+			strike.tween_method(func(p):
+				actor.visual_root.position = home + contact * p - Vector2(0, sin(p * PI) * 68), 0.0, 1.0, 0.30)
+			strike.tween_property(actor.visual_root, "rotation", 0.17 * direction, 0.30)
+		else:
+			strike.tween_property(actor.visual_root, "position", home + contact, 0.24).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
+			strike.tween_property(actor.visual_root, "rotation", (0.14 if hero.animation == "sweep" else 0.09) * direction, 0.24)
+			if hero.animation in ["crescent", "daggers"]: strike.tween_property(actor.visual_root, "modulate:a", 0.28, 0.12)
+	elif hero.animation in ["volley", "thorns"]:
+		strike.tween_property(actor.visual_root, "rotation", 0.11 * direction, 0.18)
+		strike.tween_property(actor.visual_root, "scale", Vector2(0.96, 1.04) * actor.depth, 0.18)
+	elif hero.animation == "rail":
+		strike.tween_property(actor.visual_root, "position", home + Vector2(-24 * direction, 0), 0.10)
+		strike.tween_property(actor.visual_root, "rotation", -0.09 * direction, 0.10)
+	elif hero.animation in ["orbit", "runes", "drones", "threads"]:
+		strike.tween_property(actor.visual_root, "position", home - Vector2(0, 28 if hero.animation == "orbit" else 13), 0.24)
+		strike.tween_property(actor.visual_root, "rotation", -0.035 * direction, 0.24)
+	elif hero.animation in ["hex", "prism", "bloom", "roots", "crater"]:
+		strike.tween_property(actor.visual_root, "scale", Vector2(1.05, 0.96) * actor.depth, 0.20)
+		strike.tween_property(actor.visual_root, "position", home + Vector2(0, 5), 0.20)
+
+	else:
+		strike.tween_property(actor.visual_root, "rotation", -0.04 * direction, 0.20)
+		strike.tween_property(actor.visual_root, "scale", Vector2(1.03, 0.98) * actor.depth, 0.20)
 	for event in targets:
-		_effect(effects, origin, fighters[event.target].hit_position(), art_hero, event.type, "travel", ultimate, 0.24)
-	await owner.get_tree().create_timer(0.24).timeout
+		_effect(effects, origin, fighters[event.target].hit_position(), art_hero, event.type, "travel", ultimate, 0.30 if hero.animation in ["crater", "roots"] else 0.24)
+	await owner.get_tree().create_timer(0.30 if hero.animation in ["crater", "roots"] else 0.24).timeout
 	if version != generation or not is_instance_valid(actor): return false
 	on_impact.call()
 	impact_count += 1
 	actor.visual_root.modulate.a = 1.0
 	var critical := false
+	var popups := {}
 	for event in _visual_events(result.events):
 		if not event.has("amount"): continue
 		var target = fighters[event.target]
@@ -108,15 +118,30 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 		reaction.tween_method(func(v):
 			if is_instance_valid(target): target.material_fx.set_shader_parameter("flash", v), 0.85, 0.0, 0.32)
 		if event.type == "damage" and target != actor:
-			var recoil := _tween(owner)
-			recoil.tween_property(target.visual_root, "rotation", -0.07 * direction, 0.08)
-			recoil.tween_property(target.visual_root, "rotation", 0.0, 0.24)
+			target.reaction_until = Time.get_ticks_msec() + 500
+			var recoil := _tween(owner).set_parallel(true)
+			var target_home := Vector2(93, 257)
+			if target.dead:
+				recoil.tween_property(target.visual_root, "rotation", 0.23 * direction, 0.35)
+				recoil.tween_property(target.visual_root, "position", target_home + Vector2(12 * direction, 12), 0.35)
+				recoil.tween_property(target.visual_root, "modulate:a", 0.42, 0.40)
+			else:
+				recoil.tween_property(target.visual_root, "rotation", -0.10 * direction, 0.08)
+				recoil.tween_property(target.visual_root, "position", target_home + Vector2(13 * direction, -3), 0.08)
+				recoil.tween_property(target.visual_root, "scale", Vector2(0.94, 1.04) * target.depth, 0.08)
+				recoil.chain().set_parallel(true)
+				recoil.tween_property(target.visual_root, "rotation", 0.0, 0.24)
+				recoil.tween_property(target.visual_root, "position", target_home, 0.24)
+				recoil.tween_property(target.visual_root, "scale", Vector2.ONE * target.depth, 0.24)
 		critical = critical or event.get("critical", false)
-		var number_at: Vector2 = target.hit_position() + Vector2(-82, -30)
-		if event.type == "heal" and event.get("passive", false) and event.target == result.actor:
-			# Dashes must not move the caster's healing receipt onto the victim's.
-			number_at = actor.position + Vector2(11, 257 - 108 * actor.depth - 30)
-		_number(owner, effects, number_at, event)
+		if not popups.has(event.target): popups[event.target] = []
+		popups[event.target].append_array(number_lines(event))
+	for id in popups:
+		var target = fighters[id]
+		var number_at: Vector2 = target.hit_position() + Vector2(-82, -45)
+		if id == result.actor: number_at = actor.position + Vector2(11, 257 - 108 * actor.depth - 45)
+		_number(owner, effects, number_at, {"lines": popups[id]})
+
 	# Hold the contact pose briefly, then show follow-through and travel home.
 	await owner.get_tree().create_timer(0.15 if critical else 0.10).timeout
 	if version != generation or not is_instance_valid(actor): return false
@@ -149,7 +174,7 @@ func _visual_events(events: Array) -> Array:
 	var grouped: Array = []
 	for event in events:
 		if event.type == "heal" and event.get("passive", false):
-			var previous: Array = grouped.filter(func(e): return e.type == "heal" and e.target == event.target and e.get("passive", false))
+			var previous: Array = grouped.filter(func(e): return e.type == "heal" and e.target == event.target and e.get("source", "") == event.get("source", "") and e.get("passive", false))
 			if not previous.is_empty():
 				previous[0].amount += event.amount
 				continue
@@ -157,6 +182,7 @@ func _visual_events(events: Array) -> Array:
 	return grouped
 
 static func number_lines(event: Dictionary) -> Array:
+	if event.has("lines"): return event.lines
 	var lines: Array = []
 	if event.get("reaction", false): lines.append(["CONTRA-ATAQUE", "d6bdff", 12])
 	if event.get("intercepted", false): lines.append(["PROTETOR", "85dcff", 12])
@@ -168,15 +194,19 @@ static func number_lines(event: Dictionary) -> Array:
 			if event.get("absorbed", 0) > 0:
 				lines.append(["−%d ESCUDO" % event.absorbed, "85dcff", 20])
 				lines.append(["QUEBRADO · resta 0" if event.shieldAfter == 0 else "Escudo restante: %d" % event.shieldAfter, "85dcff", 12])
-		"heal": lines.append(["+%d VIDA" % event.amount, "a1e6b3", 22])
+		"heal": lines.append(["+%d VIDA" % event.amount, "a1e6b3", 20])
+		"shieldExpired":
+			lines.append(["ESCUDO EXPIROU", "9ebad2", 15])
+			lines.append(["−%d ESCUDO · resta 0" % event.amount, "85dcff", 15])
 		"shield", "guard":
-			lines.append(["+%d ESCUDO" % event.amount, "85dcff", 20])
+			lines.append(["+%d ESCUDO" % event.amount if event.amount > 0 else "ESCUDO RENOVADO", "85dcff", 20])
 			lines.append(["Escudo total: %d" % event.get("shieldAfter", event.amount), "85dcff", 12])
 		"energy": lines.append(["+%d ENERGIA" % event.amount, "c6b4ff", 18])
 		"support": lines.append(["SUPORTE", "c6b4ff", 15])
 		"burn", "bleed", "fracture":
 			lines.append([{ "burn": "QUEIMADURA", "bleed": "SANGRAMENTO", "fracture": "FRATURA" }[event.type], "ffae88", 14])
 			lines.append(["−%d VIDA" % event.amount, "ffc5b3", 22])
+	if event.get("healingPenalty", 0) > 0: lines.append(["CURA −%d%%" % event.healingPenalty, "ffc18a", 13])
 	if event.get("passive", false): lines.append(["REGENERAÇÃO" if event.has("remaining") else ("SEMENTE" if event.get("source", "") == "seed" else "DRENO DE VIDA"), "a1e6b3", 12])
 	if event.has("remaining"): lines.append(["%d ativação(ões) restante(s)" % event.remaining, "d6dded", 11])
 	if event.has("effect"):

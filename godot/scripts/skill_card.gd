@@ -14,13 +14,13 @@ var action_id := "basic"
 func _ready() -> void:
 	toggle_mode = true
 	clip_contents = true
-	custom_minimum_size = Vector2(0, 110)
+	custom_minimum_size = Vector2(0, 92)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "right"]: margin.add_theme_constant_override("margin_" + side, 8)
-	for side in ["top", "bottom"]: margin.add_theme_constant_override("margin_" + side, 8)
+	for side in ["left", "right"]: margin.add_theme_constant_override("margin_" + side, 6)
+	for side in ["top", "bottom"]: margin.add_theme_constant_override("margin_" + side, 6)
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(margin)
 	var column := VBoxContainer.new()
@@ -41,7 +41,7 @@ func _ready() -> void:
 	body.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	column.add_child(body)
 	illustration = TextureRect.new()
-	illustration.custom_minimum_size = Vector2(46, 46)
+	illustration.custom_minimum_size = Vector2(38, 38)
 	illustration.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	illustration.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	illustration.mouse_filter = Control.MOUSE_FILTER_IGNORE
