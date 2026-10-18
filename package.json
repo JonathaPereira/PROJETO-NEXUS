@@ -12,6 +12,8 @@
     "test": "node --test tests/*.test.js",
     "test:browser": "node --test tests/browser.mjs",
     "test:site": "npm run build && node --test tests/site.mjs",
+    "sync:godot": "node scripts/sync-godot.mjs",
+    "test:godot": "node scripts/test-godot.mjs",
     "check": "node --check src/app.js && node --check src/engine.js && node --check src/art.js"
   },
   "engines": {

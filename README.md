@@ -4,6 +4,16 @@ Protótipo jogável de RPG tático original: equipes de três, seis afinidades p
 
 ## Jogar
 
+### Nova base em Godot
+
+O projeto Godot está em **[godot/](godot/README.md)**. Use **Godot 4.6 Standard**, gratuito, sem a edição .NET. Importe [godot/project.godot](godot/project.godot), aguarde a importação dos recursos e pressione **F5**.
+
+Esta primeira migração contém os 24 personagens, montagem das duas equipes, combate 3 contra 3, treino contra IA, duelo local, efeitos e som básicos, resultado e replay. Os gráficos atuais são provisórios; o rework de apresentação e a simplificação das mecânicas ficam para a etapa seguinte. A campanha e a integração com A Lei do Trono ainda serão implementadas.
+
+O endereço atual do GitHub Pages continua executando o protótipo JavaScript. A versão Godot é aberta pelo editor nesta etapa; sua exportação para navegador será uma entrega separada. Veja [godot/README.md](godot/README.md) para instruções, estrutura e testes.
+
+### Protótipo web existente
+
 O download anterior foi retirado após o relato **“Vírus detectado”**. A causa permanece inconclusiva. Não execute o pacote antigo nem desative a proteção. O [registro do alerta](docs/ALERTA-DO-DOWNLOAD.md) documenta o arquivo e as medidas tomadas.
 
 ### Versão web
