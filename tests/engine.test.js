@@ -63,7 +63,7 @@ test("regeneration heals on exactly two personal turns and purification removes 
   const healer = currentUnit(cleansing),
     target = cleansing.units[1];
   target.hp = 500;
-  target.statuses = ["burn", "regen", "expose", "weaken"].map((type) => ({
+  target.statuses = ["burn", "bleed", "regen", "expose", "weaken"].map((type) => ({
     type,
     turns: 2,
   }));
@@ -297,4 +297,66 @@ test("difficulty only scales AI HP/attack and leaves persistent class/initiative
   assert.throws(() =>
     createBattle(...DEFAULT_TEAMS, { difficulty: "invalid" }),
   );
+});
+
+test("a fully shielded critical keeps its critical flag, absorption and exact remaining shield", () => {
+  const battle = createBattle(...DEFAULT_TEAMS, { seed: 1972 });
+  const target = battle.units.find(u => u.id === "1-vesper");
+  target.shield = 600;
+  const hp = target.hp;
+  const result = act(battle, "basic", target.id);
+  const hit = result.events.find(e => e.type === "damage");
+  assert.equal(hit.critical, true);
+  assert.equal(hit.amount, 0);
+  assert.equal(hit.total, hit.absorbed);
+  assert.equal(hit.shieldBefore, 600);
+  assert.equal(hit.shieldAfter, 600 - hit.absorbed);
+  assert.equal(hit.hpAfter, hp);
+  assert.equal(target.hp, hp);
+});
+
+test("shield breaks report real HP damage without counting overkill as damage", () => {
+  const battle = createBattle(...DEFAULT_TEAMS);
+  const target = battle.units.find(u => u.id === "1-vesper");
+  target.shield = 40;
+  target.hp = 10;
+  const result = act(battle, "basic", target.id);
+  const hit = result.events.find(e => e.type === "damage");
+  assert.equal(hit.absorbed, 40);
+  assert.equal(hit.amount, 10);
+  assert.equal(hit.shieldBefore, 40);
+  assert.equal(hit.shieldAfter, 0);
+  assert.equal(hit.hpAfter, 0);
+  assert(hit.total >= hit.amount + hit.absorbed);
+  assert.equal(result.impactUnits.find(u => u.id === target.id).hp, 0);
+});
+
+test("burn and bleeding are separately reported after the attack snapshot, bypassing shield", () => {
+  const battle = createBattle(...DEFAULT_TEAMS);
+  const target = battle.units.find(u => u.id === "1-vesper");
+  target.shield = 600;
+  target.statuses = ["burn", "bleed"].map(type => ({type, turns: 2}));
+  const result = act(battle, "basic", target.id);
+  const impact = result.impactUnits.find(u => u.id === target.id);
+  const ticks = result.turnEvents.filter(e => e.type === "burn" || e.type === "bleed");
+  assert.deepEqual(ticks.map(e => e.type), ["burn", "bleed"]);
+  assert.equal(impact.hp, target.maxHp);
+  assert.equal(target.hp, impact.hp - 2 * Math.round(target.maxHp * 0.065));
+  assert.equal(target.shield, impact.shield);
+  assert.equal(ticks[0].hpAfter - ticks[1].hpAfter, ticks[1].amount);
+  assert(ticks.every(e => e.remaining === 1 && e.shieldAfter === impact.shield));
+  // The report owns a snapshot, so later turns cannot rewrite the impact.
+  impact.hp = 1;
+  assert.notEqual(target.hp, 1);
+});
+
+test("Riven's blood technique applies two turns of bleeding instead of fire", () => {
+  const battle = createBattle(["riven", "axion", "oren"], ["bast", "noct", "rhazen"]);
+  assert.equal(currentUnit(battle).heroId, "riven");
+  const target = battle.units.find(u => u.id === "1-bast");
+  const result = act(battle, "skill", target.id);
+  const hit = result.events.find(e => e.type === "damage");
+  assert.equal(hit.effect, "bleed");
+  assert.equal(hit.effectTurns, 2);
+  assert.deepEqual(target.statuses, [{type: "bleed", turns: 2}]);
 });

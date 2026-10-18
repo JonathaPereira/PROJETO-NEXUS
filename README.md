@@ -8,7 +8,7 @@ Protótipo jogável de RPG tático original: equipes de três, seis afinidades p
 
 O projeto Godot está em **[godot/](godot/README.md)**. Use **Godot 4.6 Standard**, gratuito, sem a edição .NET. Importe [godot/project.godot](godot/project.godot), aguarde a importação dos recursos e pressione **F5**.
 
-A **Alpha 0.2** contém os 24 personagens, montagem das duas equipes, combate 3 contra 3, treino contra IA, duelo local, resultado e replay. O rework traz HUD com cartas de habilidades, recortes refinados, retratos na iniciativa e uma **Galeria de golpes** para testar seis representantes, um por classe. A campanha e a integração com A Lei do Trono ainda serão implementadas.
+A **Alpha 0.3** contém os 24 personagens, montagem das duas equipes, combate 3 contra 3, treino contra IA, duelo local, resultado e replay. O rework traz formação triangular, 72 imagens próprias de habilidades, poses de ataque para seis representantes e HUD que separa vida, escudo, crítico e dano contínuo. **Vulnerável/Resistente** aparece acima dos oponentes; a **Galeria de golpes** inclui cenários de escudo e debuffs. A campanha e a integração com A Lei do Trono ainda serão implementadas.
 
 O endereço atual do GitHub Pages continua executando o protótipo JavaScript. A versão Godot é aberta pelo editor nesta etapa; sua exportação para navegador será uma entrega separada. Veja [godot/README.md](godot/README.md) para instruções, estrutura e testes.
 
@@ -77,7 +77,7 @@ Cada personagem possui ataque básico, técnica, supremo e assinatura visual pr�
 
 - **Energia:** começa em 40/100. Ataque básico recupera 24; defesa recupera 25; técnica custa 30 e fica indisponível por dois turnos pessoais; supremo custa 80.
 - **Defesa:** barreira de 12% da vida máxima e redução de 35% do dano até o próximo turno. Barreiras absorvem dano antes da vida e acumulam até 60% da vida máxima.
-- **Estados:** queimadura tira 6,5% da vida máxima por turno; regeneração cura 7%; exposição reduz defesa em 25%; enfraquecimento reduz ataque em 20%. Duram dois turnos do alvo; aplicações renovam a duração, sem acumular duplicatas. Cura não excede a vida máxima nem ressuscita.
+- **Estados:** queimadura e sangramento tiram 6,5% da vida máxima por turno e atravessam escudos; regeneração cura 7%; exposição reduz defesa em 25%; enfraquecimento reduz ataque em 20%. Duram dois turnos do alvo; aplicações renovam a duração, sem acumular duplicatas. Cura não excede a vida máxima nem ressuscita.
 - **Crítico:** chance de 10%, dano multiplicado por 1,4. O motor usa aleatoriedade com semente para permitir simulações reproduzíveis.
 - **Fratura do Nexus:** a partir da rodada 12, cada herói sofre dano direto antes de agir. Começa em 4% da vida máxima e sobe 2,5 pontos percentuais por rodada, até 85%. Ignora barreiras e impede impasses de cura/defesa. Cada ocorrência aparece no registro.
 - **Dificuldade:** Iniciante usa 82% da vida/ataque da IA; Desafiador usa 115%. Normal e Duelo local usam atributos iguais nos dois lados.

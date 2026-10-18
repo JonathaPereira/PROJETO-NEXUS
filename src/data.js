@@ -450,7 +450,7 @@ const roster = [
     "daggers",
     "damage",
     1.8,
-    "burn",
+    "bleed",
     "Vende lembranças alheias para comprar o próprio passado.",
   ],
   [
@@ -603,16 +603,17 @@ export const HEROES = roster.map((r, index) => {
         ? "Recupera 42% da vida máxima de toda a equipe e purifica efeitos negativos."
         : protecting
           ? "Concede barreira de 36% da vida máxima e regeneração a toda a equipe."
-          : "Atinge todos os rivais com 205% do poder de ataque e aplica o efeito da técnica.",
+          : skillDescription("aoe", effect, 2.05),
     },
   };
 });
 function skillDescription(kind, effect, power) {
   const statuses = {
-    burn: "Aplica queimadura por 2 turnos.",
+    burn: "Queimadura: perde 6,5% da vida máxima no início de 2 turnos, atravessando escudos.",
+    bleed: "Sangramento: perde 6,5% da vida máxima no início de 2 turnos, atravessando escudos.",
     weaken: "Reduz o ataque do alvo em 20% por 2 turnos.",
     expose: "Reduz a defesa do alvo em 25% por 2 turnos.",
-    regen: "Concede regeneração por 2 turnos.",
+    regen: "Regeneração: recupera 7% da vida máxima no início de 2 turnos.",
     cleanse: "Remove efeitos negativos.",
   };
   return (

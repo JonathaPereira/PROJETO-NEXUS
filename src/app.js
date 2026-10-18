@@ -276,8 +276,8 @@ function logEntry(e) {
             ? `<strong>${target}</strong> recebeu uma barreira.`
             : e.type === "defeated"
               ? `<strong>${target}</strong> deixou o combate.`
-              : e.type === "burn"
-                ? `Queimadura causou <b>${e.amount}</b> de dano a <strong>${target}</strong>.`
+              : e.type === "burn" || e.type === "bleed"
+                ? `${STATUS_LABELS[e.type]} causou <b>${e.amount}</b> de dano a <strong>${target}</strong>.`
                 : "";
   return `<div class="log-message ${e.type}"><span class="log-mark">${icon(e.type === "action" ? "swords" : e.type === "heal" ? "leaf" : e.type === "defeated" ? "skull" : e.type === "burn" ? "flame" : e.type === "shield" || e.type === "guard" ? "shield" : "bolt")}</span><p>${message}<time>RODADA ${String(e.round).padStart(2, "0")}</time></p></div>`;
 }

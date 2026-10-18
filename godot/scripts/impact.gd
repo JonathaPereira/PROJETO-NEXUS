@@ -8,6 +8,7 @@ var kind := "damage"
 var elapsed := 0.0
 var duration := 0.8
 var ultimate := false
+var phase := "impact"
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -24,7 +25,37 @@ func _draw() -> void:
 	var color := Color(tint, fade)
 	var scale_factor := 1.45 if ultimate else 1.0
 	var at := destination
-	if kind.begins_with("shield") or kind == "guard":
+	if phase == "charge":
+		var radius := (38 - p * 15) * scale_factor
+		_polygon(at, radius, 6 if affinity == "tecnico" else 3 if affinity == "arcano" else 8, color, p * 2)
+		draw_arc(at, radius + 10, p * TAU, p * TAU + PI * 1.5, 32, color, 2, true)
+		for i in range(9):
+			var point := at + Vector2.from_angle(i * TAU / 9 + p) * (75 * (1 - p) + 10)
+			draw_circle(point, 2.5, Color(tint, fade))
+		return
+	if phase == "travel":
+		var point := origin.lerp(at, p)
+		if affinity in ["igneo", "sombrio"]:
+			draw_line(origin, point, Color(tint, fade * 0.25), 15 * scale_factor, true)
+			draw_arc(point, 24 * scale_factor, -PI * 0.8 + p * 3, PI * 0.4 + p * 3, 24, color, 4, true)
+		elif affinity == "tecnico":
+			draw_line(origin, point, Color(tint, fade * 0.35), 14 * scale_factor, true)
+			draw_line(origin, point, Color("d9f7ff", fade), 3, true)
+		else:
+			point.y -= sin(p * PI) * (45 if affinity == "arcano" else 15)
+			draw_circle(point, 12 * scale_factor, Color(tint, fade * 0.3))
+			draw_circle(point, 5 * scale_factor, Color(tint.lightened(0.5), fade))
+			_polygon(point, 18 * scale_factor, 5 if affinity == "natural" else 4, color, p * 4)
+		return
+	if kind in ["shieldHit", "shieldBreak"]:
+		var shield_color := Color("83d8ff", fade)
+		for i in range(6):
+			var angle := TAU * i / 6.0 - PI / 2
+			var center := at + Vector2.from_angle(angle) * p * (45 if kind == "shieldBreak" else 5)
+			draw_line(center + Vector2.from_angle(angle) * 46, center + Vector2.from_angle(angle + TAU / 6) * 46, shield_color, 4, true)
+		_particles(at, p, Color("9be8ff"), 16, scale_factor)
+		if kind == "shieldHit": return
+	if kind in ["shield", "shieldAll", "guard"]:
 		for radius in [40.0, 52.0]: _polygon(at, radius * scale_factor, 6, color, p * 0.2)
 		for i in range(4):
 			var from := at + Vector2(-35 + i * 24, 50)

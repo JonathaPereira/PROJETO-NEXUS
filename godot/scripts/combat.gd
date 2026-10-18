@@ -98,7 +98,13 @@ func _status(target: Dictionary, type: String) -> void:
 			return
 	target.statuses.append({"type": type, "turns": 2})
 
-func _begin_turn(state: Dictionary) -> void:
+func _turn_event(state: Dictionary, events: Array, actor: Dictionary, event: Dictionary) -> void:
+	event.hpAfter = actor.hp
+	event.shieldAfter = actor.shield
+	_log(state, event)
+	events.append(event)
+
+func _begin_turn(state: Dictionary, turn_events: Array = []) -> void:
 	while state.phase == "playing":
 		if state.cursor >= state.order.size():
 			state.round += 1
@@ -114,22 +120,23 @@ func _begin_turn(state: Dictionary) -> void:
 		if state.round >= 12:
 			var amount: int = mini(actor.hp, int(ceil(actor.maxHp * minf(0.85, 0.04 + (state.round - 12) * 0.025))))
 			actor.hp -= amount
-			_log(state, {"type": "fracture", "actor": actor.id, "target": actor.id, "amount": amount})
-			if actor.hp <= 0: _log(state, {"type": "defeated", "actor": actor.id, "target": actor.id})
+			_turn_event(state, turn_events, actor, {"type": "fracture", "actor": actor.id, "target": actor.id, "amount": amount})
+			if actor.hp <= 0: _turn_event(state, turn_events, actor, {"type": "defeated", "actor": actor.id, "target": actor.id})
 		for status in actor.statuses:
 			if actor.hp <= 0: break
-			if status.type == "burn":
+			if status.turns <= 0: continue
+			if status.type in ["burn", "bleed"]:
 				var amount: int = mini(actor.hp, rounded(actor.maxHp * 0.065))
 				actor.hp -= amount
-				_log(state, {"type": "burn", "actor": actor.id, "target": actor.id, "amount": amount})
+				_turn_event(state, turn_events, actor, {"type": status.type, "actor": actor.id, "target": actor.id, "amount": amount, "remaining": status.turns - 1})
 				if actor.hp <= 0:
-					_log(state, {"type": "defeated", "actor": actor.id, "target": actor.id})
+					_turn_event(state, turn_events, actor, {"type": "defeated", "actor": actor.id, "target": actor.id})
 					break
 			if status.type == "regen":
 				var amount := _heal(actor, actor.maxHp * 0.07)
-				_log(state, {"type": "heal", "actor": actor.id, "target": actor.id, "amount": amount, "passive": true})
+				_turn_event(state, turn_events, actor, {"type": "heal", "actor": actor.id, "target": actor.id, "amount": amount, "passive": true, "remaining": status.turns - 1})
 			status.turns -= 1
-		actor.statuses = actor.statuses.filter(func(s): return s.turns >= 0)
+		actor.statuses = actor.statuses.filter(func(s): return s.turns > 0 or (s.turns == 0 and s.type in ["weaken", "expose"]))
 		if _victory(state): return
 		if actor.hp <= 0:
 			state.cursor += 1
@@ -158,7 +165,7 @@ func act(state: Dictionary, action_id: String, target_id: String) -> Dictionary:
 		var before_shield: int = actor.shield
 		actor.shield = mini(rounded(actor.maxHp * 0.6), actor.shield + rounded(actor.maxHp * 0.12))
 		actor.energy = mini(100, actor.energy + 25)
-		events.append({"type": "guard", "target": actor.id, "amount": actor.shield - before_shield})
+		events.append({"type": "guard", "target": actor.id, "amount": actor.shield - before_shield, "shieldBefore": before_shield, "shieldAfter": actor.shield})
 		var entry: Dictionary = events.back().duplicate()
 		entry.actor = actor.id
 		_log(state, entry)
@@ -172,7 +179,7 @@ func act(state: Dictionary, action_id: String, target_id: String) -> Dictionary:
 			elif action.kind.begins_with("shield"):
 				var before: int = target.shield
 				target.shield = mini(rounded(target.maxHp * 0.6), before + rounded(target.maxHp * action.power))
-				event = {"type": "shield", "target": target.id, "amount": target.shield - before}
+				event = {"type": "shield", "target": target.id, "amount": target.shield - before, "shieldBefore": before, "shieldAfter": target.shield}
 			else:
 				var weak := 0.8 if actor.statuses.any(func(s): return s.type == "weaken") else 1.0
 				var exposed := 0.75 if target.statuses.any(func(s): return s.type == "expose") else 1.0
@@ -185,13 +192,16 @@ func act(state: Dictionary, action_id: String, target_id: String) -> Dictionary:
 				var dealt: int = mini(target.hp, total - absorbed)
 				target.hp -= dealt
 				actor.stats.damage += dealt
-				event = {"type": "damage", "target": target.id, "amount": dealt, "absorbed": absorbed, "advantage": multiplier, "critical": critical}
+				event = {"type": "damage", "target": target.id, "amount": dealt, "absorbed": absorbed, "advantage": multiplier, "critical": critical, "total": total, "shieldBefore": target.shield + absorbed, "shieldAfter": target.shield, "hpAfter": target.hp}
 				if hero.classId == "sombrio" and dealt > 0:
 					var amount := _heal(actor, dealt * 0.25)
 					if amount > 0:
 						events.append({"type": "heal", "target": actor.id, "amount": amount, "passive": true})
 						actor.stats.healing += amount
 			if action_id != "basic" and target.hp > 0 and action.has("effect"):
+				event.effect = action.effect
+				event.effectTurns = 0 if action.effect == "cleanse" else 2
+				if action.effect == "cleanse": event.cleansed = target.statuses.filter(func(s): return s.type != "regen").map(func(s): return s.type)
 				_status(target, action.effect)
 			events.append(event)
 			var entry := event.duplicate()
@@ -202,10 +212,12 @@ func act(state: Dictionary, action_id: String, target_id: String) -> Dictionary:
 				_log(state, {"type": "defeated", "actor": actor.id, "target": target.id})
 		if action_id == "basic": actor.energy = mini(100, actor.energy + 24)
 	actor.statuses = actor.statuses.filter(func(s): return s.turns > 0)
+	var impact_units: Array = state.units.duplicate(true)
+	var turn_events: Array = []
 	if not _victory(state):
 		state.cursor += 1
-		_begin_turn(state)
-	return {"actor": actor.id, "heroId": actor.heroId, "actionId": action_id, "animation": hero.animation, "events": events}
+		_begin_turn(state, turn_events)
+	return {"actor": actor.id, "heroId": actor.heroId, "actionId": action_id, "animation": hero.animation, "events": events, "impactUnits": impact_units, "turnEvents": turn_events}
 
 func choose_ai(state: Dictionary) -> Dictionary:
 	var actor := current(state)

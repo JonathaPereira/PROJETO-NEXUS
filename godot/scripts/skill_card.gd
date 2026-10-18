@@ -1,9 +1,11 @@
 extends Button
 const Glyph = preload("res://scripts/glyph.gd")
+const Art = preload("res://scripts/ability_art.gd")
 var kind_label: Label
 var name_label: Label
 var cost_label: Label
 var glyph: Control
+var illustration: TextureRect
 var tint := Color.WHITE
 var available := true
 var reason := ""
@@ -12,12 +14,12 @@ var action_id := "basic"
 func _ready() -> void:
 	toggle_mode = true
 	clip_contents = true
-	custom_minimum_size = Vector2(0, 96)
+	custom_minimum_size = Vector2(0, 110)
 	size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mouse_default_cursor_shape = Control.CURSOR_POINTING_HAND
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	for side in ["left", "right"]: margin.add_theme_constant_override("margin_" + side, 12)
+	for side in ["left", "right"]: margin.add_theme_constant_override("margin_" + side, 8)
 	for side in ["top", "bottom"]: margin.add_theme_constant_override("margin_" + side, 8)
 	margin.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(margin)
@@ -29,15 +31,28 @@ func _ready() -> void:
 	header.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	column.add_child(header)
 	glyph = Glyph.new()
-	glyph.custom_minimum_size = Vector2(22, 22)
+	glyph.custom_minimum_size = Vector2(17, 17)
 	header.add_child(glyph)
 	kind_label = _label(12)
 	kind_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header.add_child(kind_label)
-	name_label = _label(16)
+	var body := HBoxContainer.new()
+	body.add_theme_constant_override("separation", 7)
+	body.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	column.add_child(body)
+	illustration = TextureRect.new()
+	illustration.custom_minimum_size = Vector2(46, 46)
+	illustration.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	illustration.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	illustration.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	body.add_child(illustration)
+	name_label = _label(14)
+	name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	name_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	name_label.max_lines_visible = 2
 	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
-	column.add_child(name_label)
-	cost_label = _label(13)
+	body.add_child(name_label)
+	cost_label = _label(12)
 	column.add_child(cost_label)
 
 func _label(font_size: int) -> Label:
@@ -46,7 +61,7 @@ func _label(font_size: int) -> Label:
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return label
 
-func configure(action: Dictionary, id: String, shortcut: int, color: Color, energy: int, cooldown: int, interactive: bool) -> void:
+func configure(action: Dictionary, id: String, shortcut: int, color: Color, energy: int, cooldown: int, interactive: bool, hero_index: int = 0) -> void:
 	action_id = id
 	tint = color
 	available = energy >= action.cost and cooldown <= 0
@@ -57,6 +72,8 @@ func configure(action: Dictionary, id: String, shortcut: int, color: Color, ener
 	kind_label.text = "%d  %s" % [shortcut, {"basic": "ATAQUE", "skill": "TÉCNICA", "ultimate": "SUPREMO", "guard": "DEFESA"}[id]]
 	kind_label.add_theme_color_override("font_color", color)
 	name_label.text = action.name
+	illustration.texture = Art.icon(hero_index, id)
+	illustration.visible = true
 	name_label.add_theme_color_override("font_color", Color("f2f5ff") if available else Color("a8b6cd"))
 	cost_label.text = "+24 energia" if id == "basic" else ("+25 energia · barreira" if id == "guard" else "%d energia" % action.cost)
 	if cooldown > 0: cost_label.text = "◷ Recarga: %d turno(s)" % cooldown

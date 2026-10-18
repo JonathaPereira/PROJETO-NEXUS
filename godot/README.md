@@ -1,6 +1,6 @@
 # NEXUS em Godot
 
-**Alpha 0.2** em **Godot 4.6 / GDScript**, validada com Godot 4.6.3 Standard em Linux. Sem addons, bibliotecas pagas, C#, chaves de API ou dependências de produção do npm. O motor é gratuito e tem licença MIT; desenvolvimento local não exige hospedagem.
+**Alpha 0.3** em **Godot 4.6 / GDScript**, validada com Godot 4.6.3 Standard em Linux. Sem addons, bibliotecas pagas, C#, chaves de API ou dependências de produção do npm. O motor é gratuito e tem licença MIT; desenvolvimento local não exige hospedagem.
 
 ## Abrir e jogar
 
@@ -24,17 +24,37 @@ godot --path godot
 
 Atalhos: **1–4** selecionam a ação; **← / →** alternam os alvos; **Enter** confirma inclusive quando uma carta de habilidade tem o foco. Há guia de afinidades, instruções, opção de reduzir animações e som sintetizado ativado por botão. A formação e as preferências são salvas em `user://preferences.cfg`; uma batalha em andamento não é restaurada. Para trocar equipes durante uma partida, use **Reiniciar**.
 
-Para atualizar uma cópia obtida por download, feche o Godot, obtenha novamente a mesma branch e extraia em uma pasta nova. Importe o `godot/project.godot` dessa nova pasta. O cabeçalho mostra **ALPHA 0.2**. Quem usa Git pode atualizar a branch com `git pull --ff-only`, preservando eventuais alterações locais.
+Para atualizar uma cópia obtida por download, feche o Godot, obtenha novamente a mesma branch e extraia em uma pasta nova. Importe o `godot/project.godot` dessa nova pasta. O cabeçalho mostra **ALPHA 0.3**. Quem usa Git pode atualizar a branch com `git pull --ff-only`, preservando eventuais alterações locais.
 
-## Rework de combate da Alpha 0.2
+## Atualizar no Windows sem usar Git
 
-![HUD da Alpha 0.2 em execução no Godot](preview/hud.png)
+1. Feche o projeto no Godot.
+2. Abra a [branch com a atualização](https://github.com/JonathaPereira/PROJETO-NEXUS/tree/codex/nexus-jogavel).
+3. Clique no botão verde **Code → Download ZIP**. No Explorador do Windows, use **Extrair tudo** para uma **pasta nova**.
+4. No gerenciador do Godot, clique em **Importar**, entre na pasta extraída e na subpasta **godot** e selecione **project.godot**.
+5. Abra, aguarde a importação e pressione **F5**. Confira **ALPHA 0.3** no topo do jogo.
 
-[Ver captura da galeria de golpes](preview/gallery.png). São capturas da execução nativa; a pasta de prévias é ignorada pelo importador do Godot.
+A cópia que já estava aberta no seu computador não recebe os novos arquivos automaticamente.
 
-O HUD possui cartas de ataque, técnica, supremo e defesa com custo, energia restante e recarga. Uma habilidade indisponível pode ser consultada; a execução informa o impedimento. As placas dos seis personagens têm espaço próprio, vida, energia, barreira e resumo de estados, com os detalhes no tooltip. A iniciativa mostra retratos; o registro completo fica no botão **Registro**.
+## Rework de combate da Alpha 0.3
 
-**Galeria de golpes** permite testar ataque, técnica e supremo sem alterar a batalha ou as equipes. Há seis artes individuais e seis coreografias de demonstração:
+![HUD da Alpha 0.3 em execução no Godot](preview/hud.png)
+
+[Galeria de golpes](preview/gallery.png) · [Crítico contra escudo](preview/shield-critical.png) · [Queimadura e sangramento](preview/debuffs.png). São capturas da execução nativa; a pasta de prévias é ignorada pelo importador do Godot.
+
+Os trios usam **formação triangular: um personagem à frente e dois atrás**, com tamanho e ordem de desenho que sugerem profundidade. A primeira escolha da equipe ocupa a frente. A posição é visual nesta etapa: não muda alcance, defesa ou regras de seleção. Cada ficha permanece alinhada com seu próprio personagem, em uma faixa reservada abaixo dos corpos.
+
+Os 24 heróis têm **72 ilustrações de habilidades**, uma para cada ataque, técnica e supremo. As cartas mostram custo e recarga; uma habilidade indisponível pode ser consultada e explica o impedimento.
+
+**Vida, escudo e energia são separados.** Verde indica vida; azul, escudo; violeta, energia. Todo personagem mostra o valor exato do escudo. O golpe apresenta vida perdida, dano absorvido, escudo restante e quebra do escudo. Um crítico totalmente absorvido continua marcado **CRÍTICO**, com **VIDA PROTEGIDA**. O relatório permanece acima da arena; golpes em área exibem totais, e o tooltip e **Registro** detalham cada alvo.
+
+As classes aparecem por nome, cor e símbolo. **VULNERÁVEL +25%** e **RESISTENTE −15%** ficam acima dos oponentes em relação ao personagem que age, para ações de dano. A mudança de turno recalcula esses avisos. Curas e escudos não exibem vantagens ofensivas.
+
+Queimadura, sangramento, regeneração, ataque reduzido e defesa exposta mostram duração. Na ficha, **Queima**, **Sangra**, **Regen**, **ATQ↓** e **DEF↓** são abreviações; passe o mouse para ler os nomes completos. Dano contínuo tem sua própria etapa depois do golpe, antes de liberar a próxima ação, com nome e número de vida perdido. O retrato e as barras acompanham quem está sofrendo o efeito.
+
+**Galeria de golpes** permite testar ataque, técnica e supremo sem alterar a batalha, as equipes ou sua aleatoriedade. O seletor de cenário demonstra combate normal, **escudo + crítico** com semente fixa ou **queimadura + sangramento**. Os números vêm do mesmo motor do combate; o crítico garantido pertence somente ao exemplo da galeria.
+
+Seis representantes possuem quatro poses desenhadas (prontidão, preparação, golpe e finalização), com recortes, escala e apoio dos pés próprios, além das seis coreografias:
 
 | Classe | Personagem | Movimento e efeitos |
 | --- | --- | --- |
@@ -45,15 +65,15 @@ O HUD possui cartas de ataque, técnica, supremo e defesa com custo, energia res
 | Sombrio | Vesper | Desaparecimento, avanço e corte de foice |
 | Lumi | Auren | Preparação da lança, coluna de luz e raios dourados |
 
-Os outros personagens aproveitam o movimento de sua classe. As animações combinam recortes 2D, poses, deformação leve e efeitos procedurais; não são animações esqueléticas completas. O cálculo da batalha é apresentado com vida e som no impacto e avanço do turno após a recuperação. Reiniciar cancela a apresentação pendente. A galeria pausa a espera da IA enquanto estiver aberta e respeita **Reduzir animações**; deixe a opção desmarcada para assistir às coreografias.
+Os outros 18 personagens aproveitam o movimento e os efeitos de sua classe, mantendo uma ilustração de corpo. As animações combinam quadros de pose, deslocamento, carga, projétil, impacto, reação e retorno; animação esquelética contínua permanece para uma etapa posterior. O cálculo da batalha é apresentado com vida e som no impacto, seguido da recuperação e dos efeitos de início de turno. Reiniciar cancela a apresentação pendente. A galeria pausa a espera da IA enquanto estiver aberta e respeita **Reduzir animações**; deixe a opção desmarcada para assistir às coreografias.
 
 ## Escopo desta etapa
 
-- 24 heróis, quatro por afinidade, com as habilidades e os atributos do protótipo web.
+- 24 heróis, quatro por afinidade, com dados compartilhados com o código-fonte web. A técnica **Dívida de sangue**, do Riven, agora aplica sangramento em lugar de queimadura; ambos causam 6,5% da vida máxima em dois inícios de turno, atravessam escudos e são removidos por purificação. Aplicar novamente renova a duração sem acumular duplicatas.
 - Ciclo Ígneo → Natural → Técnico → Arcano → Sombrio → Lumi → Ígneo; vantagem +25%, desvantagem −15%.
-- Combate determinístico: iniciativa, energia, recarga, barreiras, defesa, queimadura, regeneração, exposição, enfraquecimento, purificação, crítico e roubo de vida.
+- Combate determinístico: iniciativa, energia, recarga, barreiras, defesa, queimadura, sangramento, regeneração, exposição, enfraquecimento, purificação, crítico e roubo de vida.
 - IA, três dificuldades de treino, duelo local com atributos iguais, resultado e replay. A Fratura a partir da rodada 12 encerra impasses defensivos.
-- Arena ilustrada, atlas com enquadramentos por silhueta e seis personagens com artes individuais em maior resolução, seis perfis de movimento, números de dano/cura e sinais sonoros sincronizados ao impacto.
+- Arena ilustrada, atlas com enquadramentos por silhueta e seis personagens com artes individuais em maior resolução, quatro poses por representante, seis perfis de movimento e indicadores distintos de dano, crítico, escudo e estados.
 
 A direção visual segue em refinamento. O layout tem verificações de sobreposição em quatro tamanhos de janela de computador, incluindo estados e barreiras. Celulares e outras plataformas exigem validação específica.
 
@@ -74,6 +94,9 @@ Campanha, missões, aquisição, economia, multiplayer online, painel de balance
 | `scripts/showcase.gd` | Galeria dos seis representantes, sem alterar a partida |
 | `scripts/skill_card.gd` | Cartas de habilidades e impedimentos de uso |
 | `data/art-regions.json` | Limites de recorte das silhuetas e retratos |
+| `data/pose-regions.json` | Recortes dos quadros, apoio dos pés e exclusões de células vizinhas |
+| `scripts/ability_art.gd` | Regiões das 72 ilustrações das habilidades |
+| `assets/poses/` | Quatro poses de cada um dos seis representantes |
 | `scripts/sound.gd` | Geração dos sinais sonoros |
 | `data/catalog.json` | Catálogo compartilhado, versão de esquema 1 |
 
@@ -116,4 +139,4 @@ Compartilhar conta não obriga compartilhar economia. Quais conquistas, personag
 
 ## Recursos e licenças
 
-Arena, atlas e artes individuais foram gerados para o projeto; os recortes do Godot têm metadados próprios para evitar misturar células vizinhas. As fontes Cinzel e Manrope acompanham suas licenças SIL em `assets/`. Os sons são sintetizados pelo código do jogo. A [licença MIT do Godot](https://godotengine.org/license/) não impõe royalties do motor; uma futura distribuição deverá incluir os avisos exigidos pelo motor e pelos recursos utilizados. Hospedagem e lojas podem ter custos próprios.
+Arena, atlas, ilustrações de habilidades, folhas de poses e artes individuais foram gerados para o projeto; os recortes do Godot têm metadados próprios para evitar misturar células vizinhas. As fontes Cinzel e Manrope acompanham suas licenças SIL em `assets/`. Os sons são sintetizados pelo código do jogo. A [licença MIT do Godot](https://godotengine.org/license/) não impõe royalties do motor; uma futura distribuição deverá incluir os avisos exigidos pelo motor e pelos recursos utilizados. Hospedagem e lojas podem ter custos próprios.

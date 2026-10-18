@@ -60,6 +60,10 @@ var active_health: Control
 var active_energy: Control
 var active_energy_label: Label
 var step_label: Label
+var active_shield: Control
+var active_shield_label: Label
+var feedback: RichTextLabel
+var feedback_panel: PanelContainer
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
@@ -136,6 +140,7 @@ func _new_battle() -> void:
 	result_shown = false
 	selected_action = "basic"
 	target_id = ""
+	if is_instance_valid(feedback): feedback.text = "[center][color=#d5b480]LEITURA DO COMBATE[/color]  ·  Dano à vida e ao escudo aparecem separados.[/center]"
 	state = combat.new_battle(teams[0], teams[1], difficulty if mode == "training" else "normal")
 	for fighter in fighters.values():
 		field.remove_child(fighter)
@@ -154,14 +159,19 @@ func _new_battle() -> void:
 
 func _position_fighters() -> void:
 	if not is_instance_valid(field): return
-	var padding := 10.0
-	var middle := 56.0
-	var slot := (field.size.x - padding * 2 - middle) / 6.0
 	for index in range(state.get("units", []).size()):
-		var fighter: Control = fighters.get(state.units[index].id)
+		var data: Dictionary = state.units[index]
+		var fighter = fighters.get(data.id)
 		if is_instance_valid(fighter):
-			var center := padding + slot * (index + 0.5) + (middle if index >= 3 else 0.0)
-			fighter.position = Vector2(center - fighter.size.x / 2, maxf(0, field.size.y - 350))
+			# Slot 0 is the vanguard; slots 1 and 2 form the back of the triangle.
+			var x: float = [0.36, 0.10, 0.23][int(data.slot)]
+			if data.side == 1: x = 1.0 - x
+			var foot := Vector2(field.size.x * x, field.size.y - [140, 175, 130][int(data.slot)])
+			fighter.position = foot - Vector2(93, 257)
+			fighter.set_depth([1.0, 0.80, 0.91][int(data.slot)])
+			fighter.z_index = int(data.slot) + 3 if data.slot == 0 else int(data.slot)
+			# Information cards stay in their own row and retain a readable size.
+			fighter.plate.position = Vector2(foot.x - 88, field.size.y - 128) - fighter.position
 
 func _human_turn() -> bool:
 	return mode == "local" or combat.current(state).get("side", 1) == 0
@@ -220,11 +230,32 @@ func _play_turn(action_id: String, target: String) -> void:
 	var hit := func():
 		if version != battle_version: return
 		sound.play_cue(int(catalog.class_by_id[hero.classId].index) if action_id != "guard" else 6)
-		for data in pending.units:
+		for data in result.impactUnits:
 			fighters[data.id].refresh(data, data.id == actor.id, false, false)
-		CombatUI.update_actor_stats(self, combat.unit(pending, actor.id))
+		CombatUI.update_actor_stats(self, result.impactUnits.filter(func(u): return u.id == actor.id)[0])
+		CombatUI.show_report(self, result.events, action.name)
 	var completed: bool = await director.play(self, effects, fighters, hero, action, result, reduced_motion, hit)
 	if version != battle_version or not completed: return
+	if not result.turnEvents.is_empty():
+		var ticks_done: bool = await director.play_ticks(self, effects, fighters, result.turnEvents, reduced_motion, func(event):
+			if version != battle_version: return
+			var fighter = fighters[event.target]
+			for member in fighters.values(): member.refresh(member.display_data, member == fighter, false, false)
+			fighter.apply_tick(event)
+			var tick_hero: Dictionary = catalog.hero_by_id[combat.unit(pending, event.target).heroId]
+			phase_label.text = "%s · efeitos de turno" % tick_hero.name
+			active_label.text = tick_hero.name
+			active_class.text = "%s\n%s" % [catalog.class_by_id[tick_hero.classId].name, tick_hero.role]
+			active_class.add_theme_color_override("font_color", catalog.affinity_color(tick_hero.classId))
+			active_portrait.texture = Fighter.portrait(int(tick_hero.index))
+			var tick_stats: Dictionary = combat.unit(pending, event.target).duplicate(true)
+			tick_stats.hp = event.hpAfter
+			tick_stats.shield = event.shieldAfter
+			CombatUI.update_actor_stats(self, tick_stats)
+			step_label.text = "Resolvendo efeitos antes da próxima ação."
+			sound.play_cue(0 if event.type == "burn" else 4 if event.type == "bleed" else 5)
+			CombatUI.show_report(self, [event], "INÍCIO DO TURNO"))
+		if version != battle_version or not ticks_done: return
 	state = pending
 	busy = false
 	selected_action = "basic"
@@ -263,11 +294,7 @@ func _update_log() -> void:
 		var message := ""
 		match entry.type:
 			"action": message = "%s usou %s." % [actor, entry.name]
-			"damage": message = "%s recebeu %d de dano%s." % [target, entry.amount, " · crítico" if entry.critical else ""]
-			"heal": message = "%s recuperou %d PV." % [target, entry.amount]
-			"shield", "guard": message = "%s ganhou %d de barreira." % [target, entry.amount]
-			"burn": message = "%s: −%d PV por queimadura." % [target, entry.amount]
-			"fracture": message = "%s: −%d PV pela Fratura." % [target, entry.amount]
+			"damage", "heal", "shield", "guard", "burn", "bleed", "fracture": message = "%s: %s" % [target, CombatUI._plain(CombatUI.event_detail(entry))]
 			"defeated": message = "%s foi derrotado." % target
 		if not message.is_empty(): lines.append("[R%d] %s" % [entry.round, message])
 	log_view.text = "\n\n".join(lines) if not lines.is_empty() else "Escolha três personagens para cada equipe.\n\nVocê pode enfrentar a IA ou jogar com outra pessoa neste dispositivo."
@@ -294,18 +321,30 @@ func _show_classes() -> void:
 	text += "Atacar quem supera sua classe causa 15% menos dano.\nAs demais relações são neutras."
 	dialog.dialog_text = text
 	add_child(dialog)
+	var help_text: String = dialog.dialog_text
+	dialog.dialog_text = ""
+	var scroll_text := RichTextLabel.new()
+	scroll_text.custom_minimum_size = Vector2(820, 440)
+	scroll_text.text = help_text
+	dialog.add_child(scroll_text)
 	dialog.visibility_changed.connect(func():
 		if not dialog.visible: dialog.queue_free())
-	dialog.popup_centered()
+	dialog.popup_centered_clamped(Vector2i(860, 520), 0.95)
 
 func _show_help() -> void:
 	var dialog := AcceptDialog.new()
 	dialog.title = "Como jogar"
-	dialog.dialog_text = "1. Monte duas equipes de três personagens diferentes.\n2. Escolha treino contra IA ou duelo no mesmo dispositivo.\n3. Inicie o combate e acompanhe a ordem dos turnos.\n4. Escolha uma ação, depois o alvo e confirme.\n5. Derrote os três rivais.\n\nAtaque: recupera 24 de energia.\nTécnica: custa 30; recarga de dois turnos pessoais.\nSupremo: custa 80 e atinge vários alvos.\nDefesa: reduz dano, concede barreira e recupera 25 de energia.\nCuras e barreiras escolhem aliados.\n\nA partir da rodada 12, a Fratura causa dano crescente antes de agir.\nA formação fica salva; a batalha em andamento não.\nDuelo local usa atributos iguais para os dois lados."
+	dialog.dialog_text = "1. Monte duas equipes de três personagens diferentes.\n2. Escolha treino contra IA ou duelo no mesmo dispositivo.\n3. Inicie o combate e acompanhe a ordem dos turnos.\n4. Escolha uma ação, depois o alvo e confirme.\n5. Derrote os três rivais.\n\nAtaque: recupera 24 de energia.\nTécnica: custa 30; recarga de dois turnos pessoais.\nSupremo: custa 80 e atinge vários alvos.\nDefesa: reduz dano, concede escudo e recupera 25 de energia.\nCuras e escudos escolhem aliados.\n\nVerde = vida; azul = escudo; violeta = energia.\nOs números separam vida perdida, escudo absorvido e escudo restante.\nCrítico: 10% de chance, +40% de dano, inclusive contra escudos.\nQueimadura e sangramento: 6,5% da vida máxima no início de 2 turnos.\nAtravessam escudos; reaplicar renova a duração. Purificação remove ambos.\nRegen: +7% da vida máxima no início de 2 turnos.\nATQ↓ = enfraquecimento (−20%); DEF↓ = exposição (−25%).\nPasse o mouse sobre a ficha para consultar nomes e duração dos estados.\nVulnerável: +25% de dano; Resistente: −15%, em relação ao herói que age.\nA formação triangular é visual; a posição não altera defesa nem seleção.\n\nA partir da rodada 12, a Fratura causa dano crescente antes de agir.\nA formação fica salva; a batalha em andamento não.\nDuelo local usa atributos iguais para os dois lados."
 	add_child(dialog)
+	var help_text: String = dialog.dialog_text
+	dialog.dialog_text = ""
+	var scroll_text := RichTextLabel.new()
+	scroll_text.custom_minimum_size = Vector2(820, 440)
+	scroll_text.text = help_text
+	dialog.add_child(scroll_text)
 	dialog.visibility_changed.connect(func():
 		if not dialog.visible: dialog.queue_free())
-	dialog.popup_centered()
+	dialog.popup_centered_clamped(Vector2i(860, 520), 0.95)
 
 func _build_roster() -> void:
 	roster_dialog = AcceptDialog.new()
@@ -357,7 +396,7 @@ func _refresh_roster() -> void:
 	_clear(hero_grid)
 	var selected: Array = roster_work[roster_side.selected]
 	var team_names: Array = selected.map(func(id): return catalog.hero_by_id[id].name)
-	roster_count.text = "%d/3 · %s" % [selected.size(), ", ".join(team_names)]
+	roster_count.text = "%d/3 · Frente: %s · Atrás: %s" % [selected.size(), team_names[0] if not team_names.is_empty() else "—", ", ".join(team_names.slice(1))]
 	for hero in catalog.heroes:
 		if roster_filter.selected > 0 and hero.classId != catalog.classes[roster_filter.selected - 1].id: continue
 		var button := _button("%s%s\n%s · %s" % ["✓ " if hero.id in selected else "", hero.name, catalog.class_by_id[hero.classId].name, hero.role], _toggle_hero.bind(hero.id))

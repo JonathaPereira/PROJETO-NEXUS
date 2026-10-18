@@ -13,7 +13,7 @@ func check(condition: bool, message: String) -> void:
 		failures.append(message)
 		push_error(message)
 
-func wait_idle(app: Node, turns: int, timeout := 5.0) -> void:
+func wait_idle(app: Node, turns: int, timeout := 8.0) -> void:
 	var deadline := Time.get_ticks_msec() + int(timeout * 1000)
 	while (app.busy or app.ai_pending or app.state.turns < turns) and Time.get_ticks_msec() < deadline:
 		await process_frame
@@ -92,6 +92,18 @@ func _ui() -> void:
 	for fighter in app.fighters.values():
 		check(fighter.health.size.y == 8 and fighter.energy.size.y == 4, "Health and energy bars do not overlap the stats")
 	await _layout(app)
+	check(app.fighters["1-oren"].relationship.visible and app.fighters["1-oren"].relationship.text.contains("VULNERÁVEL"), "Weak opponent is explicitly labeled relative to current attacker")
+	check(app.fighters["1-auren"].relationship.visible and app.fighters["1-auren"].relationship.text.contains("RESISTENTE"), "Resistant opponent is explicitly labeled")
+	app._select_action("guard")
+	check(not app.fighters["1-oren"].relationship.visible, "Support actions do not display misleading enemy weakness labels")
+	app._select_action("basic")
+	var Art = load("res://scripts/ability_art.gd")
+	var icons: Array = []
+	for hero in app.catalog.heroes:
+		for action_id in ["basic", "skill", "ultimate"]:
+			var icon: AtlasTexture = Art.icon(int(hero.index), action_id)
+			icons.append("%s:%s" % [icon.atlas.resource_path, icon.region])
+	check(icons.size() == 72 and icons.all(func(icon): return icons.count(icon) == 1), "Every hero's three skills use their own illustrated texture region")
 	check(app.sound.cues.size() == 7 and app.sound.cues[0].data.size() > 0, "Synthesized audio cues loaded")
 	app.roster_button.pressed.emit()
 	check(app.hero_grid.get_child_count() == 24, "Roster contains 24 heroes")
@@ -181,7 +193,9 @@ func _ui() -> void:
 	await create_timer(0.22).timeout
 	check(app.effects.get_child_count() > 0, "Normal action creates procedural visual effects")
 	check(app.fighters["1-vesper"].health.value == app.combat.unit(app.state, "1-vesper").hp, "Health does not change during anticipation")
-	await create_timer(0.2).timeout
+	var hit_deadline := Time.get_ticks_msec() + 1500
+	while app.fighters["1-vesper"].health.value == app.combat.unit(app.state, "1-vesper").hp and Time.get_ticks_msec() < hit_deadline:
+		await process_frame
 	check(app.fighters["1-vesper"].health.value < app.combat.unit(app.state, "1-vesper").hp and app.state.turns == 0, "Health updates at impact while the same actor is presented until recovery")
 	app._set_reduced(true)
 	check(app.fighters["1-vesper"].health.value < app.combat.unit(app.state, "1-vesper").hp, "Changing animation preference during impact cannot restore old health")
@@ -193,6 +207,7 @@ func _ui() -> void:
 	await create_timer(0.8).timeout
 	check(not app.busy and app.state.turns == 0 and app.effects.get_child_count() == 0, "Restart during animation cancels stale effects and actions")
 	await _gallery(app)
+	await _feedback(app)
 	var config := ConfigFile.new()
 	config.set_value("teams", "0", ["unknown", "veyra", "veyra"])
 	config.set_value("game", "mode", "local")
@@ -221,12 +236,26 @@ func _layout(app) -> void:
 			var fighter = app.fighters[data.id]
 			var sample: Dictionary = data.duplicate(true)
 			sample.shield = 300
-			sample.statuses = ["burn", "regen", "weaken", "expose"].map(func(type): return {"type": type, "turns": 2})
+			sample.guarding = true
+			sample.statuses = ["burn", "bleed", "regen", "weaken", "expose"].map(func(type): return {"type": type, "turns": 2})
 			fighter.refresh(sample, false, false, false)
 			var rect: Rect2 = fighter.plate.get_global_rect()
 			check(bounds.encloses(rect), "Status nameplate stays inside arena at %s" % dimensions)
 			for other in plates: check(not rect.intersects(other), "Nameplates never overlap at %s" % dimensions)
 			plates.append(rect)
+			check(is_equal_approx(rect.get_center().x, bounds.position.x + fighter.foot_position().x), "Nameplate remains under its own character at %s" % dimensions)
+			check(fighter.shield.value == 300 and fighter.shield_label.text.contains("300"), "Shield has its own meter and exact number")
+			for line in fighter.status_label.text.split("\n"):
+				check(fighter.status_label.get_theme_font("font").get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x <= fighter.status_label.size.x, "All simultaneous status labels fit their allocated row")
+		for side in range(2):
+			var team: Array = app.state.units.filter(func(u): return u.side == side)
+			var front = app.fighters[team[0].id]
+			var rear_a = app.fighters[team[1].id]
+			var rear_b = app.fighters[team[2].id]
+			check(front.foot_position().y > rear_a.foot_position().y and front.foot_position().y < rear_b.foot_position().y, "One vanguard and two rear positions form a triangle")
+			check(front.depth > rear_a.depth and front.depth > rear_b.depth, "Vanguard is visually closer than the rear line")
+		for fighter in app.fighters.values():
+			if fighter.relationship.visible: check(bounds.encloses(fighter.relationship.get_global_rect()), "Weakness badge remains inside arena")
 		check(root.get_visible_rect().encloses(app.execute_button.get_global_rect()), "Confirmation stays visible at %s" % dimensions)
 		check(root.get_visible_rect().encloses(app.start_button.get_global_rect()), "Start button stays visible at %s" % dimensions)
 	root.size = original
@@ -260,9 +289,47 @@ func _gallery(app) -> void:
 		check(not gallery.playing, "%s supreme completes" % id)
 	check(profiles.size() == 6 and profiles.all(func(profile): return profiles.count(profile) == 1), "All six classes have distinct choreography profiles")
 	check(app.state == preserved, "The gallery does not mutate the live battle")
+	gallery.scenario.select(1)
+	gallery._select_hero("veyra")
+	await gallery._play("basic")
+	check(gallery.report.text.contains("CRÍTICO") and gallery.report.text.contains("ESCUDO"), "Gallery can demonstrate a calculated critical against shield")
+	gallery.scenario.select(2)
+	gallery._select_hero("veyra")
+	await gallery._play("skill")
+	check(gallery.report.text.contains("SANGRAMENTO") and gallery.director.last_numbers.has("QUEIMADURA"), "Gallery demonstrates both periodic damage types independently")
+	check(app.state == preserved, "Gallery scenarios cannot change the real battle or its RNG")
+	gallery.scenario.select(0)
 	gallery.reduced_motion = true
 	gallery._select_hero("veyra")
 	await gallery._play("skill")
 	check(gallery.effects.get_child_count() == 0 and not gallery.fighters.actor.motion_enabled, "Reduced motion is honored inside the gallery")
 	gallery.hide()
 	await process_frame
+
+func _feedback(app) -> void:
+	app.mode = "local"
+	app.reduced_motion = false
+	app.teams = app.catalog.default_teams.duplicate(true)
+	app._new_battle()
+	var target: Dictionary = app.combat.unit(app.state, "1-vesper")
+	target.shield = 600
+	target.statuses = [{"type": "burn", "turns": 2}, {"type": "bleed", "turns": 2}]
+	app.state.random = 1972
+	app._start()
+	var baseline: int = app.director.impact_count
+	app._execute()
+	var deadline := Time.get_ticks_msec() + 2500
+	while app.director.impact_count == baseline and Time.get_ticks_msec() < deadline: await process_frame
+	check(app.director.impact_count == baseline + 1, "Shielded attack applies exactly one logical impact")
+	check(app.fighters["1-vesper"].health.value == target.maxHp and app.fighters["1-vesper"].shield.value < 600, "Shield hit updates shield independently while preserving protected HP")
+	check(app.feedback.text.contains("CRÍTICO") and app.feedback.text.contains("resta"), "Persistent damage HUD explains critical absorption and remaining shield")
+	check(app.director.last_numbers.has("CRÍTICO!") and app.director.last_numbers.has("VIDA PROTEGIDA"), "Fully shielded critical remains explicit in floating damage HUD")
+	check(app.busy and app.state.turns == 0 and app.execute_button.disabled, "Turn remains locked until recovery and periodic damage finish")
+	await wait_idle(app, 1)
+	var resolved: Dictionary = app.combat.unit(app.state, target.id)
+	check(resolved.hp == resolved.maxHp - 2 * app.combat.rounded(resolved.maxHp * 0.065), "Both damage-over-time ticks are presented after the direct impact")
+	check(app.feedback.text.contains("SANGRAMENTO") and app.director.last_numbers.has("QUEIMADURA"), "Periodic damage has separate named HUD events")
+	check(app.fighters[target.id].health.value == resolved.hp and app.fighters[target.id].shield.value == resolved.shield, "Displayed HP and remaining shield match the committed turn")
+	check(app.log_view.text.contains("CRÍTICO") and app.log_view.text.contains("SANGRAMENTO") and app.log_view.text.contains("resta"), "Detailed battle log preserves shield, critical and debuff evidence")
+	app._new_battle()
+	await create_timer(1.2).timeout

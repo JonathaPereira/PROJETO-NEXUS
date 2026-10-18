@@ -16,7 +16,7 @@ const fixtures = [];
 function scenario(name, teams, difficulty, seed, patch = {}, defensive = false) {
   const state = createBattle(...teams, { difficulty, seed });
   const initial = structuredClone(state);
-  for (const unit of state.units) Object.assign(unit, patch[unit.id] || {});
+  for (const unit of state.units) Object.assign(unit, structuredClone(patch[unit.id] || {}));
   const commands = [];
   while (state.phase === "playing" && state.turns < 400) {
     const choice = chooseAI(state);
@@ -44,6 +44,9 @@ scenario("healing-ties-preserve-team-order", [["elyra", "sylva", "saira"], ["rha
 scenario("ultimates-and-shield-absorption", DEFAULT_TEAMS, "normal", 127, Object.fromEntries(
   DEFAULT_TEAMS.flatMap((team, side) => team.map(id => [`${side}-${id}`, { energy: 100, shield: 250 }]))
 ));
+scenario("shielded-critical-and-both-dots", DEFAULT_TEAMS, "normal", 1972, {
+  "1-vesper": { shield: 600, statuses: ["burn", "bleed"].map(type => ({type, turns: 2})) },
+});
 scenario("fracture-ends-defensive-stalemate", [["sylva", "elyra", "brin"], ["saira", "zaya", "oren"]], "normal", 73, {}, true);
 const fixturePath = resolve(scratch, "cases.json");
 const outputPath = resolve(scratch, "results.json");
@@ -53,7 +56,7 @@ const env = { ...process.env,
   XDG_CACHE_HOME: resolve(scratch, "cache"),
 };
 const executable = process.env.GODOT_EXECUTABLE || "godot";
-function run(args, timeout = 45000) {
+function run(args, timeout = 75000) {
   const result = spawnSync(executable, args, { cwd: root, env, encoding: "utf8", timeout, maxBuffer: 4 * 1024 * 1024 });
   const log = (result.stdout || "") + (result.stderr || "");
   if (result.error || result.status !== 0 || /SCRIPT ERROR|Parse Error|ERROR:/i.test(log))

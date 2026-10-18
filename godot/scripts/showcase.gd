@@ -2,6 +2,9 @@ extends AcceptDialog
 const Fighter = preload("res://scripts/fighter.gd")
 const Director = preload("res://scripts/animation_director.gd")
 const Backdrop = preload("res://scripts/arena_backdrop.gd")
+const Art = preload("res://scripts/ability_art.gd")
+const Combat = preload("res://scripts/combat.gd")
+const CombatUI = preload("res://scripts/combat_ui.gd")
 const HEROES = ["veyra", "sylva", "axion", "astra", "vesper", "auren"]
 var catalog
 var audio
@@ -17,6 +20,9 @@ var action_buttons: Array[Button] = []
 var caption: Label
 var explanation: Label
 var version := 0
+var scenario: OptionButton
+var report: RichTextLabel
+var preview_state: Dictionary = {}
 
 func _ready() -> void:
 	title = "Galeria de golpes · um personagem de cada classe"
@@ -33,7 +39,15 @@ func _ready() -> void:
 	var hint := Label.new()
 	hint.text = "Escolha um personagem e experimente seus golpes. Esta demonstração não altera a partida."
 	hint.add_theme_font_size_override("font_size", 14)
-	content.add_child(hint)
+	var hint_row := HBoxContainer.new()
+	content.add_child(hint_row)
+	hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hint.text = "Teste golpes e indicadores sem alterar a partida."
+	hint_row.add_child(hint)
+	scenario = OptionButton.new()
+	for label in ["Cenário: normal", "Escudo + crítico (exemplo)", "Queimadura + sangramento"]: scenario.add_item(label)
+	scenario.tooltip_text = "Cenários de demonstração. Os valores são calculados pelo motor; o crítico deste exemplo usa uma semente fixa."
+	hint_row.add_child(scenario)
 	var heroes := HBoxContainer.new()
 	content.add_child(heroes)
 	for id in HEROES:
@@ -66,6 +80,12 @@ func _ready() -> void:
 	caption.add_theme_font_size_override("font_size", 20)
 	caption.add_theme_color_override("font_color", Color("e5c38c"))
 	content.add_child(caption)
+	report = RichTextLabel.new()
+	report.bbcode_enabled = true
+	report.scroll_active = false
+	report.custom_minimum_size = Vector2(980, 36)
+	report.add_theme_font_size_override("normal_font_size", 13)
+	content.add_child(report)
 	explanation = Label.new()
 	explanation.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	# Give wrapping text a width before it enters the Window. Otherwise its
@@ -90,6 +110,7 @@ func _select_hero(id: String) -> void:
 	version += 1
 	director.cancel()
 	playing = false
+	if is_instance_valid(scenario): scenario.disabled = false
 	selected_hero = id
 	for fighter in fighters.values():
 		stage.remove_child(fighter)
@@ -112,19 +133,29 @@ func _select_hero(id: String) -> void:
 			fighter.artwork.flip_h = true
 		fighters[entry[1]] = fighter
 	for index in range(HEROES.size()): hero_buttons[index].set_pressed_no_signal(HEROES[index] == id)
-	for button in action_buttons: button.disabled = false
+	for index in range(action_buttons.size()):
+		var button: Button = action_buttons[index]
+		button.disabled = false
+		button.icon = Art.icon(int(hero.index), ["basic", "skill", "ultimate"][index])
+		button.expand_icon = true
+		button.add_theme_constant_override("icon_max_width", 28)
 	caption.text = "%s · %s" % [hero.name, catalog.class_by_id[hero.classId].name]
 	explanation.text = "Antecipação, ataque, impacto e retorno. Escolha um golpe abaixo para assistir."
+	report.text = "Vida, escudo, crítico e estados aparecerão aqui no impacto."
 	_position.call_deferred()
 
 func _position() -> void:
 	if fighters.size() != 2: return
-	fighters.actor.position = Vector2(stage.size.x * 0.25 - 93, maxf(0, (stage.size.y - 350) / 2))
-	fighters.target.position = Vector2(stage.size.x * 0.75 - 93, maxf(0, (stage.size.y - 350) / 2))
+	for pair in [["actor", 0.25], ["target", 0.75]]:
+		var fighter = fighters[pair[0]]
+		fighter.position = Vector2(stage.size.x * pair[1] - 93, stage.size.y - 132 - 257)
+		fighter.set_depth(0.95)
+		fighter.plate.position = Vector2(5, stage.size.y - 128 - fighter.position.y)
 
 func _play(action_id: String) -> void:
 	if playing: return
 	playing = true
+	scenario.disabled = true
 	var stamp := version
 	for button in action_buttons: button.disabled = true
 	var hero: Dictionary = catalog.hero_by_id[selected_hero]
@@ -132,10 +163,58 @@ func _play(action_id: String) -> void:
 	caption.text = "%s · %s" % [hero.name, action.name]
 	explanation.text = action.description
 	if reduced_motion: explanation.text += " Animações reduzidas estão ativadas."
-	var type := "heal" if action.kind.begins_with("heal") else ("shield" if action.kind.begins_with("shield") else "damage")
-	var result := {"actor": "actor", "actionId": action_id, "events": [{"type": type, "target": "target", "amount": 0}]}
-	var completed: bool = await director.play(self, effects, fighters, hero, action, result, reduced_motion, func():
-		if is_instance_valid(audio): audio.play_cue(int(catalog.class_by_id[hero.classId].index)))
+	var combat = Combat.new()
+	var dummy: String = "axion" if selected_hero != "axion" else "vesper"
+	var rest: Array = catalog.heroes.map(func(h): return h.id).filter(func(id): return id not in [selected_hero, dummy])
+	preview_state = combat.new_battle([selected_hero, dummy, rest[0]], [dummy, rest[1], rest[2]], "normal", 1972 if scenario.selected == 1 else 73)
+	var actor_id := "0-" + selected_hero
+	var friendly: bool = action.kind.begins_with("heal") or action.kind.begins_with("shield")
+	var target_id := ("0-" if friendly else "1-") + dummy
+	var actor := combat.unit(preview_state, actor_id)
+	var target := combat.unit(preview_state, target_id)
+	actor.energy = 100
+	actor.hp = combat.rounded(actor.maxHp * 0.75)
+	target.hp = combat.rounded(target.maxHp * 0.70)
+	if scenario.selected == 1 and not friendly: target.shield = 240
+	if scenario.selected == 2:
+		target.statuses = [{"type": "burn", "turns": 2}, {"type": "bleed", "turns": 2}]
+	# Explicit two-person preview order; the real battle and its RNG stay untouched.
+	preview_state.order = [actor_id, target_id]
+	preview_state.cursor = 0
+	fighters.actor.refresh(actor, true, false, false)
+	fighters.target.refresh(target, false, false, false)
+	fighters.target.title.text = "Aliado de treino" if friendly else "Alvo de treino"
+	fighters.target.set_relationship(combat.advantage(hero.classId, catalog.hero_by_id[dummy].classId), not friendly)
+	var result := combat.act(preview_state, action_id, target_id)
+	var mapped: Array = []
+	for event in result.events:
+		if event.target not in [actor_id, target_id]: continue
+		var copy: Dictionary = event.duplicate(true)
+		copy.target = "actor" if event.target == actor_id else "target"
+		mapped.append(copy)
+	var presentation := {"actor": "actor", "actionId": action_id, "events": mapped}
+	report.text = "Preparação…" + (" Crítico demonstrativo; escudo inicial de 240." if scenario.selected == 1 and not friendly else "")
+	var completed: bool = await director.play(self, effects, fighters, hero, action, presentation, reduced_motion, func():
+		if is_instance_valid(audio): audio.play_cue(int(catalog.class_by_id[hero.classId].index))
+		for pair in [["actor", actor_id], ["target", target_id]]:
+			var data: Dictionary = result.impactUnits.filter(func(u): return u.id == pair[1])[0]
+			fighters[pair[0]].refresh(data, pair[0] == "actor", false, false)
+		report.text = "\n".join(mapped.filter(func(e): return e.has("amount")).map(func(e): return CombatUI.event_detail(e))))
 	if stamp != version or not completed: return
+	var ticks: Array = []
+	for event in result.turnEvents:
+		if event.target not in [actor_id, target_id]: continue
+		var copy: Dictionary = event.duplicate(true)
+		copy.target = "actor" if event.target == actor_id else "target"
+		ticks.append(copy)
+	if not ticks.is_empty():
+		completed = await director.play_ticks(self, effects, fighters, ticks, reduced_motion, func(event):
+			for fighter in fighters.values(): fighter.refresh(fighter.display_data, fighter.unit_id == event.target, false, false)
+			fighters[event.target].apply_tick(event)
+			report.text = CombatUI.event_detail(event))
+		if stamp != version or not completed: return
+	for pair in [["actor", actor_id], ["target", target_id]]:
+		fighters[pair[0]].refresh(combat.unit(preview_state, pair[1]), pair[0] == "actor", false, false)
 	playing = false
+	scenario.disabled = false
 	for button in action_buttons: button.disabled = false

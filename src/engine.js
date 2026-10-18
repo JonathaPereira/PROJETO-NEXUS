@@ -118,7 +118,7 @@ function addStatus(target, type) {
   if (s) s.turns = 2;
   else target.statuses.push({ type, turns: 2 });
 }
-function beginTurn(state) {
+function beginTurn(state, turnEvents = []) {
   // At most six dead units can be encountered; rounds are rebuilt from survivors.
   while (state.phase === "playing") {
     if (state.cursor >= state.order.length) {
@@ -132,6 +132,11 @@ function beginTurn(state) {
       continue;
     }
     actor.guarding = false;
+    const report = (event) => {
+      const detail = { ...event, hpAfter: actor.hp, shieldAfter: actor.shield };
+      log(state, detail);
+      turnEvents.push(detail);
+    };
     for (const id of Object.keys(actor.cooldowns))
       actor.cooldowns[id] = Math.max(0, actor.cooldowns[id] - 1);
     // A public, increasing hazard prevents permanent healing/barrier stalemates.
@@ -144,45 +149,49 @@ function beginTurn(state) {
         ),
       );
       actor.hp -= amount;
-      log(state, {
+      report({
         type: "fracture",
         actor: actor.id,
         target: actor.id,
         amount,
       });
       if (actor.hp <= 0)
-        log(state, { type: "defeated", actor: actor.id, target: actor.id });
+        report({ type: "defeated", actor: actor.id, target: actor.id });
     }
     for (const s of actor.statuses) {
       if (actor.hp <= 0) break;
-      if (s.type === "burn") {
+      if (s.turns <= 0) continue;
+      if (s.type === "burn" || s.type === "bleed") {
         const n = Math.min(actor.hp, Math.round(actor.maxHp * 0.065));
         actor.hp -= n;
-        log(state, {
-          type: "burn",
+        report({
+          type: s.type,
           actor: actor.id,
           target: actor.id,
           amount: n,
+          remaining: s.turns - 1,
         });
         if (actor.hp <= 0) {
-          log(state, { type: "defeated", actor: actor.id, target: actor.id });
+          report({ type: "defeated", actor: actor.id, target: actor.id });
           break;
         }
       }
       if (s.type === "regen") {
         const n = heal(actor, actor.maxHp * 0.07);
-        log(state, {
+        report({
           type: "heal",
           actor: actor.id,
           target: actor.id,
           amount: n,
           passive: true,
+          remaining: s.turns - 1,
         });
       }
       s.turns--;
     }
     // Stat effects last through the affected actor's action, including their last turn.
-    actor.statuses = actor.statuses.filter((s) => s.turns >= 0);
+    actor.statuses = actor.statuses.filter((s) => s.turns > 0 ||
+      (s.turns === 0 && ["weaken", "expose"].includes(s.type)));
     if (checkVictory(state)) return;
     if (actor.hp <= 0) {
       state.cursor++;
@@ -219,6 +228,8 @@ export function act(state, actionId, targetId) {
       type: "guard",
       target: actor.id,
       amount: actor.shield - beforeShield,
+      shieldBefore: beforeShield,
+      shieldAfter: actor.shield,
     });
     log(state, { ...events.at(-1), actor: actor.id });
   } else {
@@ -237,6 +248,8 @@ export function act(state, actionId, targetId) {
           type: "shield",
           target: target.id,
           amount: target.shield - before,
+          shieldBefore: before,
+          shieldAfter: target.shield,
         };
       } else {
         const weak = actor.statuses.some((s) => s.type === "weaken") ? 0.8 : 1,
@@ -272,6 +285,10 @@ export function act(state, actionId, targetId) {
           absorbed,
           advantage: multiplier,
           critical,
+          total,
+          shieldBefore: target.shield + absorbed,
+          shieldAfter: target.shield,
+          hpAfter: target.hp,
         };
         if (hero.classId === "sombrio" && dealt) {
           const n = heal(actor, dealt * 0.25);
@@ -286,8 +303,12 @@ export function act(state, actionId, targetId) {
           }
         }
       }
-      if (actionId !== "basic" && target.hp > 0 && action.effect)
+      if (actionId !== "basic" && target.hp > 0 && action.effect) {
+        event.effect = action.effect;
+        event.effectTurns = action.effect === "cleanse" ? 0 : 2;
+        if (action.effect === "cleanse") event.cleansed = target.statuses.filter(s => s.type !== "regen").map(s => s.type);
         addStatus(target, action.effect);
+      }
       events.push(event);
       log(state, { ...event, actor: actor.id });
       if (target.hp === 0) {
@@ -299,9 +320,10 @@ export function act(state, actionId, targetId) {
   }
   // Remove expired effects after they influenced the actor's last affected action.
   actor.statuses = actor.statuses.filter((s) => s.turns > 0);
+  const impactUnits = structuredClone(state.units), turnEvents = [];
   if (!checkVictory(state)) {
     state.cursor++;
-    beginTurn(state);
+    beginTurn(state, turnEvents);
   }
   return {
     actor: actor.id,
@@ -309,6 +331,8 @@ export function act(state, actionId, targetId) {
     actionId,
     animation: hero.animation,
     events,
+    impactUnits,
+    turnEvents,
   };
 }
 export function chooseAI(state) {

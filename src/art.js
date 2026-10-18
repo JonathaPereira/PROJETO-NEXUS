@@ -58,12 +58,13 @@ export function crest() {
 }
 export const STATUS_LABELS = {
   burn: "Queimadura",
+  bleed: "Sangramento",
   regen: "Regeneração",
   weaken: "Ataque reduzido",
   expose: "Defesa exposta",
 };
 export function statusIcon(type) {
   return icon(
-    { burn: "flame", regen: "leaf", weaken: "moon", expose: "target" }[type],
+    { burn: "flame", bleed: "swords", regen: "leaf", weaken: "moon", expose: "target" }[type],
   );
 }

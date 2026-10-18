@@ -32,7 +32,7 @@
         "effect": "burn",
         "cost": 30,
         "cooldown": 2,
-        "description": "Causa 170% do ataque a um rival. Aplica queimadura por 2 turnos."
+        "description": "Causa 170% do ataque a um rival. Queimadura: perde 6,5% da vida máxima no início de 2 turnos, atravessando escudos."
       },
       "ultimate": {
         "id": "ultimate",
@@ -42,7 +42,7 @@
         "effect": "burn",
         "cost": 80,
         "cooldown": 0,
-        "description": "Atinge todos os rivais com 205% do poder de ataque e aplica o efeito da técnica."
+        "description": "Causa 205% do ataque a todos os rivais. Queimadura: perde 6,5% da vida máxima no início de 2 turnos, atravessando escudos."
       }
     },
     {
@@ -76,7 +76,7 @@
         "effect": "burn",
         "cost": 30,
         "cooldown": 2,
-        "description": "Causa 145% do ataque a um rival. Aplica queimadura por 2 turnos."
+        "description": "Causa 145% do ataque a um rival. Queimadura: perde 6,5% da vida máxima no início de 2 turnos, atravessando escudos."
       },
       "ultimate": {
         "id": "ultimate",
@@ -86,7 +86,7 @@
         "effect": "burn",
         "cost": 80,
         "cooldown": 0,
-        "description": "Atinge todos os rivais com 205% do poder de ataque e aplica o efeito da técnica."
+        "description": "Causa 205% do ataque a todos os rivais. Queimadura: perde 6,5% da vida máxima no início de 2 turnos, atravessando escudos."
       }
     },
     {
@@ -120,7 +120,7 @@
         "effect": "burn",
         "cost": 30,
         "cooldown": 2,
-        "description": "Causa 100% do ataque a todos os rivais. Aplica queimadura por 2 turnos."
+        "description": "Causa 100% do ataque a todos os rivais. Queimadura: perde 6,5% da vida máxima no início de 2 turnos, atravessando escudos."
       },
       "ultimate": {
         "id": "ultimate",
@@ -130,7 +130,7 @@
         "effect": "burn",
         "cost": 80,
         "cooldown": 0,
-        "description": "Atinge todos os rivais com 205% do poder de ataque e aplica o efeito da técnica."
+        "description": "Causa 205% do ataque a todos os rivais. Queimadura: perde 6,5% da vida máxima no início de 2 turnos, atravessando escudos."
       }
     },
     {
@@ -174,7 +174,7 @@
         "effect": "expose",
         "cost": 80,
         "cooldown": 0,
-        "description": "Atinge todos os rivais com 205% do poder de ataque e aplica o efeito da técnica."
+        "description": "Causa 205% do ataque a todos os rivais. Reduz a defesa do alvo em 25% por 2 turnos."
       }
     },
     {
@@ -208,7 +208,7 @@
         "effect": "regen",
         "cost": 30,
         "cooldown": 2,
-        "description": "Recupera 32% da vida máxima de um aliado. Concede regeneração por 2 turnos."
+        "description": "Recupera 32% da vida máxima de um aliado. Regeneração: recupera 7% da vida máxima no início de 2 turnos."
       },
       "ultimate": {
         "id": "ultimate",
@@ -252,7 +252,7 @@
         "effect": "regen",
         "cost": 30,
         "cooldown": 2,
-        "description": "Protege um aliado com barreira de 25% da vida máxima. Concede regeneração por 2 turnos."
+        "description": "Protege um aliado com barreira de 25% da vida máxima. Regeneração: recupera 7% da vida máxima no início de 2 turnos."
       },
       "ultimate": {
         "id": "ultimate",
@@ -306,7 +306,7 @@
         "effect": "weaken",
         "cost": 80,
         "cooldown": 0,
-        "description": "Atinge todos os rivais com 205% do poder de ataque e aplica o efeito da técnica."
+        "description": "Causa 205% do ataque a todos os rivais. Reduz o ataque do alvo em 20% por 2 turnos."
       }
     },
     {
@@ -340,7 +340,7 @@
         "effect": "regen",
         "cost": 30,
         "cooldown": 2,
-        "description": "Recupera 20% da vida máxima da equipe. Concede regeneração por 2 turnos."
+        "description": "Recupera 20% da vida máxima da equipe. Regeneração: recupera 7% da vida máxima no início de 2 turnos."
       },
       "ultimate": {
         "id": "ultimate",
@@ -384,7 +384,7 @@
         "effect": "regen",
         "cost": 30,
         "cooldown": 2,
-        "description": "Protege a equipe com barreira de 16% da vida máxima. Concede regeneração por 2 turnos."
+        "description": "Protege a equipe com barreira de 16% da vida máxima. Regeneração: recupera 7% da vida máxima no início de 2 turnos."
       },
       "ultimate": {
         "id": "ultimate",
@@ -438,7 +438,7 @@
         "effect": "expose",
         "cost": 80,
         "cooldown": 0,
-        "description": "Atinge todos os rivais com 205% do poder de ataque e aplica o efeito da técnica."
+        "description": "Causa 205% do ataque a todos os rivais. Reduz a defesa do alvo em 25% por 2 turnos."
       }
     },
     {
@@ -472,7 +472,7 @@
         "effect": "regen",
         "cost": 30,
         "cooldown": 2,
-        "description": "Protege um aliado com barreira de 30% da vida máxima. Concede regeneração por 2 turnos."
+        "description": "Protege um aliado com barreira de 30% da vida máxima. Regeneração: recupera 7% da vida máxima no início de 2 turnos."
       },
       "ultimate": {
         "id": "ultimate",
@@ -526,7 +526,7 @@
         "effect": "expose",
         "cost": 80,
         "cooldown": 0,
-        "description": "Atinge todos os rivais com 205% do poder de ataque e aplica o efeito da técnica."
+        "description": "Causa 205% do ataque a todos os rivais. Reduz a defesa do alvo em 25% por 2 turnos."
       }
     },
     {
@@ -570,7 +570,7 @@
         "effect": "expose",
         "cost": 80,
         "cooldown": 0,
-        "description": "Atinge todos os rivais com 205% do poder de ataque e aplica o efeito da técnica."
+        "description": "Causa 205% do ataque a todos os rivais. Reduz a defesa do alvo em 25% por 2 turnos."
       }
     },
     {
@@ -614,7 +614,7 @@
         "effect": "weaken",
         "cost": 80,
         "cooldown": 0,
-        "description": "Atinge todos os rivais com 205% do poder de ataque e aplica o efeito da técnica."
+        "description": "Causa 205% do ataque a todos os rivais. Reduz o ataque do alvo em 20% por 2 turnos."
       }
     },
     {
@@ -648,7 +648,7 @@
         "effect": "regen",
         "cost": 30,
         "cooldown": 2,
-        "description": "Recupera 22% da vida máxima da equipe. Concede regeneração por 2 turnos."
+        "description": "Recupera 22% da vida máxima da equipe. Regeneração: recupera 7% da vida máxima no início de 2 turnos."
       },
       "ultimate": {
         "id": "ultimate",
@@ -702,7 +702,7 @@
         "effect": "expose",
         "cost": 80,
         "cooldown": 0,
-        "description": "Atinge todos os rivais com 205% do poder de ataque e aplica o efeito da técnica."
+        "description": "Causa 205% do ataque a todos os rivais. Reduz a defesa do alvo em 25% por 2 turnos."
       }
     },
     {
@@ -746,7 +746,7 @@
         "effect": "weaken",
         "cost": 80,
         "cooldown": 0,
-        "description": "Atinge todos os rivais com 205% do poder de ataque e aplica o efeito da técnica."
+        "description": "Causa 205% do ataque a todos os rivais. Reduz o ataque do alvo em 20% por 2 turnos."
       }
     },
     {
@@ -790,7 +790,7 @@
         "effect": "weaken",
         "cost": 80,
         "cooldown": 0,
-        "description": "Atinge todos os rivais com 205% do poder de ataque e aplica o efeito da técnica."
+        "description": "Causa 205% do ataque a todos os rivais. Reduz o ataque do alvo em 20% por 2 turnos."
       }
     },
     {
@@ -824,7 +824,7 @@
         "effect": "regen",
         "cost": 30,
         "cooldown": 2,
-        "description": "Protege um aliado com barreira de 25% da vida máxima. Concede regeneração por 2 turnos."
+        "description": "Protege um aliado com barreira de 25% da vida máxima. Regeneração: recupera 7% da vida máxima no início de 2 turnos."
       },
       "ultimate": {
         "id": "ultimate",
@@ -865,20 +865,20 @@
         "name": "Dívida de sangue",
         "kind": "damage",
         "power": 1.8,
-        "effect": "burn",
+        "effect": "bleed",
         "cost": 30,
         "cooldown": 2,
-        "description": "Causa 180% do ataque a um rival. Aplica queimadura por 2 turnos."
+        "description": "Causa 180% do ataque a um rival. Sangramento: perde 6,5% da vida máxima no início de 2 turnos, atravessando escudos."
       },
       "ultimate": {
         "id": "ultimate",
         "name": "Última lembrança",
         "kind": "aoe",
         "power": 2.05,
-        "effect": "burn",
+        "effect": "bleed",
         "cost": 80,
         "cooldown": 0,
-        "description": "Atinge todos os rivais com 205% do poder de ataque e aplica o efeito da técnica."
+        "description": "Causa 205% do ataque a todos os rivais. Sangramento: perde 6,5% da vida máxima no início de 2 turnos, atravessando escudos."
       }
     },
     {
@@ -922,7 +922,7 @@
         "effect": "weaken",
         "cost": 80,
         "cooldown": 0,
-        "description": "Atinge todos os rivais com 205% do poder de ataque e aplica o efeito da técnica."
+        "description": "Causa 205% do ataque a todos os rivais. Reduz o ataque do alvo em 20% por 2 turnos."
       }
     },
     {
@@ -1010,7 +1010,7 @@
         "effect": "weaken",
         "cost": 80,
         "cooldown": 0,
-        "description": "Atinge todos os rivais com 205% do poder de ataque e aplica o efeito da técnica."
+        "description": "Causa 205% do ataque a todos os rivais. Reduz o ataque do alvo em 20% por 2 turnos."
       }
     },
     {

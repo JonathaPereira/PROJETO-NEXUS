@@ -24,7 +24,7 @@ static func build(app) -> void:
 	var title = app._label("NEXUS", 28, app.GOLD)
 	title.add_theme_font_override("font", preload("res://assets/cinzel.ttf"))
 	brand.add_child(title)
-	brand.add_child(app._label("ECOS DO CREPÚSCULO  /  ALPHA 0.2", 10, app.MUTED))
+	brand.add_child(app._label("ECOS DO CREPÚSCULO  /  ALPHA 0.3", 10, app.MUTED))
 	app.roster_button = app._button("Equipes", app._open_roster)
 	header.add_child(app.roster_button)
 	header.add_child(app._button("Afinidades", app._show_classes))
@@ -97,7 +97,7 @@ static func build(app) -> void:
 	arena_header.add_child(right)
 	app.field = Control.new()
 	app.field.clip_contents = true
-	app.field.custom_minimum_size = Vector2(0, 356)
+	app.field.custom_minimum_size = Vector2(0, 390)
 	app.field.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	arena_column.add_child(app.field)
 	app.backdrop = Backdrop.new()
@@ -107,6 +107,23 @@ static func build(app) -> void:
 	app.effects.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	app.effects.z_index = 60
 	app.field.add_child(app.effects)
+	app.feedback_panel = PanelContainer.new()
+	app.feedback_panel.custom_minimum_size.y = 44
+	app.feedback_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	app.feedback_panel.z_index = 80
+	var feedback_style = app._style(Color("091321ec"), Color("314459"))
+	feedback_style.content_margin_top = 4
+	feedback_style.content_margin_bottom = 4
+	app.feedback_panel.add_theme_stylebox_override("panel", feedback_style)
+	arena_column.add_child(app.feedback_panel)
+	arena_column.move_child(app.feedback_panel, 1)
+	app.feedback = RichTextLabel.new()
+	app.feedback.bbcode_enabled = true
+	app.feedback.scroll_active = false
+	app.feedback.custom_minimum_size.y = 32
+	app.feedback.add_theme_font_size_override("normal_font_size", 13)
+	app.feedback.mouse_filter = Control.MOUSE_FILTER_PASS
+	app.feedback_panel.add_child(app.feedback)
 	app.field.resized.connect(app._position_fighters)
 	var commands := PanelContainer.new()
 	commands.add_theme_stylebox_override("panel", app._style(Color("0c1727"), Color("31435b")))
@@ -116,7 +133,7 @@ static func build(app) -> void:
 	commands.add_child(commands_row)
 	var identity := VBoxContainer.new()
 	identity.custom_minimum_size.x = 204
-	identity.add_theme_constant_override("separation", 7)
+	identity.add_theme_constant_override("separation", 4)
 	commands_row.add_child(identity)
 	var portrait_row := HBoxContainer.new()
 	identity.add_child(portrait_row)
@@ -138,11 +155,17 @@ static func build(app) -> void:
 	app.active_health = Meter.new()
 	app.active_health.custom_minimum_size.y = 7
 	identity.add_child(app.active_health)
-	app.active_energy_label = app._label("", 13, Color("a0d3f2"))
+	app.active_shield_label = app._label("", 12, Color("83d8ff"))
+	identity.add_child(app.active_shield_label)
+	app.active_shield = Meter.new()
+	app.active_shield.fill = Color("62d0ff")
+	app.active_shield.custom_minimum_size.y = 5
+	identity.add_child(app.active_shield)
+	app.active_energy_label = app._label("", 13, Color("b7a6ef"))
 	identity.add_child(app.active_energy_label)
 	app.active_energy = Meter.new()
 	app.active_energy.custom_minimum_size.y = 6
-	app.active_energy.fill = Color("60bcea")
+	app.active_energy.fill = Color("9586dc")
 	identity.add_child(app.active_energy)
 	app.step_label = app._label("", 11, app.MUTED)
 	app.step_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -224,13 +247,14 @@ static func refresh(app) -> void:
 	if app.state.round >= 12: app.round_label.text = "RODADA %02d   /   FRATURA ATIVA" % app.state.round
 	app.active_label.text = hero.name
 	app.active_class.text = "%s\n%s" % [app.catalog.class_by_id[hero.classId].name, hero.role]
+	app.active_class.add_theme_color_override("font_color", app.catalog.affinity_color(hero.classId))
 	app.active_portrait.texture = Fighter.portrait(int(hero.index))
 	update_actor_stats(app, actor)
 	app.step_label.text = "Escolha a habilidade, o alvo e confirme." if app._can_act() else ("Consulte as habilidades e inicie o combate." if not app.started else "Aguarde a ação terminar." if app.busy else "Aguarde o próximo turno.")
 	for index in range(app.ACTIONS.size()):
 		var id: String = app.ACTIONS[index]
 		var card = app.action_buttons[id]
-		card.configure(app.combat.get_action(actor, id), id, index + 1, app.catalog.affinity_color(hero.classId), int(actor.energy), int(actor.cooldowns.get(id, 0)), app._can_inspect())
+		card.configure(app.combat.get_action(actor, id), id, index + 1, app.catalog.affinity_color(hero.classId), int(actor.energy), int(actor.cooldowns.get(id, 0)), app._can_inspect(), int(hero.index))
 		if id == "skill":
 			card.glyph.symbol = hero.classId
 			card.glyph.queue_redraw()
@@ -260,6 +284,8 @@ static func refresh(app) -> void:
 		var fighter = app.fighters[data.id]
 		fighter.motion_enabled = not app.reduced_motion
 		fighter.refresh(data, app.started and data.id == actor.id and app.state.phase == "playing", data.id == app.target_id, data.id in ids and app._can_act())
+		var multiplier: float = app.combat.advantage(hero.classId, app.catalog.hero_by_id[data.heroId].classId)
+		fighter.set_relationship(multiplier, data.side != actor.side and action.kind in ["damage", "aoe"] and app.state.phase == "playing")
 		fighter.disabled = not app._can_act() or not data.id in ids
 	app.backdrop.motion_enabled = not app.reduced_motion
 	_timeline(app)
@@ -268,9 +294,77 @@ static func update_actor_stats(app, actor: Dictionary) -> void:
 	app.active_numbers.text = "VIDA   %d / %d" % [actor.hp, actor.maxHp]
 	app.active_health.max_value = actor.maxHp
 	app.active_health.value = actor.hp
-	app.active_health.shield_value = actor.shield
+	app.active_shield.max_value = round(actor.maxHp * 0.6)
+	app.active_shield.value = actor.shield
+	app.active_shield_label.text = "ESCUDO   %d / %d" % [actor.shield, int(app.active_shield.max_value)]
 	app.active_energy_label.text = "ENERGIA   %d / 100" % actor.energy
 	app.active_energy.value = actor.energy
+
+static func event_detail(event: Dictionary) -> String:
+	var detail := ""
+	match event.type:
+		"damage":
+			if event.get("critical", false): detail += "[color=#ffd17a]CRÍTICO![/color]  "
+			detail += "[color=#ffc0af]−%d VIDA[/color]" % event.amount
+			if event.get("absorbed", 0) > 0:
+				detail += "  ·  [color=#83d8ff]−%d ESCUDO · resta %d[/color]" % [event.absorbed, event.shieldAfter]
+				if event.shieldAfter == 0: detail += "  ·  [color=#83d8ff]ESCUDO QUEBRADO[/color]"
+			if event.get("advantage", 1.0) != 1.0: detail += "  ·  " + ("Vulnerável +25%" if event.advantage > 1 else "Resistente −15%")
+		"heal": detail = "[color=#a1e6b3]+%d VIDA%s[/color]" % [event.amount, (" · REGENERAÇÃO" if event.has("remaining") else " · DRENO DE VIDA") if event.get("passive", false) else ""]
+		"shield", "guard": detail = "[color=#83d8ff]+%d ESCUDO · total %d[/color]" % [event.amount, event.get("shieldAfter", event.amount)]
+		"burn", "bleed", "fracture":
+			detail = "[color=#ffb49b]%s · −%d VIDA[/color]  ·  atravessa escudos" % [{"burn": "QUEIMADURA", "bleed": "SANGRAMENTO", "fracture": "FRATURA"}[event.type], event.amount]
+			if event.has("remaining"): detail += "  ·  %d ativação(ões) restante(s)" % event.remaining
+	if event.has("effect"):
+		if event.effect == "cleanse": detail += "  ·  PURIFICADO (%d efeito(s))" % event.cleansed.size()
+		else: detail += "  ·  [color=#eac4ee]%s %dT[/color]" % [Fighter.STATUS_NAMES.get(event.effect, event.effect).to_upper(), event.effectTurns]
+	return detail
+
+static func show_report(app, events: Array, title: String) -> void:
+	var lines: Array = []
+	for event in events:
+		var detail := event_detail(event)
+		if detail.is_empty(): continue
+		lines.append("%s: %s" % [app._unit_name(event.target), detail])
+	# Individual receipts remain on hover and in Registro. Area attacks show
+	# totals so the fixed-height banner stays readable in the smallest window.
+	app.feedback.tooltip_text = title + "\n" + "\n".join(lines.map(func(line): return _plain(line)))
+	if lines.size() > 1:
+		var health_loss := 0
+		var absorbed := 0
+		var healing := 0
+		var granted := 0
+		var criticals := 0
+		var recipients: Array = []
+		var remaining: Array = []
+		var statuses: Array = []
+		for event in events:
+			if not event.has("amount"): continue
+			if not event.target in recipients: recipients.append(event.target)
+			if event.type == "damage":
+				health_loss += int(event.amount)
+				absorbed += int(event.absorbed)
+			elif event.type == "heal": healing += int(event.amount)
+			elif event.type in ["shield", "guard"]: granted += int(event.amount)
+			if event.get("critical", false): criticals += 1
+			if event.has("shieldAfter") and (event.type in ["shield", "guard"] or event.get("absorbed", 0) > 0): remaining.append("%s %d" % [app._unit_name(event.target), event.shieldAfter])
+			if event.has("effect"):
+				var status: String = Fighter.STATUS_NAMES.get(event.effect, "Purificado")
+				if not status in statuses: statuses.append(status)
+		var totals: Array = []
+		if health_loss > 0 or absorbed > 0: totals.append("[color=#ffc0af]−%d VIDA[/color] / [color=#83d8ff]−%d ESCUDO[/color]" % [health_loss, absorbed])
+		if healing > 0: totals.append("[color=#a1e6b3]+%d CURA[/color]" % healing)
+		if granted > 0: totals.append("[color=#83d8ff]+%d ESCUDO[/color]" % granted)
+		if not remaining.is_empty(): totals.append("Escudos: " + ", ".join(remaining))
+		if not statuses.is_empty(): totals.append(", ".join(statuses))
+		app.feedback.text = "[center][color=#d5b480]%s · %d alvo(s)%s[/color]\n%s[/center]" % [title, recipients.size(), " · %d CRÍTICO(S)" % criticals if criticals > 0 else "", "  ·  ".join(totals)]
+	else:
+		app.feedback.text = "[center][color=#d5b480]%s[/color]\n%s[/center]" % [title, "".join(lines)]
+
+static func _plain(value: String) -> String:
+	var regex := RegEx.new()
+	regex.compile("\\[/?color[^\\]]*\\]")
+	return regex.sub(value, "", true)
 
 static func _timeline(app) -> void:
 	app._clear(app.timeline)
