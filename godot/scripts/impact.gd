@@ -5,6 +5,7 @@ var destination := Vector2.ZERO
 var tint := Color.WHITE
 var affinity := "igneo"
 var kind := "damage"
+var signature := ""
 var elapsed := 0.0
 var duration := 0.8
 var ultimate := false
@@ -35,7 +36,18 @@ func _draw() -> void:
 		return
 	if phase == "travel":
 		var point := origin.lerp(at, p)
-		if affinity in ["igneo", "sombrio"]:
+		if signature in ["volley", "daggers", "thorns"]:
+			for i in range(3):
+				var tip := point + Vector2(0, (i - 1) * 18)
+				draw_line(tip - (at - origin).normalized() * 30, tip, color, 3, true)
+				_polygon(tip, 6, 3, color, (at - origin).angle())
+		elif signature in ["drones", "prism", "runes", "orbit"]:
+			for i in range(3):
+				var orbit := point + Vector2.from_angle(p * TAU + i * TAU / 3) * 23
+				_polygon(orbit, 9, 4 if signature == "drones" else 3, color, p * 3)
+		elif signature == "threads":
+			for i in range(4): draw_line(origin + Vector2(0, i * 8 - 12), point + Vector2(0, sin(p * TAU + i) * 24), color, 2, true)
+		elif affinity in ["igneo", "sombrio"]:
 			draw_line(origin, point, Color(tint, fade * 0.25), 15 * scale_factor, true)
 			draw_arc(point, 24 * scale_factor, -PI * 0.8 + p * 3, PI * 0.4 + p * 3, 24, color, 4, true)
 		elif affinity == "tecnico":

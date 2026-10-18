@@ -5,7 +5,7 @@ const Backdrop = preload("res://scripts/arena_backdrop.gd")
 const Art = preload("res://scripts/ability_art.gd")
 const Combat = preload("res://scripts/combat.gd")
 const CombatUI = preload("res://scripts/combat_ui.gd")
-const HEROES = ["veyra", "sylva", "axion", "astra", "vesper", "auren"]
+const HEROES = ["veyra", "sylva", "axion", "astra", "vesper"]
 var catalog
 var audio
 var director = Director.new()
@@ -168,7 +168,7 @@ func _play(action_id: String) -> void:
 	var rest: Array = catalog.heroes.map(func(h): return h.id).filter(func(id): return id not in [selected_hero, dummy])
 	preview_state = combat.new_battle([selected_hero, dummy, rest[0]], [dummy, rest[1], rest[2]], "normal", 1972 if scenario.selected == 1 else 73)
 	var actor_id := "0-" + selected_hero
-	var friendly: bool = action.kind.begins_with("heal") or action.kind.begins_with("shield")
+	var friendly: bool = combat.friendly(action)
 	var target_id := ("0-" if friendly else "1-") + dummy
 	var actor := combat.unit(preview_state, actor_id)
 	var target := combat.unit(preview_state, target_id)
@@ -185,7 +185,7 @@ func _play(action_id: String) -> void:
 	fighters.target.refresh(target, false, false, false)
 	fighters.target.title.text = "Aliado de treino" if friendly else "Alvo de treino"
 	fighters.target.set_relationship(combat.advantage(hero.classId, catalog.hero_by_id[dummy].classId), not friendly)
-	var result := combat.act(preview_state, action_id, target_id)
+	var result := combat.act(preview_state, action_id, actor_id if action.get("self", false) else target_id)
 	var mapped: Array = []
 	for event in result.events:
 		if event.target not in [actor_id, target_id]: continue

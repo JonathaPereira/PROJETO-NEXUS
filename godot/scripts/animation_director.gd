@@ -28,6 +28,7 @@ func _effect(effects: Control, origin: Vector2, destination: Vector2, hero: Dict
 	effect.destination = destination
 	effect.tint = Color(hero.get("color", "ffffff"))
 	effect.affinity = hero.classId
+	effect.signature = hero.get("animation", "")
 	effect.kind = kind
 	effect.phase = phase
 	effect.ultimate = ultimate
@@ -55,8 +56,8 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 	var home: Vector2 = actor.visual_root.position
 	var direction := -1.0 if actor.artwork.flip_h else 1.0
 	var ultimate: bool = result.actionId == "ultimate"
-	var charge_time := 0.48 if ultimate else (0.34 if result.actionId == "skill" else 0.24)
-	var support: bool = action.kind.begins_with("heal") or action.kind.begins_with("shield") or action.kind == "guard"
+	var charge_time := (0.48 if ultimate else (0.34 if result.actionId == "skill" else 0.24)) + (0.12 if hero.animation in ["crater", "roots"] else 0.0)
+	var support: bool = action.kind.begins_with("heal") or action.kind.begins_with("shield") or action.kind == "guard" or action.kind.begins_with("support")
 	var origin: Vector2 = actor.hit_position()
 	_effect(effects, origin, origin, art_hero, action.kind, "charge", ultimate, charge_time + 0.05)
 	var anticipate := _tween(owner).set_parallel(true)
@@ -65,23 +66,26 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 	anticipate.tween_property(actor.visual_root, "position", home + Vector2(-9 * direction, -7 if hero.classId in ["arcano", "lumi"] else 3), charge_time)
 	await owner.get_tree().create_timer(charge_time).timeout
 	if version != generation or not is_instance_valid(actor): return false
-	var targets: Array = result.events.filter(func(e): return e.has("amount") and not e.get("passive", false))
+	var targets: Array = result.events.filter(func(e): return e.type in ["damage", "heal", "shield", "guard", "support"] and not e.get("passive", false) and not e.get("reaction", false) and not e.get("intercepted", false))
 	var primary = fighters[targets[0].target] if not targets.is_empty() else actor
 	var travel: Vector2 = primary.foot_position() - (actor.position + home)
 	actor.set_pose(3 if ultimate else 2)
 	var strike := _tween(owner).set_parallel(true)
 	match hero.classId:
 		"igneo":
-			strike.tween_property(actor.visual_root, "position", home + travel * (0.72 if not support else 0.0) - Vector2(0, 8), 0.20).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
+			strike.tween_property(actor.visual_root, "position", home + travel * (0.72 if not support and hero.role != "Suporte" else 0.0) - Vector2(0, 8), 0.20).set_trans(Tween.TRANS_QUAD).set_ease(Tween.EASE_IN)
 			strike.tween_property(actor.visual_root, "rotation", 0.10 * direction, 0.20)
 		"sombrio":
 			strike.tween_property(actor.visual_root, "modulate:a", 0.18, 0.10)
-			strike.tween_property(actor.visual_root, "position", home + travel * (0.78 if not support else 0.0), 0.18)
+			strike.tween_property(actor.visual_root, "position", home + travel * (0.78 if not support and hero.role != "Suporte" else 0.0), 0.18)
 		"tecnico":
 			strike.tween_property(actor.visual_root, "position", home + Vector2(-13 * direction, 0), 0.16)
 			strike.tween_property(actor.visual_root, "rotation", 0.05 * direction, 0.16)
 		"arcano": strike.tween_property(actor.visual_root, "position", home - Vector2(0, 20), 0.20)
-		"natural": strike.tween_property(actor.visual_root, "rotation", 0.04 * direction, 0.20)
+		"natural":
+			if hero.animation == "roots" and not support:
+				strike.tween_property(actor.visual_root, "position", home + Vector2(14 * direction, -12), 0.20)
+			else: strike.tween_property(actor.visual_root, "rotation", 0.04 * direction, 0.20)
 		"lumi":
 			strike.tween_property(actor.visual_root, "rotation", -0.06 * direction, 0.20)
 			strike.tween_method(func(v): actor.material_fx.set_shader_parameter("flash", v), 0.0, 0.30, 0.20)
@@ -154,6 +158,9 @@ func _visual_events(events: Array) -> Array:
 
 static func number_lines(event: Dictionary) -> Array:
 	var lines: Array = []
+	if event.get("reaction", false): lines.append(["CONTRA-ATAQUE", "d6bdff", 12])
+	if event.get("intercepted", false): lines.append(["PROTETOR", "85dcff", 12])
+	if event.has("combo"): lines.append(["COMBO!", "ffd17a", 15])
 	if event.get("critical", false): lines.append(["CRÍTICO!", "ffd17a", 22])
 	match event.type:
 		"damage":
@@ -165,10 +172,12 @@ static func number_lines(event: Dictionary) -> Array:
 		"shield", "guard":
 			lines.append(["+%d ESCUDO" % event.amount, "85dcff", 20])
 			lines.append(["Escudo total: %d" % event.get("shieldAfter", event.amount), "85dcff", 12])
+		"energy": lines.append(["+%d ENERGIA" % event.amount, "c6b4ff", 18])
+		"support": lines.append(["SUPORTE", "c6b4ff", 15])
 		"burn", "bleed", "fracture":
 			lines.append([{ "burn": "QUEIMADURA", "bleed": "SANGRAMENTO", "fracture": "FRATURA" }[event.type], "ffae88", 14])
 			lines.append(["−%d VIDA" % event.amount, "ffc5b3", 22])
-	if event.get("passive", false): lines.append(["REGENERAÇÃO" if event.has("remaining") else "DRENO DE VIDA", "a1e6b3", 12])
+	if event.get("passive", false): lines.append(["REGENERAÇÃO" if event.has("remaining") else ("SEMENTE" if event.get("source", "") == "seed" else "DRENO DE VIDA"), "a1e6b3", 12])
 	if event.has("remaining"): lines.append(["%d ativação(ões) restante(s)" % event.remaining, "d6dded", 11])
 	if event.has("effect"):
 		lines.append(["PURIFICADO" if event.effect == "cleanse" else "%s · %dT" % [Fighter.STATUS_NAMES.get(event.effect, event.effect), event.effectTurns], "eac4ee", 12])

@@ -1,6 +1,7 @@
 extends RefCounted
 ## Generated catalog is shared with the browser prototype. No Node runtime needed.
 var heroes: Array = []
+var archived_heroes: Array = []
 var classes: Array = []
 var hero_by_id: Dictionary = {}
 var class_by_id: Dictionary = {}
@@ -11,6 +12,7 @@ func _init() -> void:
 	var data: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/catalog.json"))
 	assert(data.get("schemaVersion") == 1, "Unsupported catalog schema")
 	heroes = data.heroes
+	archived_heroes = data.get("archivedHeroes", [])
 	classes = data.classes
 	default_teams = data.defaultTeams
 	guard = data.guard

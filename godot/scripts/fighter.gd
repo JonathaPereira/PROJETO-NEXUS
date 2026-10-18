@@ -5,7 +5,7 @@ const Glyph = preload("res://scripts/glyph.gd")
 const ATLAS = preload("res://assets/clean-atlas.png")
 const CHARACTER_SHADER = preload("res://shaders/character.gdshader")
 const SPECIAL = {0: "veyra", 4: "sylva", 8: "axion", 12: "astra", 16: "vesper", 20: "auren"}
-const STATUS_NAMES = {"burn": "Queimadura", "bleed": "Sangramento", "regen": "Regeneração", "weaken": "Ataque −20%", "expose": "Defesa −25%"}
+const STATUS_NAMES = {"burn": "Queimadura", "bleed": "Sangramento", "regen": "Regeneração", "weaken": "Ataque −20%", "expose": "Defesa −25%", "empower": "Ataque +20%", "fortify": "Dano recebido −20%", "cover": "Proteção: desvia 35%", "mirror": "Reflete 20% do dano à vida", "riposte": "Contra-ataca: 40% ATQ", "taunt": "Provocação", "emberguard": "Retalia com queimadura", "focus": "Próximo golpe +25%", "seed": "Semente: próximo atacante cura 10%"}
 static var texture_cache: Dictionary = {}
 static var region_cache: Dictionary = {}
 static var pose_regions: Dictionary = {}
@@ -271,7 +271,8 @@ func refresh(data: Dictionary, is_active: bool, is_chosen: bool, can_target: boo
 	for status in data.statuses:
 		var duration: int = int(status.turns)
 		states.append("%s · %s" % [STATUS_NAMES.get(status.type, status.type), "%d turno(s) restante(s)" % duration if duration > 0 else "expira após esta ação"])
-		compact.append("%s %s" % [{"burn": "Queima", "bleed": "Sangra", "regen": "Regen", "weaken": "ATQ↓", "expose": "DEF↓"}.get(status.type, status.type), "%dT" % duration if duration > 0 else "•"])
+		compact.append("%s %s" % [{"burn": "Queima", "bleed": "Sangra", "regen": "Regen", "weaken": "ATQ↓", "expose": "DEF↓", "empower": "ATQ↑", "fortify": "Fortif.", "cover": "Proteg.", "mirror": "Reflexo", "riposte": "Contra", "taunt": "Provoca", "emberguard": "Brasa", "focus": "Foco", "seed": "Semente"}.get(status.type, status.type), "%dT" % duration if duration > 0 else "•"])
+	if compact.size() > 4: compact = compact.slice(0, 3) + ["+%d estados" % (compact.size() - 3)]
 	var split := ceili(compact.size() / 2.0) if compact.size() > 2 else compact.size()
 	status_label.text = "DERROTADO" if dead else (" · ".join(compact.slice(0, split)) + ("\n" + " · ".join(compact.slice(split)) if compact.size() > 2 else ""))
 	status_label.tooltip_text = "\n".join(states)
@@ -294,7 +295,7 @@ func apply_tick(event: Dictionary) -> void:
 		var type: String = "regen" if event.type == "heal" else event.type
 		for status in data.statuses:
 			if status.type == type: status.turns = event.remaining
-		data.statuses = data.statuses.filter(func(s): return s.turns > 0 or s.type in ["weaken", "expose"])
+		data.statuses = data.statuses.filter(func(s): return s.turns > 0 or not s.type in ["burn", "bleed", "regen"])
 	refresh(data, true, false, false)
 
 func _draw() -> void:

@@ -84,7 +84,7 @@ func _capture() -> void:
 		await wait_done(gallery)
 	gallery.scenario.select(2)
 	gallery._select_hero("veyra")
-	gallery._play("skill")
+	gallery._play("basic")
 	var deadline := Time.get_ticks_msec() + 7000
 	while not gallery.report.text.contains("SANGRAMENTO") and Time.get_ticks_msec() < deadline: await process_frame
 	await shot("godot-debuffs")
@@ -92,6 +92,15 @@ func _capture() -> void:
 	gallery.hide()
 	app._new_battle()
 	await create_timer(1.4).timeout
+	app._show_lab()
+	await app.lab._simulate()
+	await process_frame
+	await shot("godot-balance")
+	app.lab.hide()
+	app._begin_lesson(1)
+	await process_frame
+	await shot("godot-lesson")
+	app._end_lesson()
 	root.size = Vector2i(960, 640)
 	await process_frame
 	await shot("godot-small-window")

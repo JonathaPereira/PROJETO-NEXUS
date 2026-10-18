@@ -1,6 +1,6 @@
 # NEXUS — Ecos do Crepúsculo
 
-Protótipo jogável de RPG tático original: equipes de três, seis afinidades permanentes, turnos por iniciativa e 24 personagens. A referência é a legibilidade do combate de jogos como Marvel Avengers Alliance; universo, personagens, ilustrações, habilidades e identidade visual são próprios.
+Protótipo jogável de RPG tático original: equipes de três, cinco afinidades permanentes, turnos por iniciativa e 15 personagens ativos. A referência é a legibilidade do combate de jogos como Marvel Avengers Alliance; universo, personagens, ilustrações, habilidades e identidade visual são próprios.
 
 ## Jogar
 
@@ -8,7 +8,7 @@ Protótipo jogável de RPG tático original: equipes de três, seis afinidades p
 
 O projeto Godot está em **[godot/](godot/README.md)**. Use **Godot 4.6 Standard**, gratuito, sem a edição .NET. Importe [godot/project.godot](godot/project.godot), aguarde a importação dos recursos e pressione **F5**.
 
-A **Alpha 0.3** contém os 24 personagens, montagem das duas equipes, combate 3 contra 3, treino contra IA, duelo local, resultado e replay. O rework traz formação triangular, 72 imagens próprias de habilidades, poses de ataque para seis representantes e HUD que separa vida, escudo, crítico e dano contínuo. **Vulnerável/Resistente** aparece acima dos oponentes; a **Galeria de golpes** inclui cenários de escudo e debuffs. A campanha e a integração com A Lei do Trono ainda serão implementadas.
+A **Alpha 0.4** traz **15 kits distintos: tanque, suporte e dano em cada uma das cinco classes**. Lumi e nove personagens ficam arquivados com seus recursos preservados. Há combos entre aliados, provocação, proteção, penetração de escudos, prévias de ações, três batalhas guiadas e um laboratório com dados locais e simulações de IA separados. A formação triangular, artes de habilidades, poses e HUD da versão anterior foram preservados. Campanha e integração com A Lei do Trono continuam para etapas futuras.
 
 O endereço atual do GitHub Pages continua executando o protótipo JavaScript. A versão Godot é aberta pelo editor nesta etapa; sua exportação para navegador será uma entrega separada. Veja [godot/README.md](godot/README.md) para instruções, estrutura e testes.
 
@@ -60,18 +60,17 @@ As equipes e preferências ficam salvas neste navegador; uma batalha em andament
 
 ## Classes e elenco
 
-**Ígneo → Natural → Técnico → Arcano → Sombrio → Lumi → Ígneo.** Cada classe supera a próxima e causa **25% mais dano**. Atacar a classe que supera a sua causa **15% menos dano**; outras relações são neutras. A classe é fixa.
+**Ígneo → Natural → Técnico → Arcano → Sombrio → Ígneo.** Cada classe supera a próxima (+25% de dano); a relação inversa recebe resistência (−15%). Outras relações são neutras. A afinidade é fixa; a função depende do kit. Não é obrigatório escolher um personagem de cada função.
 
-| Classe  | Identidade                                           | Personagens                 |
-| ------- | ---------------------------------------------------- | --------------------------- |
-| Ígneo   | Pressão e queimadura                                 | Veyra, Rhazen, Cindra, Torv |
-| Natural | Recuperação e resistência                            | Sylva, Oren, Nima, Brin     |
-| Técnico | Barreiras e exposição                                | Axion, Kira, Bast, Vektor   |
-| Arcano  | Magia; ignora 25% da defesa                          | Astra, Elun, Saira, Ivo     |
-| Sombrio | Enfraquecimento; rouba 25% do dano causado como vida | Vesper, Maura, Noct, Riven  |
-| Lumi    | Cura e purificação                                   | Auren, Elyra, Solen, Zaya   |
+| Classe | Tanque | Suporte | Dano |
+| --- | --- | --- | --- |
+| Ígneo | Rhazen | Cindra | Veyra |
+| Natural | Oren | Sylva | Nima |
+| Técnico | Axion | Vektor | Kira |
+| Arcano | Elun | Saira | Astra |
+| Sombrio | Vesper | Maura | Riven |
 
-Cada personagem possui ataque básico, técnica, supremo e assinatura visual próprios. Defesa é uma ação comum. Há atacantes, controladores, guardiões e suportes; papel e afinidade são conceitos diferentes.
+Os nove restantes estão em `ARCHIVED_HEROES`, sem entrar na seleção ou nas simulações atuais. Kits e exemplos de sinergia: [godot/KITS.md](godot/KITS.md).
 
 ## Regras do modelo inicial
 
@@ -91,7 +90,7 @@ Enfraquecimento modifica o ataque; exposição e Arcano modificam a defesa efeti
 
 ## Apresentação e controles
 
-Ruínas sob um eclipse, HUD de obsidiana e ouro e ilustrações 2D originais. O protótipo combina deslocamento, antecipação, projéteis, impactos, partículas, números de dano/cura e **24 assinaturas visuais**, uma por personagem. Os supremos têm apresentação ampliada. São coreografias procedurais sobre ilustrações; animação esquelética ou quadros desenhados por golpe podem ser desenvolvidos após validar as mecânicas.
+Ruínas sob um eclipse, HUD de obsidiana e ouro e ilustrações 2D originais. O protótipo combina deslocamento, antecipação, projéteis, impactos, partículas, números de dano/cura e **15 assinaturas visuais ativas**, uma por personagem. Os supremos têm apresentação ampliada. São coreografias procedurais sobre ilustrações; animação esquelética ou quadros desenhados por golpe podem ser desenvolvidos após validar as mecânicas.
 
 O som é sintetizado localmente e ativado no topo. O guia oferece **Reduzir animações** e respeita inicialmente a preferência do sistema. No celular, **Ver ficha** abre atributos, história e habilidades.
 
@@ -124,7 +123,7 @@ npm run test:browser
 npm run test:site
 ```
 
-Os testes do motor cobrem regras, estados, término e simulações que exercitam todos os 24 heróis. Os testes de navegador verificam formações persistentes, filtros, guias, animação, IA, partida local completa, resultado, replay e celular. `test:site` verifica a versão construída em uma subpasta de URL, incluindo fontes, imagens, combate e celular. São testes funcionais, não uma análise antivírus. Capturas ficam em `artifacts/`, ignorada pelo Git.
+Os testes do motor cobrem regras, estados, término e simulações que exercitam todos os 15 heróis ativos. Os testes de navegador verificam formações persistentes, filtros, guias, animação, IA, partida local completa, resultado, replay e celular. `test:site` verifica a versão construída em uma subpasta de URL, incluindo fontes, imagens, combate e celular. São testes funcionais, não uma análise antivírus. Capturas ficam em `artifacts/`, ignorada pelo Git.
 
 O teste de navegador inicia e encerra seu servidor na porta 5199. Usa `CHROMIUM_EXECUTABLE_PATH`, `/usr/bin/chromium` quando disponível ou o Chromium do Playwright. Se necessário: `npx playwright install chromium`; para dependências de sistema Linux, `npx playwright install --with-deps chromium`. Para usar um servidor já aberto, defina `NEXUS_TEST_BASE_URL`.
 

@@ -1,12 +1,12 @@
 import { mkdir, copyFile, writeFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
-import { HEROES, CLASS_BY_ID, DEFAULT_TEAMS, GUARD } from "../src/data.js";
+import { HEROES, ARCHIVED_HEROES, CLASS_BY_ID, DEFAULT_TEAMS, GUARD } from "../src/data.js";
 
 const destination = new URL("../godot/", import.meta.url);
 await mkdir(new URL("data/", destination), { recursive: true });
 await mkdir(new URL("assets/", destination), { recursive: true });
 await writeFile(new URL("data/catalog.json", destination), JSON.stringify({
-  schemaVersion: 1, heroes: HEROES, classes: Object.values(CLASS_BY_ID),
+  schemaVersion: 1, heroes: HEROES, archivedHeroes: ARCHIVED_HEROES, classes: Object.values(CLASS_BY_ID),
   defaultTeams: DEFAULT_TEAMS, guard: GUARD,
 }, null, 2) + "\n");
 // Godot character art has its own cutouts/atlas; don't overwrite the refined art.

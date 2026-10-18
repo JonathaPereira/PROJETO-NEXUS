@@ -1,4 +1,5 @@
-export const CLASSES = [
+import { KITS, applyKit } from "./kits.js";
+export const ALL_CLASSES = [
   {
     id: "igneo",
     name: "Ígneo",
@@ -60,14 +61,15 @@ export const CLASSES = [
       "Proteção e renovação. Dissipa efeitos negativos e cura a equipe.",
   },
 ];
+export const CLASSES = ALL_CLASSES.filter(c => c.id !== "lumi");
 export const CLASS_BY_ID = Object.fromEntries(
   CLASSES.map((c, i) => [
     c.id,
     {
       ...c,
       index: i,
-      strongAgainst: CLASSES[(i + 1) % 6].id,
-      weakAgainst: CLASSES[(i + 5) % 6].id,
+      strongAgainst: CLASSES[(i + 1) % CLASSES.length].id,
+      weakAgainst: CLASSES[(i + CLASSES.length - 1) % CLASSES.length].id,
     },
   ]),
 );
@@ -530,7 +532,7 @@ const roster = [
     "Leva mensagens de uma era que ainda não começou.",
   ],
 ];
-export const HEROES = roster.map((r, index) => {
+export const ALL_HEROES = roster.map((r, index) => {
   const [
     id,
     name,
@@ -629,10 +631,12 @@ function skillDescription(kind, effect, power) {
     statuses[effect]
   );
 }
+export const HEROES = ALL_HEROES.filter(h => KITS[h.id]).map(applyKit);
+export const ARCHIVED_HEROES = ALL_HEROES.filter(h => !KITS[h.id]);
 export const HERO_BY_ID = Object.fromEntries(HEROES.map((h) => [h.id, h]));
 export const DEFAULT_TEAMS = [
   ["veyra", "astra", "axion"],
-  ["vesper", "oren", "auren"],
+  ["vesper", "oren", "kira"],
 ];
 export const GUARD = {
   id: "guard",

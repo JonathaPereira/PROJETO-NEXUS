@@ -64,6 +64,13 @@ var active_shield: Control
 var active_shield_label: Label
 var feedback: RichTextLabel
 var feedback_panel: PanelContainer
+var preview_requested := true
+var tutorial_index := -1
+var tutorial_progress: Dictionary = {}
+var free_settings: Dictionary = {}
+var lab
+const Lessons = preload("res://scripts/lessons.gd")
+const Lab = preload("res://scripts/lab.gd")
 
 func _ready() -> void:
 	texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
@@ -139,9 +146,13 @@ func _new_battle() -> void:
 	ai_pending = false
 	result_shown = false
 	selected_action = "basic"
+	preview_requested = true
 	target_id = ""
 	if is_instance_valid(feedback): feedback.text = "[center][color=#d5b480]LEITURA DO COMBATE[/color]  ·  Dano à vida e ao escudo aparecem separados.[/center]"
 	state = combat.new_battle(teams[0], teams[1], difficulty if mode == "training" else "normal")
+	if tutorial_index >= 0:
+		tutorial_progress = {}
+		Lessons.prepare(state, tutorial_index)
 	for fighter in fighters.values():
 		field.remove_child(fighter)
 		fighter.queue_free()
@@ -184,6 +195,7 @@ func _refresh() -> void:
 	_update_log()
 	if state.phase == "finished" and not result_shown:
 		result_shown = true
+		if tutorial_index < 0: Lab.record(state, mode, difficulty)
 		var damage := 0
 		var healing := 0
 		for data in state.units:
@@ -191,6 +203,8 @@ func _refresh() -> void:
 				damage += int(data.stats.damage)
 				healing += int(data.stats.healing)
 		result_dialog.dialog_text = "Equipe %d venceu!\n\n%d rodadas · %d ações\nDano da equipe vencedora: %d\nCura: %d\n\nJogue novamente ou feche para consultar o resultado." % [int(state.winner) + 1, state.round, state.turns, damage, healing]
+		if tutorial_index >= 0:
+			result_dialog.dialog_text += "\n\n" + Lessons.hint(tutorial_index, tutorial_progress)
 		result_dialog.popup_centered()
 
 func _start() -> void:
@@ -201,6 +215,7 @@ func _start() -> void:
 func _select_action(id: String) -> void:
 	if not _can_inspect() or not id in ACTIONS: return
 	selected_action = id
+	preview_requested = true
 	_refresh()
 
 func _select_target(id: String) -> void:
@@ -208,6 +223,7 @@ func _select_target(id: String) -> void:
 	var legal := combat.legal_targets(state, combat.current(state), combat.get_action(combat.current(state), selected_action))
 	if not legal.any(func(u): return u.id == id): return
 	target_id = id
+	preview_requested = true
 	_refresh()
 
 func _execute() -> void:
@@ -226,10 +242,14 @@ func _play_turn(action_id: String, target: String) -> void:
 		description.text = result.error
 		return
 	busy = true
+	preview_requested = false
 	CombatUI.lock_action(self, hero, action)
 	var hit := func():
 		if version != battle_version: return
-		sound.play_cue(int(catalog.class_by_id[hero.classId].index) if action_id != "guard" else 6)
+		var cue := int(catalog.class_by_id[hero.classId].index) if action_id != "guard" else 6
+		if result.events.any(func(e): return e.get("critical", false)): cue = 8
+		elif result.events.any(func(e): return e.get("absorbed", 0) > 0): cue = 7
+		sound.play_cue(cue)
 		for data in result.impactUnits:
 			fighters[data.id].refresh(data, data.id == actor.id, false, false)
 		CombatUI.update_actor_stats(self, result.impactUnits.filter(func(u): return u.id == actor.id)[0])
@@ -253,9 +273,10 @@ func _play_turn(action_id: String, target: String) -> void:
 			tick_stats.shield = event.shieldAfter
 			CombatUI.update_actor_stats(self, tick_stats)
 			step_label.text = "Resolvendo efeitos antes da próxima ação."
-			sound.play_cue(0 if event.type == "burn" else 4 if event.type == "bleed" else 5)
+			sound.play_cue(9 if event.type in ["burn", "bleed", "fracture"] else 5)
 			CombatUI.show_report(self, [event], "INÍCIO DO TURNO"))
 		if version != battle_version or not ticks_done: return
+	if tutorial_index >= 0: Lessons.observe(tutorial_progress, result, actor.side)
 	state = pending
 	busy = false
 	selected_action = "basic"
@@ -294,7 +315,7 @@ func _update_log() -> void:
 		var message := ""
 		match entry.type:
 			"action": message = "%s usou %s." % [actor, entry.name]
-			"damage", "heal", "shield", "guard", "burn", "bleed", "fracture": message = "%s: %s" % [target, CombatUI._plain(CombatUI.event_detail(entry))]
+			"damage", "heal", "shield", "guard", "burn", "bleed", "fracture", "energy", "status", "support", "converted": message = "%s: %s" % [target, CombatUI._plain(CombatUI.event_detail(entry))]
 			"defeated": message = "%s foi derrotado." % target
 		if not message.is_empty(): lines.append("[R%d] %s" % [entry.round, message])
 	log_view.text = "\n\n".join(lines) if not lines.is_empty() else "Escolha três personagens para cada equipe.\n\nVocê pode enfrentar a IA ou jogar com outra pessoa neste dispositivo."
@@ -318,7 +339,7 @@ func _show_classes() -> void:
 	var text := "Cada personagem possui uma afinidade permanente.\n\n"
 	for affinity in catalog.classes:
 		text += "%s → %s  (+25%% de dano)\n%s\n\n" % [affinity.name, catalog.class_by_id[affinity.strongAgainst].name, affinity.description]
-	text += "Atacar quem supera sua classe causa 15% menos dano.\nAs demais relações são neutras."
+	text += "Classe define afinidade; tanque, suporte e dano são funções dos kits. Cada classe tem as três funções. Lumi e nove personagens estão arquivados para esta fase de testes.\n\nAtacar quem supera sua classe causa 15% menos dano.\nAs demais relações são neutras."
 	dialog.dialog_text = text
 	add_child(dialog)
 	var help_text: String = dialog.dialog_text
@@ -334,7 +355,7 @@ func _show_classes() -> void:
 func _show_help() -> void:
 	var dialog := AcceptDialog.new()
 	dialog.title = "Como jogar"
-	dialog.dialog_text = "1. Monte duas equipes de três personagens diferentes.\n2. Escolha treino contra IA ou duelo no mesmo dispositivo.\n3. Inicie o combate e acompanhe a ordem dos turnos.\n4. Escolha uma ação, depois o alvo e confirme.\n5. Derrote os três rivais.\n\nAtaque: recupera 24 de energia.\nTécnica: custa 30; recarga de dois turnos pessoais.\nSupremo: custa 80 e atinge vários alvos.\nDefesa: reduz dano, concede escudo e recupera 25 de energia.\nCuras e escudos escolhem aliados.\n\nVerde = vida; azul = escudo; violeta = energia.\nOs números separam vida perdida, escudo absorvido e escudo restante.\nCrítico: 10% de chance, +40% de dano, inclusive contra escudos.\nQueimadura e sangramento: 6,5% da vida máxima no início de 2 turnos.\nAtravessam escudos; reaplicar renova a duração. Purificação remove ambos.\nRegen: +7% da vida máxima no início de 2 turnos.\nATQ↓ = enfraquecimento (−20%); DEF↓ = exposição (−25%).\nPasse o mouse sobre a ficha para consultar nomes e duração dos estados.\nVulnerável: +25% de dano; Resistente: −15%, em relação ao herói que age.\nA formação triangular é visual; a posição não altera defesa nem seleção.\n\nA partir da rodada 12, a Fratura causa dano crescente antes de agir.\nA formação fica salva; a batalha em andamento não.\nDuelo local usa atributos iguais para os dois lados."
+	dialog.dialog_text = "1. Monte duas equipes de três personagens diferentes.\n2. Escolha treino contra IA ou duelo no mesmo dispositivo.\n3. Inicie o combate e acompanhe a ordem dos turnos.\n4. Escolha uma ação, depois o alvo e confirme.\n5. Derrote os três rivais.\n\nAtaque: recupera 24 de energia.\nTécnica: custa 30; recarga de dois turnos pessoais.\nSupremo: custa 80; o alcance varia por personagem.\nDefesa: reduz dano, concede escudo e recupera 25 de energia.\nCuras e escudos escolhem aliados.\n\nVerde = vida; azul = escudo; violeta = energia.\nOs números separam vida perdida, escudo absorvido e escudo restante.\nCrítico: 10% de chance, +40% de dano, inclusive contra escudos.\nQueimadura e sangramento: 6,5% da vida máxima no início de 2 turnos.\nAtravessam escudos; reaplicar renova a duração. Purificação remove ambos.\nRegen: +7% da vida máxima no início de 2 turnos.\nATQ↓ = enfraquecimento (−20%); DEF↓ = exposição (−25%).\nPasse o mouse sobre a ficha para consultar nomes e duração dos estados.\nVulnerável: +25% de dano; Resistente: −15%, em relação ao herói que age.\nA formação triangular é visual; a posição não altera defesa nem seleção.\n\nFratura: começa na rodada 12 com 4% da vida máxima antes de cada ação pessoal. Cresce 2,5 pontos percentuais por rodada (limite 85%) e ignora escudos. Evita combates sem fim.\nProvocação limita ataques individuais ao tanque; ataques em área ignoram isso.\nProteção de Oren desvia 35% de um ataque individual ao protetor vivo.\nFortificação reduz dano em 20%; inspiração aumenta ATQ em 20%.\nSemente cura o próximo atacante aliado; Foco amplia o próximo golpe em 25%.\nCombos e condições próprias aparecem na descrição de cada habilidade.\nA formação fica salva; a batalha em andamento não.\nDuelo local usa atributos iguais para os dois lados."
 	add_child(dialog)
 	var help_text: String = dialog.dialog_text
 	dialog.dialog_text = ""
@@ -348,7 +369,7 @@ func _show_help() -> void:
 
 func _build_roster() -> void:
 	roster_dialog = AcceptDialog.new()
-	roster_dialog.title = "Monte suas equipes · escolha três por lado"
+	roster_dialog.title = "15 ativos · tanque, suporte e dano em cada classe · 9 arquivados"
 	roster_dialog.ok_button_text = "Usar equipes"
 	roster_dialog.confirmed.connect(_save_roster)
 	add_child(roster_dialog)
@@ -385,7 +406,7 @@ func _build_roster() -> void:
 	content.add_child(hero_detail)
 
 func _open_roster() -> void:
-	if started and state.phase == "playing": return
+	if tutorial_index >= 0 or (started and state.phase == "playing"): return
 	roster_work = teams.duplicate(true)
 	roster_side.select(0)
 	roster_filter.select(0)
@@ -408,7 +429,7 @@ func _refresh_roster() -> void:
 		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		button.toggle_mode = true
 		button.set_pressed_no_signal(hero.id in selected)
-		button.tooltip_text = "%s\n%s" % [hero.title, hero.lore]
+		button.tooltip_text = "%s · %s\n%s\nSinergia: %s" % [hero.title, hero.role, hero.identity, hero.synergy]
 		hero_grid.add_child(button)
 	roster_dialog.get_ok_button().disabled = not catalog.valid_team(roster_work[0]) or not catalog.valid_team(roster_work[1])
 
@@ -417,7 +438,7 @@ func _toggle_hero(id: String) -> void:
 	if id in selected: selected.erase(id)
 	elif selected.size() < 3: selected.append(id)
 	var hero: Dictionary = catalog.hero_by_id[id]
-	hero_detail.text = "%s · %s\nPV %d · ATQ %d · DEF %d · VEL %d\n%s\nTécnica — %s: %s\nSupremo — %s: %s" % [hero.name, hero.title, hero.hp, hero.attack, hero.defense, hero.speed, hero.lore, hero.skill.name, hero.skill.description, hero.ultimate.name, hero.ultimate.description]
+	hero_detail.text = "%s · %s\nPV %d · ATQ %d · DEF %d · VEL %d\n%s\nTécnica — %s: %s\nSupremo — %s: %s" % [hero.name, hero.title, hero.hp, hero.attack, hero.defense, hero.speed, hero.identity + " · Sinergia: " + hero.synergy, hero.skill.name, hero.skill.description, hero.ultimate.name, hero.ultimate.description]
 	_refresh_roster()
 
 func _save_roster() -> void:
@@ -441,9 +462,10 @@ func _load_preferences() -> void:
 
 func _save_preferences() -> void:
 	var config := ConfigFile.new()
-	for side in range(2): config.set_value("teams", str(side), teams[side])
-	config.set_value("game", "mode", mode)
-	config.set_value("game", "difficulty", difficulty)
+	var saved_teams: Array = free_settings.get("teams", teams)
+	for side in range(2): config.set_value("teams", str(side), saved_teams[side])
+	config.set_value("game", "mode", free_settings.get("mode", mode))
+	config.set_value("game", "difficulty", free_settings.get("difficulty", difficulty))
 	config.set_value("game", "reduced_motion", reduced_motion)
 	var error := config.save("user://preferences.cfg")
 	if error != OK: push_warning("Não foi possível salvar as preferências: %s" % error_string(error))
@@ -481,3 +503,52 @@ func _input(event: InputEvent) -> void:
 		if battle_focus and _can_act():
 			_execute()
 			get_viewport().set_input_as_handled()
+
+func _show_lab() -> void:
+	if not is_instance_valid(lab):
+		lab = Lab.new()
+		lab.catalog = catalog
+		add_child(lab)
+	lab.refresh()
+	lab.popup_centered_clamped(Vector2i(1130, 660), 0.95)
+
+func _show_lessons() -> void:
+	var dialog := AcceptDialog.new()
+	dialog.title = "Aprender · três batalhas guiadas"
+	add_child(dialog)
+	var column := VBoxContainer.new()
+	dialog.add_child(column)
+	for i in range(3):
+		var tip := _label(Lessons.hint(i, {}), 13, MUTED)
+		column.add_child(tip)
+		column.add_child(_button(Lessons.TITLES[i], func():
+			dialog.hide()
+			_begin_lesson(i)))
+	if tutorial_index >= 0:
+		column.add_child(_button("Voltar ao treino livre", func():
+			dialog.hide()
+			_end_lesson()))
+	dialog.visibility_changed.connect(func():
+		if not dialog.visible: dialog.queue_free())
+	dialog.popup_centered()
+
+func _begin_lesson(index: int) -> void:
+	if free_settings.is_empty(): free_settings = {"teams": teams.duplicate(true), "mode": mode, "difficulty": difficulty}
+	tutorial_index = index
+	teams = Lessons.TEAMS[index].duplicate(true)
+	mode = "training"
+	difficulty = "easy"
+	mode_picker.select(0)
+	difficulty_picker.select(0)
+	_new_battle()
+
+func _end_lesson() -> void:
+	if free_settings.is_empty(): return
+	teams = free_settings.teams
+	mode = free_settings.mode
+	difficulty = free_settings.difficulty
+	free_settings = {}
+	tutorial_index = -1
+	mode_picker.select(0 if mode == "training" else 1)
+	difficulty_picker.select(["easy", "normal", "hard"].find(difficulty))
+	_new_battle()

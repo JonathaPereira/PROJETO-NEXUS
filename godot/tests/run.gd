@@ -57,8 +57,9 @@ func _run() -> void:
 		var commands: Array = []
 		for command in fixture.commands:
 			var choice := combat.choose_ai(state)
+			var prediction: Variant = combat.preview(state, command.actionId, command.targetId) if commands.is_empty() else null
 			var result := combat.act(state, command.actionId, command.targetId)
-			commands.append({"choice": choice, "result": result})
+			commands.append({"choice": choice, "result": result, "prediction": prediction})
 		results.append({"initial": initial, "commands": commands, "final": state})
 	var state := combat.new_battle(combat.catalog.default_teams[0], combat.catalog.default_teams[1])
 	var before := state.duplicate(true)
@@ -93,7 +94,7 @@ func _ui() -> void:
 		check(fighter.health.size.y == 8 and fighter.energy.size.y == 4, "Health and energy bars do not overlap the stats")
 	await _layout(app)
 	check(app.fighters["1-oren"].relationship.visible and app.fighters["1-oren"].relationship.text.contains("VULNERÁVEL"), "Weak opponent is explicitly labeled relative to current attacker")
-	check(app.fighters["1-auren"].relationship.visible and app.fighters["1-auren"].relationship.text.contains("RESISTENTE"), "Resistant opponent is explicitly labeled")
+	check(app.fighters["1-vesper"].relationship.visible and app.fighters["1-vesper"].relationship.text.contains("RESISTENTE"), "Resistant opponent is explicitly labeled")
 	app._select_action("guard")
 	check(not app.fighters["1-oren"].relationship.visible, "Support actions do not display misleading enemy weakness labels")
 	app._select_action("basic")
@@ -103,25 +104,25 @@ func _ui() -> void:
 		for action_id in ["basic", "skill", "ultimate"]:
 			var icon: AtlasTexture = Art.icon(int(hero.index), action_id)
 			icons.append("%s:%s" % [icon.atlas.resource_path, icon.region])
-	check(icons.size() == 72 and icons.all(func(icon): return icons.count(icon) == 1), "Every hero's three skills use their own illustrated texture region")
-	check(app.sound.cues.size() == 7 and app.sound.cues[0].data.size() > 0, "Synthesized audio cues loaded")
+	check(icons.size() == 45 and icons.all(func(icon): return icons.count(icon) == 1), "Every hero's three skills use their own illustrated texture region")
+	check(app.sound.cues.size() == 10 and app.sound.cues[0].data.size() > 0, "Synthesized audio cues loaded")
 	app.roster_button.pressed.emit()
-	check(app.hero_grid.get_child_count() == 24, "Roster contains 24 heroes")
+	check(app.hero_grid.get_child_count() == 15, "Roster contains 15 active heroes")
 	app.hero_grid.get_node("veyra").pressed.emit()
 	check(app.roster_dialog.get_ok_button().disabled, "Incomplete team cannot be confirmed")
 	app.hero_grid.get_node("sylva").pressed.emit()
 	check(not app.roster_dialog.get_ok_button().disabled, "Three distinct heroes can be confirmed")
-	app.hero_grid.get_node("brin").pressed.emit()
+	app.hero_grid.get_node("nima").pressed.emit()
 	check(app.roster_work[0].size() == 3, "Fourth hero cannot be added")
 	app.roster_side.select(1)
 	app.roster_side.item_selected.emit(1)
-	app.hero_grid.get_node("auren").pressed.emit()
-	app.hero_grid.get_node("elyra").pressed.emit()
-	check("elyra" in app.roster_work[1], "Both teams can be edited")
-	for index in range(1, 7):
+	app.hero_grid.get_node("kira").pressed.emit()
+	app.hero_grid.get_node("saira").pressed.emit()
+	check("saira" in app.roster_work[1], "Both teams can be edited")
+	for index in range(1, 6):
 		app.roster_filter.select(index)
 		app.roster_filter.item_selected.emit(index)
-		check(app.hero_grid.get_child_count() == 4, "Each class filters to four heroes")
+		check(app.hero_grid.get_child_count() == 3, "Each class filters to three heroes")
 	app.roster_dialog.hide()
 	app._save_roster()
 	var restored = MainScene.instantiate()
@@ -180,6 +181,10 @@ func _ui() -> void:
 		await process_frame
 		turns += 1
 	check(app.state.phase == "finished" and app.result_dialog.visible, "Complete local match displays a result")
+	var recorded: int = app.Lab.read_records().size()
+	app._refresh()
+	app._refresh()
+	check(app.Lab.read_records().size() == recorded, "Result refresh cannot record a match twice")
 	app.result_dialog.hide()
 	app.result_dialog.confirmed.emit()
 	check(app.state.turns == 0 and not app.started, "Replay resets actions and battle state")
@@ -206,6 +211,7 @@ func _ui() -> void:
 	app._new_battle()
 	await create_timer(0.8).timeout
 	check(not app.busy and app.state.turns == 0 and app.effects.get_child_count() == 0, "Restart during animation cancels stale effects and actions")
+	await _new_features(app)
 	await _gallery(app)
 	await _feedback(app)
 	var config := ConfigFile.new()
@@ -269,7 +275,7 @@ func _gallery(app) -> void:
 	await process_frame
 	var gallery = app.showcase
 	var preserved: Dictionary = app.state.duplicate(true)
-	check(gallery.hero_buttons.size() == 6, "Gallery exposes one representative per class")
+	check(gallery.hero_buttons.size() == 5, "Gallery exposes one representative per class")
 	check(gallery.size.y <= root.get_visible_rect().size.y, "Gallery window fits the viewport instead of inflating during text wrapping")
 	var content := Rect2(Vector2.ZERO, Vector2(gallery.size))
 	for button in gallery.action_buttons: check(content.encloses(button.get_global_rect()), "Gallery action buttons stay visible")
@@ -287,7 +293,7 @@ func _gallery(app) -> void:
 		check(not gallery.playing, "%s basic attack completes" % id)
 		await gallery._play("ultimate")
 		check(not gallery.playing, "%s supreme completes" % id)
-	check(profiles.size() == 6 and profiles.all(func(profile): return profiles.count(profile) == 1), "All six classes have distinct choreography profiles")
+	check(profiles.size() == 5 and profiles.all(func(profile): return profiles.count(profile) == 1), "All five active classes have distinct choreography profiles")
 	check(app.state == preserved, "The gallery does not mutate the live battle")
 	gallery.scenario.select(1)
 	gallery._select_hero("veyra")
@@ -295,7 +301,7 @@ func _gallery(app) -> void:
 	check(gallery.report.text.contains("CRÍTICO") and gallery.report.text.contains("ESCUDO"), "Gallery can demonstrate a calculated critical against shield")
 	gallery.scenario.select(2)
 	gallery._select_hero("veyra")
-	await gallery._play("skill")
+	await gallery._play("basic")
 	check(gallery.report.text.contains("SANGRAMENTO") and gallery.director.last_numbers.has("QUEIMADURA"), "Gallery demonstrates both periodic damage types independently")
 	check(app.state == preserved, "Gallery scenarios cannot change the real battle or its RNG")
 	gallery.scenario.select(0)
@@ -315,6 +321,7 @@ func _feedback(app) -> void:
 	target.shield = 600
 	target.statuses = [{"type": "burn", "turns": 2}, {"type": "bleed", "turns": 2}]
 	app.state.random = 1972
+	app.state.order = ["0-veyra", "1-vesper", "1-kira", "0-astra", "0-axion", "1-oren"]
 	app._start()
 	var baseline: int = app.director.impact_count
 	app._execute()
@@ -333,3 +340,71 @@ func _feedback(app) -> void:
 	check(app.log_view.text.contains("CRÍTICO") and app.log_view.text.contains("SANGRAMENTO") and app.log_view.text.contains("resta"), "Detailed battle log preserves shield, critical and debuff evidence")
 	app._new_battle()
 	await create_timer(1.2).timeout
+
+func _new_features(app) -> void:
+	app._new_battle()
+	var before: Dictionary = app.state.duplicate(true)
+	app._select_action("skill")
+	check(app.feedback.text.contains("PRÉVIA"), "Selecting an available ability shows exact preview")
+	check(app.state == before, "HUD preview cannot spend energy or advance RNG")
+	for affinity in app.catalog.classes:
+		var roles: Array = app.catalog.heroes.filter(func(h): return h.classId == affinity.id).map(func(h): return h.role)
+		check(roles.size() == 3 and roles.has("Tanque") and roles.has("Suporte") and roles.has("Dano"), "Every affinity has all three roles")
+	check(app.catalog.archived_heroes.size() == 9, "Archived heroes remain in catalog")
+	var teams_before: Array = app.teams.duplicate(true)
+	for index in range(3):
+		app._begin_lesson(index)
+		check(app.tutorial_index == index and app.roster_button.disabled, "Guided battle locks its teaching team")
+		check(app.step_label.tooltip_text.contains(app.Lessons.TITLES[index]), "Guided battle displays objectives")
+		# Observe actual engine receipts rather than setting completed flags.
+		var engine = Combat.new()
+		var sample := engine.new_battle(app.teams[0], app.teams[1])
+		var progress := {}
+		if index == 0:
+			for action_id in ["basic", "skill", "guard"]:
+				sample.order = ["0-veyra"]
+				sample.cursor = 0
+				var unit := engine.unit(sample, "0-veyra")
+				unit.energy = 100
+				unit.cooldowns = {"skill": 0, "ultimate": 0}
+				var targets := engine.legal_targets(sample, unit, engine.get_action(unit, action_id))
+				app.Lessons.observe(progress, engine.act(sample, action_id, targets[0].id), 0)
+		elif index == 1:
+			sample.order = ["0-veyra", "1-oren"]
+			sample.cursor = 0
+			app.Lessons.prepare(sample, index)
+			app.Lessons.observe(progress, engine.act(sample, "skill", "1-oren"), 0)
+		else:
+			sample.order = ["0-riven", "1-vesper"]
+			sample.cursor = 0
+			app.Lessons.prepare(sample, index)
+			app.Lessons.observe(progress, engine.act(sample, "basic", "1-vesper"), 0)
+			sample.order = ["0-riven"]
+			sample.cursor = 0
+			app.Lessons.observe(progress, engine.act(sample, "guard", "0-riven"), 0)
+		check(app.Lessons.complete(index, progress), "Real action receipts complete all lesson objectives")
+	app._end_lesson()
+	check(app.teams == teams_before and app.tutorial_index == -1, "Leaving lessons restores free teams")
+	app._show_lab()
+	await process_frame
+	await process_frame
+	check(app.lab.size.y <= root.get_visible_rect().size.y, "Balance window fits the viewport")
+	check(Rect2(Vector2.ZERO, Vector2(app.lab.size)).encloses(app.lab.get_ok_button().get_global_rect()), "Balance close button remains visible")
+	await app.lab._simulate()
+	check(app.lab.rows.size() == 60, "Lab stores exactly sixty AI matches in its own dataset")
+	check(app.lab.table.get_root().get_child_count() == 15, "Lab reports all fifteen active heroes")
+	var compositions := {}
+	for match_data in app.lab.rows:
+		compositions[str(match_data.units.slice(0, 3).map(func(u): return u.heroId))] = true
+	check(compositions.size() >= 20, "AI sample includes varied compositions rather than repeating fixed trios")
+	check(app.state.turns == 0, "Balance simulations cannot change the real battle")
+	app.lab.source.select(0)
+	app.lab.refresh()
+	check(app.lab.rows.all(func(m): return m.source == "played"), "Played and simulated matches remain separated")
+	app.lab.hide()
+	var records: Array = app.Lab.read_records()
+	var malformed := FileAccess.open(app.Lab.STORE, FileAccess.WRITE)
+	malformed.store_string('{"schema":1,"matches":[{"source":"ai","rounds":2,"units":[]}]}')
+	malformed.close()
+	check(app.Lab.read_records().is_empty(), "Malformed balance record is ignored safely")
+	app.Lab.persist(records)

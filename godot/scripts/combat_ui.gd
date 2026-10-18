@@ -3,6 +3,7 @@ const Fighter = preload("res://scripts/fighter.gd")
 const Card = preload("res://scripts/skill_card.gd")
 const Meter = preload("res://scripts/meter.gd")
 const Backdrop = preload("res://scripts/arena_backdrop.gd")
+const Lessons = preload("res://scripts/lessons.gd")
 const Sound = preload("res://scripts/sound.gd")
 
 static func build(app) -> void:
@@ -24,12 +25,14 @@ static func build(app) -> void:
 	var title = app._label("NEXUS", 28, app.GOLD)
 	title.add_theme_font_override("font", preload("res://assets/cinzel.ttf"))
 	brand.add_child(title)
-	brand.add_child(app._label("ECOS DO CREPÚSCULO  /  ALPHA 0.3", 10, app.MUTED))
+	brand.add_child(app._label("ECOS DO CREPÚSCULO  /  ALPHA 0.4", 10, app.MUTED))
 	app.roster_button = app._button("Equipes", app._open_roster)
 	header.add_child(app.roster_button)
 	header.add_child(app._button("Afinidades", app._show_classes))
 	header.add_child(app._button("Ajuda", app._show_help))
-	header.add_child(app._button("Galeria de golpes", app._open_showcase))
+	header.add_child(app._button("Golpes", app._open_showcase))
+	header.add_child(app._button("Aprender", app._show_lessons))
+	header.add_child(app._button("Balanço", app._show_lab))
 	app.log_dialog = AcceptDialog.new()
 	app.log_dialog.title = "Registro da batalha"
 	app.add_child(app.log_dialog)
@@ -237,14 +240,14 @@ static func refresh(app) -> void:
 	var targets: Array = app.combat.legal_targets(app.state, actor, action)
 	var ids: Array = targets.map(func(u): return u.id)
 	if not app.target_id in ids: app.target_id = ids[0] if not ids.is_empty() else ""
-	app.roster_button.disabled = app.started and app.state.phase == "playing"
+	app.roster_button.disabled = app.tutorial_index >= 0 or (app.started and app.state.phase == "playing")
 	app.roster_button.tooltip_text = "Reinicie para alterar as equipes." if app.roster_button.disabled else "Escolha três personagens por equipe."
-	app.mode_picker.disabled = app.started and app.state.phase == "playing"
-	app.difficulty_picker.disabled = (app.started and app.state.phase == "playing") or app.mode == "local"
+	app.mode_picker.disabled = app.tutorial_index >= 0 or (app.started and app.state.phase == "playing")
+	app.difficulty_picker.disabled = (app.started and app.state.phase == "playing") or app.mode == "local" or app.tutorial_index >= 0
 	app.start_button.visible = not app.started
 	app.phase_label.text = "Prepare sua equipe" if not app.started else ("Batalha encerrada" if app.state.phase == "finished" else "%s · %s" % [hero.name, "sua vez" if app._human_turn() else "vez do rival"])
-	app.round_label.text = "RODADA %02d   /   RUÍNAS DE ASTERION" % app.state.round
-	if app.state.round >= 12: app.round_label.text = "RODADA %02d   /   FRATURA ATIVA" % app.state.round
+	app.round_label.text = "RODADA %02d  ·  FRATURA EM %d RODADAS" % [app.state.round, 12 - app.state.round]
+	if app.state.round >= 12: app.round_label.text = "FRATURA: %.1f%% DA VIDA / TURNO · IGNORA ESCUDO" % (minf(0.85, 0.04 + (app.state.round - 12) * 0.025) * 100)
 	app.active_label.text = hero.name
 	app.active_class.text = "%s\n%s" % [app.catalog.class_by_id[hero.classId].name, hero.role]
 	app.active_class.add_theme_color_override("font_color", app.catalog.affinity_color(hero.classId))
@@ -275,7 +278,7 @@ static func refresh(app) -> void:
 		button.disabled = not app._can_act()
 		button.add_theme_font_size_override("font_size", 13)
 		app.target_buttons.add_child(button)
-	var all_targets: bool = action.kind in ["aoe", "healAll", "shieldAll"]
+	var all_targets: bool = action.kind in ["aoe", "healAll", "shieldAll", "supportAll"]
 	app.execute_button.text = "Confirmar em todos" if all_targets else "Usar em %s" % app._unit_name(app.target_id)
 	if not app.started: app.execute_button.text = "Inicie o combate"
 	elif not selected.available: app.execute_button.text = "Em recarga" if actor.cooldowns.get(app.selected_action, 0) > 0 else "Energia insuficiente"
@@ -288,6 +291,12 @@ static func refresh(app) -> void:
 		fighter.set_relationship(multiplier, data.side != actor.side and action.kind in ["damage", "aoe"] and app.state.phase == "playing")
 		fighter.disabled = not app._can_act() or not data.id in ids
 	app.backdrop.motion_enabled = not app.reduced_motion
+	if app.preview_requested and app._can_inspect(): _preview(app, action)
+	if app.tutorial_index >= 0:
+		var goals: Array = Lessons.GOALS[app.tutorial_index]
+		var pending: Array = goals.filter(func(g): return not app.tutorial_progress.get(g, false))
+		app.step_label.text = "Treino %d · %d/%d objetivos\n%s" % [app.tutorial_index + 1, goals.size() - pending.size(), goals.size(), "Próximo: " + Lessons.LABELS[pending[0]] if not pending.is_empty() else "Concluído! Veja Aprender."]
+		app.step_label.tooltip_text = Lessons.hint(app.tutorial_index, app.tutorial_progress)
 	_timeline(app)
 
 static func update_actor_stats(app, actor: Dictionary) -> void:
@@ -304,17 +313,25 @@ static func event_detail(event: Dictionary) -> String:
 	var detail := ""
 	match event.type:
 		"damage":
+			if event.get("reaction", false): detail += "CONTRA-ATAQUE · "
+			if event.get("intercepted", false): detail += "PROTETOR · "
+			if event.has("combo"): detail += "COMBO · "
 			if event.get("critical", false): detail += "[color=#ffd17a]CRÍTICO![/color]  "
 			detail += "[color=#ffc0af]−%d VIDA[/color]" % event.amount
 			if event.get("absorbed", 0) > 0:
 				detail += "  ·  [color=#83d8ff]−%d ESCUDO · resta %d[/color]" % [event.absorbed, event.shieldAfter]
 				if event.shieldAfter == 0: detail += "  ·  [color=#83d8ff]ESCUDO QUEBRADO[/color]"
 			if event.get("advantage", 1.0) != 1.0: detail += "  ·  " + ("Vulnerável +25%" if event.advantage > 1 else "Resistente −15%")
-		"heal": detail = "[color=#a1e6b3]+%d VIDA%s[/color]" % [event.amount, (" · REGENERAÇÃO" if event.has("remaining") else " · DRENO DE VIDA") if event.get("passive", false) else ""]
+		"heal": detail = "[color=#a1e6b3]+%d VIDA%s[/color]" % [event.amount, (" · REGENERAÇÃO" if event.has("remaining") else " · SEMENTE" if event.get("source", "") == "seed" else " · DRENO DE VIDA") if event.get("passive", false) else ""]
 		"shield", "guard": detail = "[color=#83d8ff]+%d ESCUDO · total %d[/color]" % [event.amount, event.get("shieldAfter", event.amount)]
+		"energy": detail = "+%d ENERGIA · total %d" % [event.amount, event.energyAfter]
+		"converted": detail = "%d ESCUDO CONVERTIDO EM DANO" % event.shieldSpent
+		"support": detail = "SUPORTE"
+		"status": detail = "ESTADO APLICADO"
 		"burn", "bleed", "fracture":
 			detail = "[color=#ffb49b]%s · −%d VIDA[/color]  ·  atravessa escudos" % [{"burn": "QUEIMADURA", "bleed": "SANGRAMENTO", "fracture": "FRATURA"}[event.type], event.amount]
 			if event.has("remaining"): detail += "  ·  %d ativação(ões) restante(s)" % event.remaining
+	if event.has("extraEffect"): detail += "  ·  %s 2T" % Fighter.STATUS_NAMES.get(event.extraEffect, event.extraEffect)
 	if event.has("effect"):
 		if event.effect == "cleanse": detail += "  ·  PURIFICADO (%d efeito(s))" % event.cleansed.size()
 		else: detail += "  ·  [color=#eac4ee]%s %dT[/color]" % [Fighter.STATUS_NAMES.get(event.effect, event.effect).to_upper(), event.effectTurns]
@@ -335,6 +352,9 @@ static func show_report(app, events: Array, title: String) -> void:
 		var healing := 0
 		var granted := 0
 		var criticals := 0
+		var energy := 0
+		var combos := 0
+		var counters := 0
 		var recipients: Array = []
 		var remaining: Array = []
 		var statuses: Array = []
@@ -346,6 +366,9 @@ static func show_report(app, events: Array, title: String) -> void:
 				absorbed += int(event.absorbed)
 			elif event.type == "heal": healing += int(event.amount)
 			elif event.type in ["shield", "guard"]: granted += int(event.amount)
+			elif event.type == "energy": energy += int(event.amount)
+			if event.has("combo"): combos += 1
+			if event.get("reaction", false): counters += 1
 			if event.get("critical", false): criticals += 1
 			if event.has("shieldAfter") and (event.type in ["shield", "guard"] or event.get("absorbed", 0) > 0): remaining.append("%s %d" % [app._unit_name(event.target), event.shieldAfter])
 			if event.has("effect"):
@@ -355,6 +378,9 @@ static func show_report(app, events: Array, title: String) -> void:
 		if health_loss > 0 or absorbed > 0: totals.append("[color=#ffc0af]−%d VIDA[/color] / [color=#83d8ff]−%d ESCUDO[/color]" % [health_loss, absorbed])
 		if healing > 0: totals.append("[color=#a1e6b3]+%d CURA[/color]" % healing)
 		if granted > 0: totals.append("[color=#83d8ff]+%d ESCUDO[/color]" % granted)
+		if energy > 0: totals.append("+%d ENERGIA" % energy)
+		if combos > 0: totals.append("%d COMBO(S)" % combos)
+		if counters > 0: totals.append("%d CONTRA-ATAQUE(S)" % counters)
 		if not remaining.is_empty(): totals.append("Escudos: " + ", ".join(remaining))
 		if not statuses.is_empty(): totals.append(", ".join(statuses))
 		app.feedback.text = "[center][color=#d5b480]%s · %d alvo(s)%s[/color]\n%s[/center]" % [title, recipients.size(), " · %d CRÍTICO(S)" % criticals if criticals > 0 else "", "  ·  ".join(totals)]
@@ -399,3 +425,37 @@ static func lock_action(app, hero: Dictionary, action: Dictionary) -> void:
 	for card in app.action_buttons.values(): card.disabled = true
 	for button in app.target_buttons.get_children(): button.disabled = true
 	for fighter in app.fighters.values(): fighter.disabled = true
+
+static func _preview(app, action: Dictionary) -> void:
+	var result: Dictionary = app.combat.preview(app.state, app.selected_action, app.target_id)
+	if result.normal.has("error"):
+		app.feedback.text = "[center]PRÉVIA INDISPONÍVEL · " + result.normal.error + "[/center]"
+		return
+	var totals: Array = []
+	var details: Array = []
+	var has_damage: bool = result.normal.events.any(func(e): return e.type == "damage")
+	for name in (["normal", "critical"] if has_damage else ["normal"]):
+		var hp := 0
+		var shield := 0
+		var healing := 0
+		var granted := 0
+		var energy := 0
+		var statuses: Array = []
+		for event in result[name].events:
+			if event.type == "damage":
+				hp += int(event.amount)
+				shield += int(event.absorbed)
+			elif event.type == "heal": healing += int(event.amount)
+			elif event.type in ["shield", "guard"]: granted += int(event.amount)
+			elif event.type == "energy": energy += int(event.amount)
+			if name == "normal":
+				details.append("%s: %s" % [app._unit_name(event.target), _plain(event_detail(event))])
+				if event.has("effect") and not event.effect in statuses: statuses.append(event.effect)
+		var label := "%s: −%d PV / −%d esc." % ["Normal" if name == "normal" else "Crítico", hp, shield] if has_damage else ""
+		if healing > 0: label += " · +%d cura" % healing
+		if granted > 0: label += " · +%d escudo" % granted
+		if energy > 0: label += " · +%d energia" % energy
+		if not has_damage and not statuses.is_empty(): label += " · " + ", ".join(statuses.map(func(k): return Fighter.STATUS_NAMES.get(k, "Purificação")))
+		totals.append(label.trim_prefix(" · "))
+	app.feedback.text = "[center][color=#d5b480]PRÉVIA · %s · custo %d EN[/color]\n%s[/center]" % [action.name, action.get("cost", 0), "  |  ".join(totals)]
+	app.feedback.tooltip_text = "\n".join(details) + "\n" + action.description + "\nCrítico: chance de 10%. Valores excluem efeitos do próximo turno; incluem reações ao golpe."

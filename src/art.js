@@ -62,9 +62,10 @@ export const STATUS_LABELS = {
   regen: "Regeneração",
   weaken: "Ataque reduzido",
   expose: "Defesa exposta",
+  empower:"Ataque +20%", fortify:"Dano recebido −20%", cover:"Proteção 35%", mirror:"Reflete dano", riposte:"Contra-ataque", taunt:"Provocação", emberguard:"Brasa reativa", focus:"Próximo golpe +25%", seed:"Próximo atacante cura 10%",
 };
 export function statusIcon(type) {
   return icon(
-    { burn: "flame", bleed: "swords", regen: "leaf", weaken: "moon", expose: "target" }[type],
+    { burn: "flame", bleed: "swords", regen: "leaf", weaken: "moon", expose: "target" }[type] || "spark",
   );
 }

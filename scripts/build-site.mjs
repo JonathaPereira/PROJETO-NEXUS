@@ -8,7 +8,7 @@ const output = resolve(root, process.argv.includes("--pages") ? "docs" : "dist")
 // credential, development server, test fixture or private browser profile.
 const files = [
   "index.html", "styles.css",
-  "src/app.js", "src/art.js", "src/data.js", "src/engine.js",
+  "src/app.js", "src/art.js", "src/data.js", "src/engine.js", "src/kits.js",
   "assets/arena.png", "assets/heroes.png", "assets/favicon.svg",
   "assets/cinzel.ttf", "assets/manrope.ttf",
   "assets/Cinzel-LICENSE.txt", "assets/Manrope-LICENSE.txt",

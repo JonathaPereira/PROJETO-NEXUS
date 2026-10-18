@@ -611,8 +611,8 @@ button:disabled {
 }
 .wheel-node {
   position: absolute;
-  left: calc(50% + 65px * sin(var(--i) * 60deg));
-  top: calc(48% - 65px * cos(var(--i) * 60deg));
+  left: calc(50% + 65px * sin(var(--i) * 72deg));
+  top: calc(48% - 65px * cos(var(--i) * 72deg));
   transform: translate(-50%, -50%);
   padding: 0;
   display: flex;

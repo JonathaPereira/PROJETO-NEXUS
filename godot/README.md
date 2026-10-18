@@ -1,142 +1,76 @@
-# NEXUS em Godot
+# NEXUS em Godot — Alpha 0.4
 
-**Alpha 0.3** em **Godot 4.6 / GDScript**, validada com Godot 4.6.3 Standard em Linux. Sem addons, bibliotecas pagas, C#, chaves de API ou dependências de produção do npm. O motor é gratuito e tem licença MIT; desenvolvimento local não exige hospedagem.
+Godot 4.6 Standard / GDScript, gratuito e sem addons pagos. Validado com Godot 4.6.3 em Linux.
 
-## Abrir e jogar
+## Atualizar e abrir no Windows
 
-1. Instale o [Godot Standard](https://godotengine.org/download/) 4.6 ou posterior; a edição .NET não é necessária.
-2. Obtenha o código da branch `codex/nexus-jogavel`. Com Git:
+1. Feche o Godot. Abra a [branch atualizada](https://github.com/JonathaPereira/PROJETO-NEXUS/tree/codex/nexus-jogavel).
+2. Clique em **Code → Download ZIP** e depois **Extrair tudo**, em uma pasta nova.
+3. No gerenciador do Godot, clique em **Importar** e selecione `godot/project.godot` dentro da pasta extraída.
+4. Aguarde a importação, pressione **F5** e confira **ALPHA 0.4** no topo.
+5. Experimente **Aprender** para os três treinos guiados, ou **Equipes → Iniciar combate** para jogar livremente.
 
-   ```bash
-   git clone --branch codex/nexus-jogavel --single-branch https://github.com/JonathaPereira/PROJETO-NEXUS.git
-   ```
+Sua cópia anterior não atualiza automaticamente. Quem usa Git pode atualizar a branch com `git pull --ff-only`, preservando alterações locais.
 
-3. No gerenciador de projetos do Godot, escolha **Importar** e selecione `PROJETO-NEXUS/godot/project.godot`.
-4. Abra o projeto, aguarde a importação das imagens e fontes e pressione **F5**.
-5. Clique em **Equipes**, escolha três heróis por lado e confirme. Escolha treino contra IA ou duelo no mesmo computador e use **Iniciar combate**.
-6. Selecione ataque, técnica, supremo ou defesa. Clique no personagem ou no botão do alvo e confirme em **Usar em…**. As ações de cura e proteção escolhem aliados.
+## Cinco afinidades, três funções por classe
 
-O editor também executa o jogo pela linha de comando, a partir da raiz do repositório:
+O ciclo é **Ígneo → Natural → Técnico → Arcano → Sombrio → Ígneo**. Vantagem: +25%; resistência na direção inversa: −15%; demais relações neutras. Classe define afinidade, enquanto tanque, suporte e dano são funções do kit. Você pode combinar livremente três personagens distintos, sem obrigação de levar um de cada função.
 
-```bash
-godot --path godot
-```
+Há **15 personagens ativos**. Lumi e nove personagens ficam arquivados, preservando dados, imagens e índices de atlas. Preferências antigas com personagens inativos usam a equipe padrão ao importar a nova versão. [Kits e sinergias](KITS.md).
 
-Atalhos: **1–4** selecionam a ação; **← / →** alternam os alvos; **Enter** confirma inclusive quando uma carta de habilidade tem o foco. Há guia de afinidades, instruções, opção de reduzir animações e som sintetizado ativado por botão. A formação e as preferências são salvas em `user://preferences.cfg`; uma batalha em andamento não é restaurada. Para trocar equipes durante uma partida, use **Reiniciar**.
+| Classe | Tanque | Suporte | Dano |
+| --- | --- | --- | --- |
+| Ígneo | Rhazen | Cindra | Veyra |
+| Natural | Oren | Sylva | Nima |
+| Técnico | Axion | Vektor | Kira |
+| Arcano | Elun | Saira | Astra |
+| Sombrio | Vesper | Maura | Riven |
 
-Para atualizar uma cópia obtida por download, feche o Godot, obtenha novamente a mesma branch e extraia em uma pasta nova. Importe o `godot/project.godot` dessa nova pasta. O cabeçalho mostra **ALPHA 0.3**. Quem usa Git pode atualizar a branch com `git pull --ff-only`, preservando eventuais alterações locais.
+## Leitura do combate
 
-## Atualizar no Windows sem usar Git
+Escolha habilidade, alvo e **Usar em…**. **1–4**, setas e **Enter** também funcionam. Ataques recuperam 24 de energia; defesa recupera 25, concede escudo e reduz dano até o próximo turno; técnica custa 30 e tem dois turnos pessoais de recarga; supremo custa 80, com alcance próprio de cada kit.
 
-1. Feche o projeto no Godot.
-2. Abra a [branch com a atualização](https://github.com/JonathaPereira/PROJETO-NEXUS/tree/codex/nexus-jogavel).
-3. Clique no botão verde **Code → Download ZIP**. No Explorador do Windows, use **Extrair tudo** para uma **pasta nova**.
-4. No gerenciador do Godot, clique em **Importar**, entre na pasta extraída e na subpasta **godot** e selecione **project.godot**.
-5. Abra, aguarde a importação e pressione **F5**. Confira **ALPHA 0.3** no topo do jogo.
+O banner mostra a **prévia normal e crítica**, separando dano à vida e ao escudo. Passe o mouse para ver os recibos por alvo, reações e estados. A prévia não altera energia, turnos ou aleatoriedade e exclui os efeitos do início do próximo turno. Críticos têm 10% de chance e +40% de dano. Ao executar, a prévia dá lugar ao resultado real; selecionar outra ação ou alvo volta a mostrar a previsão.
 
-A cópia que já estava aberta no seu computador não recebe os novos arquivos automaticamente.
+Vida é verde; escudo, azul; energia, violeta. Os valores distinguem dano absorvido, escudo restante e quebra. Combo, contra-ataque, protetor e cura da Semente têm identificação própria. **Registro** conserva os detalhes. Estados mostram duração e explicação no tooltip; muitos estados aparecem como `+N estados` para caber na ficha.
 
-## Rework de combate da Alpha 0.3
+Queimadura e sangramento causam 6,5% da vida máxima em dois inícios de turno, ignorando escudos; regeneração cura 7%. Purificação remove efeitos negativos. Aplicar novamente renova a duração sem duplicar. Provocação limita ataques individuais, mas não ataques em área. Proteção de Oren desvia 35% de um ataque individual para ele enquanto estiver vivo; escolher o próprio Oren concede escudo, sem desvio para si.
 
-![HUD da Alpha 0.3 em execução no Godot](preview/hud.png)
+**Fratura** começa na rodada 12: dano direto de 4% da vida máxima antes de cada ação pessoal, aumentando 2,5 pontos percentuais por rodada, até 85%. Ignora escudos e encerra impasses. O HUD mostra a contagem e depois a porcentagem atual, e cada ocorrência fica no registro.
 
-[Galeria de golpes](preview/gallery.png) · [Crítico contra escudo](preview/shield-critical.png) · [Queimadura e sangramento](preview/debuffs.png). São capturas da execução nativa; a pasta de prévias é ignorada pelo importador do Godot.
+## Treinos e laboratório
 
-Os trios usam **formação triangular: um personagem à frente e dois atrás**, com tamanho e ordem de desenho que sugerem profundidade. A primeira escolha da equipe ocupa a frente. A posição é visual nesta etapa: não muda alcance, defesa ou regras de seleção. Cada ficha permanece alinhada com seu próprio personagem, em uma faixa reservada abaixo dos corpos.
+**Aprender** oferece três batalhas com objetivos acompanhados no HUD: turnos/energia/defesa, afinidade/combo e escudos/dano contínuo. Os trios são fixos nesse modo; ao sair pelo botão **Voltar ao treino livre**, as equipes e opções anteriores voltam. Os treinos não entram nas estatísticas de partidas jogadas. São introduções às regras, ainda sem campanha ou progressão.
 
-Os 24 heróis têm **72 ilustrações de habilidades**, uma para cada ataque, técnica e supremo. As cartas mostram custo e recarga; uma habilidade indisponível pode ser consultada e explica o impedimento.
+**Balanço** mostra aparições e vitórias por herói, dano direto à vida, dano a escudos, cura direta, proteção efetiva, energia e combos. Danos e curas periódicos ainda não entram nos totais individuais. A duração média e a frequência da Fratura ajudam a identificar combates arrastados. Escudo concedido sem ser consumido não conta como proteção útil; a absorção é atribuída ao dono do escudo, e o dano à vida desviado, ao protetor.
 
-**Vida, escudo e energia são separados.** Verde indica vida; azul, escudo; violeta, energia. Todo personagem mostra o valor exato do escudo. O golpe apresenta vida perdida, dano absorvido, escudo restante e quebra do escudo. Um crítico totalmente absorvido continua marcado **CRÍTICO**, com **VIDA PROTEGIDA**. O relatório permanece acima da arena; golpes em área exibem totais, e o tooltip e **Registro** detalham cada alvo.
+As partidas jogadas ficam separadas das **simulações IA × IA**. O botão simula 60 partidas normais em pares espelhados, com sementes fixas, composições de classe única e mistas, todas com as três funções. As amostras são limitadas e dependem de composição, dificuldade e decisões; a taxa de vitória não comprova equilíbrio competitivo. Guarda até 500 partidas em `user://balance.json`; apagar esse arquivo reinicia o histórico. Equipes e preferências ficam em `user://preferences.cfg`. Batalhas em andamento não são salvas.
 
-As classes aparecem por nome, cor e símbolo. **VULNERÁVEL +25%** e **RESISTENTE −15%** ficam acima dos oponentes em relação ao personagem que age, para ações de dano. A mudança de turno recalcula esses avisos. Curas e escudos não exibem vantagens ofensivas.
+## Apresentação preservada e refinada
 
-Queimadura, sangramento, regeneração, ataque reduzido e defesa exposta mostram duração. Na ficha, **Queima**, **Sangra**, **Regen**, **ATQ↓** e **DEF↓** são abreviações; passe o mouse para ler os nomes completos. Dano contínuo tem sua própria etapa depois do golpe, antes de liberar a próxima ação, com nome e número de vida perdido. O retrato e as barras acompanham quem está sofrendo o efeito.
+A formação triangular é visual: primeira escolha na frente e duas atrás; posição não altera regras. Fichas independentes evitam sobreposições. Os 15 ativos usam 45 imagens de habilidades, mantendo os atlas completos de 72 imagens. Cinco representantes ativos (Veyra, Sylva, Axion, Astra e Vesper) têm quatro poses desenhadas; os outros dez usam uma ilustração com movimento procedural. As artes de Auren e dos demais arquivados continuam disponíveis no projeto.
 
-**Galeria de golpes** permite testar ataque, técnica e supremo sem alterar a batalha, as equipes ou sua aleatoriedade. O seletor de cenário demonstra combate normal, **escudo + crítico** com semente fixa ou **queimadura + sangramento**. Os números vêm do mesmo motor do combate; o crítico garantido pertence somente ao exemplo da galeria.
+A apresentação combina preparação, golpe, contato, reação e retorno. Projéteis de flechas, espinhos, drones, prismas, runas, órbitas e fios variam por personagem. Suportes não avançam sobre o inimigo ao conjurar; escudo e crítico possuem sons próprios. A opção **Reduzir animações** mantém as regras e remove a coreografia.
 
-Seis representantes possuem quatro poses desenhadas (prontidão, preparação, golpe e finalização), com recortes, escala e apoio dos pés próprios, além das seis coreografias:
+**Golpes** abre a galeria isolada com um representante de cada classe ativa. Há cenários normal, escudo com crítico demonstrativo e queimadura/sangramento. A técnica de Veyra consome a queimadura para seu combo; use o ataque básico nesse cenário para observar os dois efeitos contínuos. A galeria não altera a partida.
 
-| Classe | Personagem | Movimento e efeitos |
-| --- | --- | --- |
-| Ígneo | Veyra | Antecipação, avanço e cortes de fogo com brasas |
-| Natural | Sylva | Conjuração, raízes, folhas e círculo de recuperação |
-| Técnico | Axion | Carga, recuo, disparo de íons e barreira hexagonal |
-| Arcano | Astra | Levitação, orbes em trajetórias curvas e runas |
-| Sombrio | Vesper | Desaparecimento, avanço e corte de foice |
-| Lumi | Auren | Preparação da lança, coluna de luz e raios dourados |
+![HUD nativo](preview/hud.png)
 
-Os outros 18 personagens aproveitam o movimento e os efeitos de sua classe, mantendo uma ilustração de corpo. As animações combinam quadros de pose, deslocamento, carga, projétil, impacto, reação e retorno; animação esquelética contínua permanece para uma etapa posterior. O cálculo da batalha é apresentado com vida e som no impacto, seguido da recuperação e dos efeitos de início de turno. Reiniciar cancela a apresentação pendente. A galeria pausa a espera da IA enquanto estiver aberta e respeita **Reduzir animações**; deixe a opção desmarcada para assistir às coreografias.
+[Galeria](preview/gallery.png) · [Crítico em escudo](preview/shield-critical.png) · [Estados](preview/debuffs.png) · [Laboratório](preview/balance.png) · [Treino guiado](preview/lesson.png)
 
-## Escopo desta etapa
+## Código e validação
 
-- 24 heróis, quatro por afinidade, com dados compartilhados com o código-fonte web. A técnica **Dívida de sangue**, do Riven, agora aplica sangramento em lugar de queimadura; ambos causam 6,5% da vida máxima em dois inícios de turno, atravessam escudos e são removidos por purificação. Aplicar novamente renova a duração sem acumular duplicatas.
-- Ciclo Ígneo → Natural → Técnico → Arcano → Sombrio → Lumi → Ígneo; vantagem +25%, desvantagem −15%.
-- Combate determinístico: iniciativa, energia, recarga, barreiras, defesa, queimadura, sangramento, regeneração, exposição, enfraquecimento, purificação, crítico e roubo de vida.
-- IA, três dificuldades de treino, duelo local com atributos iguais, resultado e replay. A Fratura a partir da rodada 12 encerra impasses defensivos.
-- Arena ilustrada, atlas com enquadramentos por silhueta e seis personagens com artes individuais em maior resolução, quatro poses por representante, seis perfis de movimento e indicadores distintos de dano, crítico, escudo e estados.
+`src/kits.js` define os kits originais; `npm run sync:godot` sincroniza o catálogo, sem sobrescrever os recortes e poses refinados. `scripts/combat.gd` implementa as regras nativas; `main.gd` controla o fluxo; `combat_ui.gd` apresenta HUD e prévias; `lessons.gd` define os objetivos; `lab.gd` agrega e simula partidas. A engine JavaScript serve como referência de paridade e continua sustentando o protótipo web.
 
-A direção visual segue em refinamento. O layout tem verificações de sobreposição em quatro tamanhos de janela de computador, incluindo estados e barreiras. Celulares e outras plataformas exigem validação específica.
-
-Campanha, missões, aquisição, economia, multiplayer online, painel de balanceamento e ligação com A Lei do Trono são etapas futuras. O Godot não substitui o site existente automaticamente: **o GitHub Pages continua executando a versão JavaScript**. Nenhum executável ou pacote de download foi gerado nesta etapa.
-
-## Estrutura e dados
-
-| Arquivo | Função |
-| --- | --- |
-| `scenes/main.tscn` | Cena inicial |
-| `scripts/main.gd` | Interface, formação, fluxo dos turnos e preferências |
-| `scripts/combat_ui.gd` | Construção e atualização do HUD e da iniciativa |
-| `scripts/combat.gd` | Regras e IA, independentes das cenas e do áudio |
-| `scripts/catalog.gd` | Carregamento do elenco e validação de equipes |
-| `scripts/fighter.gd` | Ilustração, barras e seleção de personagens |
-| `scripts/impact.gd` | Efeitos procedurais temporários |
-| `scripts/animation_director.gd` | Antecipação, golpe, impacto, reação e recuperação |
-| `scripts/showcase.gd` | Galeria dos seis representantes, sem alterar a partida |
-| `scripts/skill_card.gd` | Cartas de habilidades e impedimentos de uso |
-| `data/art-regions.json` | Limites de recorte das silhuetas e retratos |
-| `data/pose-regions.json` | Recortes dos quadros, apoio dos pés e exclusões de células vizinhas |
-| `scripts/ability_art.gd` | Regiões das 72 ilustrações das habilidades |
-| `assets/poses/` | Quatro poses de cada um dos seis representantes |
-| `scripts/sound.gd` | Geração dos sinais sonoros |
-| `data/catalog.json` | Catálogo compartilhado, versão de esquema 1 |
-
-Enquanto as duas versões coexistem, `src/data.js` na raiz é a fonte dos atributos e habilidades. Para atualizar o catálogo e copiar os recursos para o Godot:
-
-```bash
-npm run sync:godot
-```
-
-O script usa apenas o Node e preserva as artes refinadas do Godot em `assets/characters/` e `assets/clean-atlas.png`. Os arquivos gerados já estão versionados, portanto **não é necessário instalar Node para abrir ou jogar no Godot**. A pasta `.godot/` é um cache local e fica fora do Git. Preserve os arquivos `.uid` e os metadados `.import` versionados.
-
-O motor de combate não depende dos desenhos nem dos controles. Isso permite refazer a apresentação depois, preservando as regras; mudanças de balanceamento serão deliberadas e poderão ser comparadas em simulações. A tabela de regras detalhada permanece no [README principal](../README.md).
-
-## Verificação
-
-Na raiz, com Node 24+ e o Godot disponível no PATH:
+Na raiz do repositório:
 
 ```bash
 npm test
 npm run test:godot
+npm run test:browser
+npm run test:site
 ```
 
-Para outro nome/caminho do binário, use a variável `GODOT_EXECUTABLE`. O teste importa o projeto, compara partidas completas com o motor JavaScript e executa verificações nativas da interface. Cobre os 24 heróis, dificuldades, ações inválidas sem alteração do estado, estados, desempates da IA, Fratura, formação, persistência, resposta da IA, prevenção de ação duplicada, cancelamento da IA ao reiniciar, animação, partida local completa e replay. Os dados de teste e as preferências ficam isolados em `artifacts/`, fora do Git.
+Godot deve estar no PATH (ou `GODOT_EXECUTABLE`). Os testes verificam kits, sinergias, recursos, estados, término de partidas, paridade entre os motores e interface nativa. Artefatos e preferências de teste ficam isolados em `artifacts/`.
 
-Uma conferência gráfica opcional requer um display ativo:
-
-```bash
-godot --path godot --script res://tests/capture.gd -- /caminho/absoluto/para/capturas
-```
-
-Os testes não instalam plugins nem baixam recursos. A exportação web ainda precisa de templates oficiais, configuração de exportação com inclusão de `data/*.json`, teste de áudio, fontes e desempenho nos navegadores, e validação da hospedagem. Não há preset de exportação declarado como pronto.
-
-## Integração futura com A Lei do Trono
-
-Esta etapa mantém o NEXUS independente e não altera o outro repositório. Os identificadores estáveis do catálogo, como `veyra` e `igneo`, serão referências de conteúdo; identificadores de unidades como `0-veyra` valem somente dentro de uma batalha.
-
-A integração futura deverá passar por uma API compartilhada para identidade e pelo servidor para progresso, inventário e recompensas. O domínio do NEXUS terá nomes próprios para evitar conflitos com os itens e personagens de A Lei do Trono. O cliente Godot enviará intenções de ação; partidas competitivas e recompensas deverão ser validadas pelo servidor. O salvamento local deste protótipo não representa posse de personagens ou saldo de uma conta online.
-
-Compartilhar conta não obriga compartilhar economia. Quais conquistas, personagens e recompensas transitam entre os jogos será uma decisão de produto posterior.
-
-## Recursos e licenças
-
-Arena, atlas, ilustrações de habilidades, folhas de poses e artes individuais foram gerados para o projeto; os recortes do Godot têm metadados próprios para evitar misturar células vizinhas. As fontes Cinzel e Manrope acompanham suas licenças SIL em `assets/`. Os sons são sintetizados pelo código do jogo. A [licença MIT do Godot](https://godotengine.org/license/) não impõe royalties do motor; uma futura distribuição deverá incluir os avisos exigidos pelo motor e pelos recursos utilizados. Hospedagem e lojas podem ter custos próprios.
+A versão Godot é aberta no editor nesta etapa. **GitHub Pages continua com o protótipo web anterior**; exportar Godot para navegador será outra entrega. Campanha, obtenção de heróis, multiplayer online e integração com A Lei do Trono permanecem em aberto.
