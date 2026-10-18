@@ -4,32 +4,41 @@ Protótipo jogável de RPG tático original: equipes de três, seis afinidades p
 
 ## Jogar
 
-### Abrir sem instalar nada
+O download anterior foi retirado após o relato **“Vírus detectado”**. A causa permanece inconclusiva. Não execute o pacote antigo nem desative a proteção. O [registro do alerta](docs/ALERTA-DO-DOWNLOAD.md) documenta o arquivo e as medidas tomadas.
 
-**Pacote pronto:** [NEXUS-v0.1.zip](downloads/NEXUS-v0.1.zip). No GitHub, abra o arquivo ZIP e use **Download raw file** (ícone de download). Extraia o pacote e abra `NEXUS-JOGAR.html` no navegador.
+### Versão web
 
-A edição **NEXUS-JOGAR.html** reúne código, imagens, fontes e som em um único arquivo. Baixe o pacote, extraia e abra o HTML no Chrome, Edge ou Firefox. Ele funciona sem servidor e sem internet. A pré-visualização de arquivos do chat pode não executar JavaScript; abra o arquivo baixado no navegador.
+O jogo usa HTML, CSS, módulos JavaScript, imagens e fontes separados. A pasta `docs/` contém a versão preparada para GitHub Pages, sem ZIP ou HTML com código e imagens empacotados. **Preparar os arquivos não ativa a hospedagem.**
 
-Para gerar essa edição a partir do código-fonte:
+Para o proprietário ativar o site pelo GitHub:
+
+1. Abra **Settings → Pages** neste repositório.
+2. Em **Build and deployment**, escolha **Deploy from a branch**.
+3. Selecione a branch **codex/nexus-jogavel** e a pasta **/docs**, depois **Save**.
+4. Aguarde a publicação e abra o endereço mostrado pelo próprio GitHub.
+
+Isso publica um site acessível pela internet, conforme a visibilidade e o plano do repositório. O GitHub pode exigir tornar o repositório público ou um plano compatível; avalie essa escolha nas configurações. A ativação não foi feita por este ambiente: o acesso à API do GitHub está bloqueado pelo proxy de rede.
+
+Para preparar os arquivos a partir do código-fonte:
 
 ```bash
-npm ci
-npm run build:offline
+npm run build         # arquivos em dist/ para hospedagem estática
+npm run build:pages   # atualiza a cópia em docs/ para GitHub Pages
 ```
 
-O arquivo será criado em `artifacts/NEXUS-JOGAR.html`. A verificação `npm run test:offline` carrega o documento gerado em memória, com rede desativada, e testa ilustrações, fontes, combate, resposta da IA e montagem de equipe. O Chromium desta máquina bloqueia URLs `file:` por política administrativa; o teste não altera essa política. A abertura do arquivo baixado deve ser feita no seu navegador.
+O gerador usa apenas bibliotecas do Node e copia uma lista explícita de arquivos públicos. Após mudar o código ou os recursos, execute `npm run build:pages` e envie também as alterações de `docs/`.
 
 ### Executar o código-fonte
 
 Requer Node.js 24 ou superior e npm.
 
 ```bash
-cd /workspace/PROJETO-NEXUS
+cd PROJETO-NEXUS
 npm ci
 npm run dev
 ```
 
-O servidor usa a porta **5173**. Abra essa porta na interface do ambiente ou acesse `http://localhost:5173` na sua máquina. Para alterar a porta: `PORT=3000 npm start`. O jogo roda no navegador, sem banco, conta, chave de API ou serviços externos. As dependências npm são usadas somente para testes de navegador.
+O servidor usa a porta **5173**. Quando executado na sua própria máquina, abra `http://localhost:5173`. Esta interface de configuração na nuvem não oferece uma prévia pública dessa porta; para jogar sem instalação, use a hospedagem web após sua ativação. Para alterar a porta: `PORT=3000 npm start`. O jogo roda no navegador, sem banco, conta, chave de API ou serviços externos. As dependências npm são usadas somente para testes de navegador.
 
 1. Abra **Personagens** ou **Montar equipe**. Escolha três heróis distintos; a formação rival também pode ser editada.
 2. Em **Treino tático**, enfrente a IA. Em **Duelo local**, duas pessoas controlam suas equipes no mesmo dispositivo. Multiplayer pela internet ainda não foi implementado.
@@ -102,9 +111,10 @@ Os números são uma **base inicial para balancear**, não uma alegação de equ
 npm run check
 npm test
 npm run test:browser
+npm run test:site
 ```
 
-Os testes do motor cobrem regras, estados, término e simulações que exercitam todos os 24 heróis. Os testes de navegador verificam formações persistentes, filtros, guias, animação, IA, partida local completa, resultado, replay e celular. Capturas ficam em `artifacts/`, ignorada pelo Git.
+Os testes do motor cobrem regras, estados, término e simulações que exercitam todos os 24 heróis. Os testes de navegador verificam formações persistentes, filtros, guias, animação, IA, partida local completa, resultado, replay e celular. `test:site` verifica a versão construída em uma subpasta de URL, incluindo fontes, imagens, combate e celular. São testes funcionais, não uma análise antivírus. Capturas ficam em `artifacts/`, ignorada pelo Git.
 
 O teste de navegador inicia e encerra seu servidor na porta 5199. Usa `CHROMIUM_EXECUTABLE_PATH`, `/usr/bin/chromium` quando disponível ou o Chromium do Playwright. Se necessário: `npx playwright install chromium`; para dependências de sistema Linux, `npx playwright install --with-deps chromium`. Para usar um servidor já aberto, defina `NEXUS_TEST_BASE_URL`.
 

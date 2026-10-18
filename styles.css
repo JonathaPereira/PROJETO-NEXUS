@@ -1,12 +1,12 @@
 @font-face {
   font-family: Cinzel;
-  src: url("/assets/cinzel.ttf") format("truetype");
+  src: url("./assets/cinzel.ttf") format("truetype");
   font-weight: 400 900;
   font-display: swap;
 }
 @font-face {
   font-family: Manrope;
-  src: url("/assets/manrope.ttf") format("truetype");
+  src: url("./assets/manrope.ttf") format("truetype");
   font-weight: 200 800;
   font-display: swap;
 }
@@ -746,7 +746,7 @@ button:disabled {
   isolation: isolate;
   position: relative;
   height: clamp(350px, 47.7vh, 510px);
-  background: #3e3a39 url("/assets/arena.png") center 59% / cover no-repeat;
+  background: #3e3a39 url("./assets/arena.png") center 59% / cover no-repeat;
   border: 1px solid #514236;
   border-top-color: #3a3531;
   border-radius: 0 0 5px 5px;

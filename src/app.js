@@ -150,7 +150,7 @@ function render() {
     c = CLASS_BY_ID[h.classId];
   const canAct = started && !busy && battle.phase === "playing" && human();
   root.innerHTML = `
- <header class="topbar"><a class="brand" href="/" aria-label="Nexus, início">${crest()}<span>NEXUS<small>ECOS DO CREPÚSCULO</small></span></a>
+ <header class="topbar"><a class="brand" href="./" aria-label="Nexus, início">${crest()}<span>NEXUS<small>ECOS DO CREPÚSCULO</small></span></a>
   <nav aria-label="Navegação principal"><button class="nav-link active" data-act="battle">${icon("swords")}<span>Batalha</span></button><button class="nav-link" data-act="roster">${icon("people")}<span>Personagens</span><b>24</b></button><button class="nav-link" data-act="classes">${icon("diamond")}<span>Afinidades</span></button></nav>
   <div class="top-tools"><span class="prototype"><i></i> VERSÃO ALPHA <b>0.1</b></span><button class="icon-button" data-act="sound" aria-label="${sound ? "Desativar" : "Ativar"} som" title="${sound ? "Desativar" : "Ativar"} som">${icon(sound ? "volume" : "muted")}</button><button class="icon-button" data-act="help" aria-label="Como jogar" title="Como jogar">${icon("help")}</button></div>
  </header>

@@ -1,6 +1,5 @@
 import { CLASS_BY_ID } from "./data.js";
-// The downloadable edition supplies a local blob URL; the server edition uses its asset route.
-const heroAtlas = globalThis.NEXUS_ASSETS?.heroes ?? "/assets/heroes.png";
+const heroAtlas = new URL("../assets/heroes.png", import.meta.url).href;
 const paths = {
   flame:
     "M12 3c1 5 6 5 6 11a6 6 0 0 1-12 0c0-3 2-5 3-7 0 4 2 5 3 6 2-3 1-6 0-10Z",
