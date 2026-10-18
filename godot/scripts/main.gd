@@ -4,6 +4,8 @@ const Fighter = preload("res://scripts/fighter.gd")
 const CombatUI = preload("res://scripts/combat_ui.gd")
 const Director = preload("res://scripts/animation_director.gd")
 const Showcase = preload("res://scripts/showcase.gd")
+const Campaign = preload("res://scripts/campaign.gd")
+const Hub = preload("res://scripts/hub.gd")
 const GOLD := Color("d5b480")
 const MUTED := Color("9aacbf")
 const ACTIONS := ["basic", "skill", "ultimate", "guard"]
@@ -75,6 +77,13 @@ var tutorial_index := -1
 var tutorial_progress: Dictionary = {}
 var free_settings: Dictionary = {}
 var lab
+var campaign
+var hub: Control
+var combat_view: Control
+var campaign_mission := -1
+var roster_campaign := false
+var mission_label: Label
+var menu_dialog: ConfirmationDialog
 const Lessons = preload("res://scripts/lessons.gd")
 const Lab = preload("res://scripts/lab.gd")
 
@@ -84,7 +93,13 @@ func _ready() -> void:
 	_load_preferences()
 	_build_theme()
 	_build_interface()
+	campaign = Campaign.new(catalog)
+	Campaign.register_enemies(catalog)
 	_new_battle()
+	hub = Hub.new()
+	hub.app = self
+	add_child(hub)
+	hub.open()
 	if DisplayServer.get_name() != "headless": _apply_display.call_deferred()
 
 func _style(color: Color, border: Color = Color("37353f")) -> StyleBoxFlat:
@@ -144,6 +159,48 @@ func _clear(node: Node) -> void:
 func _build_interface() -> void:
 	CombatUI.build(self)
 
+func _enter_free() -> void:
+	campaign_mission = -1
+	hub.hide()
+	combat_view.show()
+	_new_battle()
+
+func _begin_mission(index: int) -> void:
+	if not hub.visible or not campaign.can_play(index): return
+	campaign_mission = index
+	hub.hide()
+	combat_view.show()
+	_new_battle()
+
+func _open_menu() -> void:
+	if started and state.phase == "playing":
+		if not is_instance_valid(menu_dialog):
+			menu_dialog = ConfirmationDialog.new()
+			menu_dialog.title = "Voltar ao menu?"
+			menu_dialog.dialog_text = "A batalha em andamento será encerrada.\nMissões concluídas, equipe e gemas salvas serão preservadas."
+			menu_dialog.ok_button_text = "Voltar ao menu"
+			menu_dialog.cancel_button_text = "Continuar batalha"
+			menu_dialog.confirmed.connect(_leave_battle.bind("menu"))
+			add_child(menu_dialog)
+		menu_dialog.popup_centered()
+	else: _leave_battle("menu")
+
+func _leave_battle(page: String = "menu") -> void:
+	battle_version += 1
+	director.cancel()
+	sound.stop()
+	started = false
+	busy = false
+	ai_pending = false
+	if tutorial_index >= 0: _end_lesson()
+	campaign_mission = -1
+	result_dialog.hide()
+	hub.open(page)
+
+func _result_confirmed() -> void:
+	if campaign_mission >= 0 and state.winner == 0: _leave_battle("story")
+	else: _new_battle()
+
 func _new_battle() -> void:
 	battle_version += 1
 	director.cancel()
@@ -156,7 +213,7 @@ func _new_battle() -> void:
 	preview_requested = true
 	target_id = ""
 	if is_instance_valid(feedback): feedback.text = "[center][color=#d5b480]LEITURA DO COMBATE[/color]  ·  Dano à vida e ao escudo aparecem separados.[/center]"
-	state = combat.new_battle(teams[0], teams[1], difficulty if mode == "training" else "normal")
+	state = campaign.battle(combat, campaign_mission) if campaign_mission >= 0 else combat.new_battle(teams[0], teams[1], difficulty if mode == "training" else "normal")
 	if tutorial_index >= 0:
 		tutorial_progress = {}
 		Lessons.prepare(state, tutorial_index)
@@ -196,17 +253,17 @@ func _position_fighters() -> void:
 			fighter.plate.position = Vector2(plate_x, plate_y) - fighter.position
 
 func _human_turn() -> bool:
-	return mode == "local" or combat.current(state).get("side", 1) == 0
+	return (campaign_mission < 0 and mode == "local") or combat.current(state).get("side", 1) == 0
 
 func _can_act() -> bool:
-	return started and not busy and state.phase == "playing" and _human_turn()
+	return combat_view.visible and started and not busy and state.phase == "playing" and _human_turn()
 
 func _refresh() -> void:
 	CombatUI.refresh(self)
 	_update_log()
 	if state.phase == "finished" and not result_shown:
 		result_shown = true
-		if tutorial_index < 0: Lab.record(state, mode, difficulty)
+		if tutorial_index < 0 and campaign_mission < 0: Lab.record(state, mode, difficulty)
 		var damage := 0
 		var healing := 0
 		for data in state.units:
@@ -216,9 +273,22 @@ func _refresh() -> void:
 		result_dialog.dialog_text = "Equipe %d venceu!\n\n%d rodadas · %d ações\nDano da equipe vencedora: %d\nCura: %d\n\nJogue novamente ou feche para consultar o resultado." % [int(state.winner) + 1, state.round, state.turns, damage, healing]
 		if tutorial_index >= 0:
 			result_dialog.dialog_text += "\n\n" + Lessons.hint(tutorial_index, tutorial_progress)
+		result_dialog.ok_button_text = "Jogar novamente"
+		if campaign_mission >= 0:
+			var mission: Dictionary = Campaign.MISSIONS[campaign_mission]
+			result_dialog.ok_button_text = "Voltar às missões" if state.winner == 0 else "Tentar novamente"
+			result_dialog.dialog_text = ("VITÓRIA · " if state.winner == 0 else "DERROTA · ") + mission.name + "\n\n"
+			if state.winner == 0:
+				var reward: Dictionary = campaign.complete(campaign_mission)
+				result_dialog.dialog_text += mission.ending + "\n\n" + ("Primeira vitória: +1 " + reward.gem if reward.get("first", false) else "Missão repetida: sem recompensa adicional.")
+				if not reward.get("saved", false): result_dialog.dialog_text += "\n\nATENÇÃO: " + campaign.error_text
+			else:
+				result_dialog.dialog_text += "Seu progresso e suas gemas foram preservados. Ajuste o trio ou os engastes no menu e tente de novo.\n\n" + mission.tip
+			result_dialog.dialog_text += "\n\n%d rodadas · %d ações" % [state.round, state.turns]
 		result_dialog.popup_centered()
 
 func _start() -> void:
+	if not combat_view.visible: return
 	started = true
 	_refresh()
 	_schedule_ai()
@@ -295,7 +365,7 @@ func _play_turn(action_id: String, target: String) -> void:
 	_schedule_ai()
 
 func _can_inspect() -> bool:
-	return not busy and (not started or (state.phase == "playing" and _human_turn()))
+	return combat_view.visible and not busy and (not started or (state.phase == "playing" and _human_turn()))
 
 func _set_reduced(enabled: bool) -> void:
 	reduced_motion = enabled
@@ -306,7 +376,7 @@ func _set_reduced(enabled: bool) -> void:
 	if not busy: _refresh()
 
 func _schedule_ai() -> void:
-	if ai_pending or busy or not started or mode != "training" or state.phase != "playing" or _human_turn(): return
+	if ai_pending or busy or not started or (mode != "training" and campaign_mission < 0) or state.phase != "playing" or _human_turn(): return
 	ai_pending = true
 	var version := battle_version
 	await get_tree().create_timer(0.45).timeout
@@ -428,8 +498,12 @@ func _build_roster() -> void:
 
 func _open_roster() -> void:
 	if tutorial_index >= 0 or (started and state.phase == "playing"): return
-	roster_work = teams.duplicate(true)
+	roster_campaign = is_instance_valid(hub) and hub.visible and hub.page in ["story", "gems"]
+	if campaign_mission >= 0: return
+	roster_work = [campaign.team.duplicate(), catalog.default_teams[1].duplicate()] if roster_campaign else teams.duplicate(true)
 	roster_side.select(0)
+	roster_side.disabled = roster_campaign
+	roster_dialog.ok_button_text = "Salvar trio da história" if roster_campaign else "Usar equipes"
 	roster_filter.select(0)
 	_refresh_roster()
 	roster_dialog.popup_centered_clamped(Vector2i(1010, 660), 0.95)
@@ -468,6 +542,10 @@ func _toggle_hero(id: String) -> void:
 
 func _save_roster() -> void:
 	if not catalog.valid_team(roster_work[0]) or not catalog.valid_team(roster_work[1]): return
+	if roster_campaign:
+		campaign.set_team(roster_work[0])
+		hub.open(hub.page)
+		return
 	teams = roster_work.duplicate(true)
 	_save_preferences()
 	_new_battle()
@@ -527,6 +605,7 @@ func _input(event: InputEvent) -> void:
 		_toggle_fullscreen()
 		get_viewport().set_input_as_handled()
 		return
+	if is_instance_valid(hub) and hub.visible: return
 	var focused := get_viewport().gui_get_focus_owner()
 	if focused is LineEdit or focused is TextEdit: return
 	if event.keycode >= KEY_1 and event.keycode <= KEY_4:
@@ -573,6 +652,7 @@ func _show_lessons() -> void:
 	dialog.popup_centered()
 
 func _begin_lesson(index: int) -> void:
+	if is_instance_valid(hub) and hub.visible: _enter_free()
 	if free_settings.is_empty(): free_settings = {"teams": teams.duplicate(true), "mode": mode, "difficulty": difficulty}
 	tutorial_index = index
 	teams = Lessons.TEAMS[index].duplicate(true)

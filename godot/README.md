@@ -1,4 +1,4 @@
-# NEXUS em Godot — Alpha 0.6
+# NEXUS em Godot — Alpha 0.7
 
 Godot 4.6 Standard / GDScript, gratuito e sem addons pagos. Validado com Godot 4.6.3 em Linux.
 
@@ -7,10 +7,24 @@ Godot 4.6 Standard / GDScript, gratuito e sem addons pagos. Validado com Godot 4
 1. Feche o Godot. Abra a [branch atualizada](https://github.com/JonathaPereira/PROJETO-NEXUS/tree/codex/nexus-jogavel).
 2. Clique em **Code → Download ZIP** e depois **Extrair tudo**, em uma pasta nova.
 3. No gerenciador do Godot, clique em **Importar** e selecione `godot/project.godot` dentro da pasta extraída.
-4. Aguarde a importação, pressione **F5** e confira **ALPHA 0.6** no topo.
-5. Experimente **Aprender** para os três treinos guiados, ou **Equipes → Iniciar combate** para jogar livremente.
+4. Aguarde a importação, pressione **F5** e confira **ALPHA 0.7** no menu inicial.
+5. Clique em **Começar história → Jogar missão → Iniciar missão**. Em **Engastar gemas**, prepare seu trio; **Combate livre** mantém os modos anteriores.
 
 Sua cópia anterior não atualiza automaticamente. Quem usa Git pode atualizar a branch com `git pull --ff-only`, preservando alterações locais.
+
+## Menu, história e gemas
+
+O menu inicial abre **História**, **Gemas**, **Combate livre**, os treinos **Aprender**, a galeria e o laboratório. **Menu**, durante uma luta, permite voltar; uma confirmação evita descartar a batalha por engano. Batalhas em andamento não são salvas.
+
+**O Farol Partido** é um capítulo curto de três missões. Sentinela de Cacos, Rastejante de Raiz e Acólito do Véu têm artes, atributos e habilidades de minions; a última missão enfrenta **Vesper como chefe**, com dois servos. O chefe tem atributos próprios, preservando o Vesper selecionável. Há introdução, dica tática e desfecho em cada missão, desbloqueio sequencial e final do capítulo. A equipe de história é independente dos dois trios do combate livre; escolha qualquer composição de três heróis distintos. Vida e energia são restauradas a cada missão.
+
+Cada herói tem **um engaste**. Você começa com uma cópia de cada gema: **Brasa lapidada (+4% ATQ)**, **Seiva cristalizada (+5% VIDA)** e **Pulso de éter (+8 energia inicial)**. Equipar, trocar e remover é gratuito, entre missões; uma cópia só pode estar em um herói por vez. Cada primeira vitória concede mais uma gema: Brasa na missão 1, Seiva na 2 e Pulso na 3. Repetir missões não repete recompensas. O painel mostra estoque livre, donos das cópias e atributos antes/depois.
+
+**Gemas valem somente na história.** Combate livre, duelo local, treinos, galeria e laboratório preservam as regras e os atributos de referência da Alpha 0.5. Partidas de campanha não entram na tabela de balanço. Progresso, trio e engastes são salvos automaticamente em `user://campaign-0.7.json`, no diretório de dados do Godot deste jogo. Não há conta nem sincronização entre dispositivos. [Regras e missões da campanha](CAMPAIGN.md).
+
+![Menu inicial](preview/menu.png)
+
+[Missões](preview/story.png) · [Engastes](preview/gems.png) · [Minions](preview/minions.png)
 
 ## Cinco afinidades, três funções por classe
 
@@ -54,7 +68,7 @@ Estas são combinações para testar, sem garantia de vitória. [Kits completos]
 
 ## Treinos e laboratório
 
-**Aprender** oferece três batalhas com objetivos acompanhados no HUD: turnos/energia/defesa, afinidade/combo e escudos/dano contínuo. Os trios são fixos nesse modo; ao sair pelo botão **Voltar ao treino livre**, as equipes e opções anteriores voltam. Os treinos não entram nas estatísticas de partidas jogadas. São introduções às regras, ainda sem campanha ou progressão.
+**Aprender** oferece três batalhas com objetivos acompanhados no HUD: turnos/energia/defesa, afinidade/combo e escudos/dano contínuo. Os trios são fixos nesse modo; ao sair pelo botão **Voltar ao treino livre**, as equipes e opções anteriores voltam. Os treinos não entram nas estatísticas de partidas jogadas e são separados da nova campanha.
 
 **Balanço** mostra aparições e vitórias por herói, dano direto à vida, dano a escudos, cura direta, proteção efetiva, energia e combos. Danos e curas periódicos ainda não entram nos totais individuais. A duração média e a frequência da Fratura ajudam a identificar combates arrastados. Escudo concedido sem ser consumido não conta como proteção útil; a absorção é atribuída ao dono do escudo, e o dano à vida desviado, ao protetor.
 
@@ -93,7 +107,7 @@ Cada um dos 15 personagens tem coreografia identificada por seu golpe, com prepa
 
 ## Código e validação
 
-`src/kits.js` define os kits originais; `npm run sync:godot` sincroniza o catálogo, sem sobrescrever os recortes e poses refinados. `scripts/combat.gd` implementa as regras nativas; `main.gd` controla o fluxo; `combat_ui.gd` apresenta HUD e prévias; `lessons.gd` define os objetivos; `lab.gd` agrega e simula partidas. A engine JavaScript serve como referência de paridade e continua sustentando o protótipo web.
+`src/kits.js` define os kits originais; `npm run sync:godot` sincroniza o catálogo, sem sobrescrever os recortes e poses refinados. `scripts/combat.gd` implementa as regras nativas; `main.gd` controla o fluxo; `combat_ui.gd` apresenta HUD e prévias; `campaign.gd` define missões, inimigos, gemas e salvamento; `hub.gd` apresenta menu, missões e engastes; `lessons.gd` define os objetivos; `lab.gd` agrega e simula partidas. A engine JavaScript serve como referência de paridade do combate livre e continua sustentando o protótipo web.
 
 Na raiz do repositório:
 
@@ -107,4 +121,6 @@ node scripts/balance-report.mjs
 
 Godot deve estar no PATH (ou `GODOT_EXECUTABLE`). Os testes verificam kits, sinergias, recursos, estados, término de partidas, paridade entre os motores e interface nativa. Também exportam os dois filtros e reproduzem todas as ações dos JSONs no motor JavaScript, conferindo recibos e estados; verificam o CSV, caminhos de salvamento e erros de destino. Artefatos e preferências de teste ficam isolados em `artifacts/`.
 
-A versão Godot é aberta no editor nesta etapa. **GitHub Pages continua com o protótipo web anterior**; exportar Godot para navegador será outra entrega. Gemas, treinamento de skills e modo história estão registrados no [roteiro de progressão](ROADMAP.md). Campanha, obtenção de heróis, multiplayer online e integração com A Lei do Trono permanecem para etapas futuras.
+A campanha tem verificações de três missões completas, bloqueios, chefe, primeira vitória e repetição sem duplicar recompensas, derrota e nova tentativa, estoque e troca de gemas, reabertura do progresso, dados inválidos e falha de gravação. Os testes confirmam que o modo história preserva os trios livres e não altera os atributos nem as estatísticas do laboratório.
+
+A versão Godot é aberta no editor nesta etapa. **GitHub Pages continua com o protótipo web anterior**; exportar Godot para navegador será outra entrega. A primeira campanha e os engastes estão implementados; treinamento de skills, obtenção de heróis, multiplayer online e integração com A Lei do Trono permanecem no [roteiro de progressão](ROADMAP.md).

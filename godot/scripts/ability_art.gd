@@ -8,6 +8,8 @@ const SHEETS = {
 const GUARD = preload("res://assets/abilities/guard.png")
 
 static func icon(index: int, action_id: String) -> Texture2D:
+	# Minions share the matching weapon illustrations; hero sheets remain intact.
+	index = {24: 8, 25: 6, 26: 17}.get(index, index)
 	if action_id == "guard": return GUARD
 	if not SHEETS.has(action_id): return null
 	var sheet: Texture2D = SHEETS[action_id]

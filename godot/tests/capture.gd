@@ -39,6 +39,7 @@ func _capture() -> void:
 	var app = MainScene.instantiate()
 	root.add_child(app)
 	await process_frame
+	app._enter_free()
 	app.teams = app.catalog.default_teams.duplicate(true)
 	app.mode = "training"
 	app.difficulty = "normal"
@@ -59,6 +60,13 @@ func _capture() -> void:
 	if root.size != Vector2i(1920,1080) or app.state != before_display:
 		push_error("Fullscreen did not render Full HD or changed the battle")
 		quit(1)
+		return
+	if args.size() == 2 and args[1] == "--campaign":
+		await campaign_review(app)
+		app.queue_free()
+		await process_frame
+		await process_frame
+		quit()
 		return
 	await shot("godot-battle")
 	app.roster_button.pressed.emit()
@@ -217,3 +225,56 @@ func ultimate_review(app) -> void:
 		await wait_done(gallery)
 		print("Rendered ultimate: " + id)
 	gallery.hide()
+
+func campaign_review(app) -> void:
+	var path := "user://campaign-capture.json"
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+	app.campaign = app.Campaign.new(app.catalog, path)
+	app._leave_battle("menu")
+	await shot("godot-menu")
+	app.hub.story_button.pressed.emit()
+	await shot("godot-story")
+	app.hub.open("gems")
+	app.hub.selected_hero = "veyra"
+	app.hub.open("gems")
+	app.hub.gem_buttons.ember.pressed.emit()
+	app.campaign.equip("axion", "sap")
+	app.campaign.equip("astra", "pulse")
+	app.hub.open("gems")
+	await shot("godot-gems")
+	app.hub.open("story")
+	app.hub.mission_buttons[0].pressed.emit()
+	await shot("godot-minions")
+	app.reduced_motion = false
+	app._start()
+	app._select_target("1-minion-acolyte")
+	var baseline: int = app.director.impact_count
+	app._execute()
+	await wait_hit(app.director, baseline)
+	await shot("godot-minion-hit")
+	await wait_done(app)
+	app._leave_battle("story")
+	app.campaign.cleared = 2
+	app._begin_mission(2)
+	app.combat.current(app.state).energy = 100
+	app._start()
+	app._select_action("ultimate")
+	app._select_target("1-boss-vesper")
+	baseline = app.director.impact_count
+	app._execute()
+	await wait_hit(app.director, baseline)
+	await create_timer(0.16).timeout
+	await shot("godot-boss")
+	await wait_done(app)
+	app._leave_battle("story")
+	app.display_mode = "windowed"
+	app.display_resolution = Vector2i(960,540)
+	app._apply_display()
+	await process_frame
+	await create_timer(0.3).timeout
+	await shot("godot-story-small")
+	app.hub.open("gems")
+	await shot("godot-gems-small")
+	app.hub.open("menu")
+	await shot("godot-menu-small")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))

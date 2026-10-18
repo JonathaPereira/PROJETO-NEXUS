@@ -12,6 +12,7 @@ static func build(app) -> void:
 	for side in ["left", "right"]: margin.add_theme_constant_override("margin_" + side, 18)
 	for side in ["top", "bottom"]: margin.add_theme_constant_override("margin_" + side, 12)
 	app.add_child(margin)
+	app.combat_view = margin
 	var layout := VBoxContainer.new()
 	layout.add_theme_constant_override("separation", 9)
 	margin.add_child(layout)
@@ -25,7 +26,8 @@ static func build(app) -> void:
 	var title = app._label("NEXUS", 28, app.GOLD)
 	title.add_theme_font_override("font", preload("res://assets/cinzel.ttf"))
 	brand.add_child(title)
-	brand.add_child(app._label("ECOS DO CREPÚSCULO  /  ALPHA 0.6", 10, app.MUTED))
+	brand.add_child(app._label("ECOS DO CREPÚSCULO  /  ALPHA 0.7", 10, app.MUTED))
+	header.add_child(app._button("Menu", app._open_menu))
 	app.roster_button = app._button("Equipes", app._open_roster)
 	header.add_child(app.roster_button)
 	header.add_child(app._button("Afinidades", app._show_classes))
@@ -82,6 +84,11 @@ static func build(app) -> void:
 		app._save_preferences()
 		app._new_battle())
 	brief_row.add_child(app.difficulty_picker)
+	app.mission_label = app._label("", 12, app.GOLD)
+	app.mission_label.custom_minimum_size.x = 235
+	app.mission_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	app.mission_label.visible = false
+	brief_row.add_child(app.mission_label)
 	var arena := PanelContainer.new()
 	arena.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	arena.add_theme_stylebox_override("panel", app._style(Color("0a1422"), Color("293b50")))
@@ -235,7 +242,9 @@ static func build(app) -> void:
 	app.result_dialog = AcceptDialog.new()
 	app.result_dialog.title = "Resultado da batalha"
 	app.result_dialog.ok_button_text = "Jogar novamente"
-	app.result_dialog.confirmed.connect(app._new_battle)
+	app.result_dialog.get_label().autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	app.result_dialog.get_label().custom_minimum_size.x = 640
+	app.result_dialog.confirmed.connect(app._result_confirmed)
 	app.add_child(app.result_dialog)
 	app._build_roster()
 
@@ -247,8 +256,15 @@ static func refresh(app) -> void:
 	var targets: Array = app.combat.legal_targets(app.state, actor, action)
 	var ids: Array = targets.map(func(u): return u.id)
 	if not app.target_id in ids: app.target_id = ids[0] if not ids.is_empty() else ""
-	app.roster_button.disabled = app.tutorial_index >= 0 or (app.started and app.state.phase == "playing")
-	app.roster_button.tooltip_text = "Reinicie para alterar as equipes." if app.roster_button.disabled else "Escolha três personagens por equipe."
+	app.roster_button.disabled = app.campaign_mission >= 0 or app.tutorial_index >= 0 or (app.started and app.state.phase == "playing")
+	app.roster_button.tooltip_text = "Altere seu trio no menu História, entre missões." if app.campaign_mission >= 0 else "Reinicie para alterar as equipes." if app.roster_button.disabled else "Escolha três personagens por equipe."
+	app.mode_picker.visible = app.campaign_mission < 0
+	app.difficulty_picker.visible = app.campaign_mission < 0
+	app.mission_label.visible = app.campaign_mission >= 0
+	if app.campaign_mission >= 0:
+		app.mission_label.text = "HISTÓRIA\n" + app.Campaign.MISSIONS[app.campaign_mission].name
+		app.mission_label.tooltip_text = app.Campaign.MISSIONS[app.campaign_mission].tip
+	app.start_button.text = "INICIAR MISSÃO" if app.campaign_mission >= 0 else "INICIAR COMBATE"
 	app.mode_picker.disabled = app.tutorial_index >= 0 or (app.started and app.state.phase == "playing")
 	app.difficulty_picker.disabled = (app.started and app.state.phase == "playing") or app.mode == "local" or app.tutorial_index >= 0
 	app.start_button.visible = not app.started
@@ -289,7 +305,7 @@ static func refresh(app) -> void:
 		app.target_buttons.add_child(button)
 	var all_targets: bool = action.kind in ["aoe", "healAll", "shieldAll", "supportAll"]
 	app.execute_button.text = "Confirmar em todos" if all_targets else "Usar em %s" % app._unit_name(app.target_id)
-	if not app.started: app.execute_button.text = "Inicie o combate"
+	if not app.started: app.execute_button.text = "Inicie a missão" if app.campaign_mission >= 0 else "Inicie o combate"
 	elif not selected.available: app.execute_button.text = "Em recarga" if actor.cooldowns.get(app.selected_action, 0) > 0 else "Energia insuficiente"
 	if action.kind == "damage" and targets.size() < app.state.units.filter(func(u): return u.hp > 0 and u.side != actor.side).size(): app.step_label.text = "PROVOCAÇÃO\nAtaque o provocador."
 	elif action.kind == "aoe": app.step_label.text = "ÁREA\nTodos os rivais vivos."

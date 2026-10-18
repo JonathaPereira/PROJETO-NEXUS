@@ -69,7 +69,7 @@ static func portrait(index: int, full_body: bool = false) -> Texture2D:
 
 func setup(hero: Dictionary, id: String, color: Color) -> void:
 	unit_id = id
-	hero_id = hero.id
+	hero_id = hero.get("visualHero", hero.id)
 	hero_name = hero.name
 	role_name = hero.role
 	tint = color
@@ -95,7 +95,7 @@ func setup(hero: Dictionary, id: String, color: Color) -> void:
 	artwork.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	artwork.stretch_mode = TextureRect.STRETCH_SCALE
 	_rest_pose()
-	artwork.flip_h = id.begins_with("1-")
+	artwork.flip_h = id.begins_with("1-") != bool(hero.get("facesLeft", false))
 	artwork.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	material_fx = ShaderMaterial.new()
 	material_fx.shader = CHARACTER_SHADER
@@ -307,6 +307,7 @@ func refresh(data: Dictionary, is_active: bool, is_chosen: bool, can_target: boo
 	status_label.text = "DERROTADO" if dead else " · ".join(compact)
 	status_label.tooltip_text = "\n".join(states)
 	tooltip_text = base_tooltip + "\nEscudo único; dura 2 ações do protegido. Não acumula.\nEscudo: %d / %d máximo" % [data.shield, int(shield.max_value)] + ("\n\nESTADOS\n" + "\n".join(states) if not states.is_empty() else "")
+	if data.has("gem"): tooltip_text += "\n\nGEMA DE CAMPANHA · " + data.gem
 	artwork.modulate = Color(0.35, 0.4, 0.5, 0.4) if dead else Color.WHITE
 	indicator.text = "◆" if chosen and available else "●"
 	indicator.visible = (active or (chosen and available)) and not dead
@@ -346,6 +347,6 @@ func set_formation(slot: int) -> void:
 	formation_slot = slot
 	var caption: String = ["FRENTE", "ATRÁS ↑", "ATRÁS ↓"][slot] if slot >= 0 else ""
 	title.text = hero_name + (" · " + caption if slot >= 0 else "")
-	position_label.text = caption
+	position_label.text = ("CHEFE · " if role_name == "Chefe" else "") + caption
 	position_label.visible = slot >= 0
 	position_label.tooltip_text = "Posição visual. Qualquer inimigo pode ser escolhido, salvo Provocação."

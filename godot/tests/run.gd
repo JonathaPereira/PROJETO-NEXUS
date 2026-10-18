@@ -89,6 +89,7 @@ func _run() -> void:
 		check(heal.amount == expected, "Native healing respects bleeding and progressive Fracture, including zero healing")
 		check(heal.cleansed == ["bleed"] and not combat.has_status(support, "bleed"), "Native purifying heal records its penalty before removing bleeding")
 	var before_ui := checks
+	await preload("res://tests/campaign.gd").run(self, MainScene, check)
 	await _ui()
 	if not failures.is_empty():
 		quit(1)
@@ -104,6 +105,9 @@ func _ui() -> void:
 	root.add_child(app)
 	await process_frame
 	await process_frame
+	check(app.hub.visible and not app.combat_view.visible, "Game starts at the main menu")
+	await click(app.hub.play_button)
+	check(app.combat_view.visible and not app.hub.visible, "Main menu opens free combat through pointer input")
 	check(app.fighters.size() == 6, "Six illustrated fighters")
 	for fighter in app.fighters.values():
 		check(fighter.health.size.y >= 16 and fighter.energy.size.y >= 13, "Health and energy bars do not overlap the stats")
