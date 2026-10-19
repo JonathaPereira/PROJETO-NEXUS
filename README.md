@@ -8,9 +8,11 @@ Protótipo jogável de RPG tático original: equipes de três, cinco afinidades 
 
 O projeto Godot está em **[godot/](godot/README.md)**. Use **Godot 4.6 Standard**, gratuito, sem a edição .NET. Importe [godot/project.godot](godot/project.godot), aguarde a importação dos recursos e pressione **F5**.
 
-A **Alpha 0.7** abre com menu inicial e a primeira campanha: **O Farol Partido**, com três missões, minions próprios e **Vesper como chefe**. Há um engaste por herói e três gemas: ataque +4%, vida +5% ou energia inicial +8. Você começa com uma de cada; primeiras vitórias concedem outras, sem repetir recompensas. Trio, engastes e avanço ficam salvos localmente. [Como jogar a campanha](godot/CAMPAIGN.md).
+A **Alpha 0.8** moderniza o menu e o combate com a ambientação hi-tech do Sanctum, painéis azul-escuros, acentos ciano e a fonte Space Grotesk. A aba **Heróis** reúne os 15 personagens, suas três habilidades ilustradas, custos, efeitos, sinergias, origem, motivação e história. **O Farol Partido** mantém três missões, minions próprios e **Vesper como chefe**, agora com mais contexto sobre o Farol, sua queda e o vínculo dos heróis com esse conflito.
 
-O combate livre mantém **15 kits distintos: tanque, suporte e dano em cada uma das cinco classes**, composição livre, três treinos guiados, laboratório e exportação de logs JSON/CSV. Preserva as regras e o TTK da Alpha 0.5, os recortes e efeitos refinados da 0.6, a formação em perspectiva e a tela cheia Full HD por F11. **Gemas são exclusivas da história**, e suas partidas não entram nos dados de balanço. Treinamento de habilidades e integração com A Lei do Trono continuam no [roteiro](godot/ROADMAP.md).
+Cada herói pode carregar **três engastes**, inclusive gemas repetidas. Você começa com **três cópias de cada tipo**: ataque +4%, vida +5% ou energia inicial +8 por cópia. Bônus iguais somam: três dão +12% ataque, +15% vida ou energia inicial de 40 para 64. Trocas são gratuitas; primeiras vitórias concedem uma cópia extra da gema da missão. Trio, engastes e avanço ficam salvos localmente, com leitura automática do progresso anterior. [Como jogar a campanha](godot/CAMPAIGN.md).
+
+O combate livre mantém **15 kits distintos: tanque, suporte e dano em cada uma das cinco classes**, composição livre, três treinos guiados, laboratório e exportação de logs JSON/CSV. A apresentação tem cards de habilidades maiores, impactos com pausa, rastros e recibos separados de dano à vida, escudo, escudo restante, crítico e estados. As regras e o TTK em rodadas da Alpha 0.5 permanecem; a tela cheia Full HD usa **F11**. **Gemas são exclusivas da história**, e suas partidas não entram nos dados de balanço. [Resultados e interpretação das simulações](godot/SIMULATIONS.md). Treinamento de habilidades e integração com A Lei do Trono continuam no [roteiro](godot/ROADMAP.md).
 
 O endereço atual do GitHub Pages continua executando o protótipo JavaScript. A versão Godot é aberta pelo editor nesta etapa; sua exportação para navegador será uma entrega separada. Veja [godot/README.md](godot/README.md) para instruções, estrutura e testes.
 
@@ -92,7 +94,9 @@ Enfraquecimento modifica o ataque; exposição e Arcano modificam a defesa efeti
 
 ## Apresentação e controles
 
-Ruínas sob um eclipse, HUD de obsidiana e ouro e ilustrações 2D originais. O protótipo combina deslocamento, antecipação, projéteis, impactos, partículas, números de dano/cura e **15 assinaturas visuais ativas**, uma por personagem. Os supremos têm apresentação ampliada. São coreografias procedurais sobre ilustrações; animação esquelética ou quadros desenhados por golpe podem ser desenvolvidos após validar as mecânicas.
+No Godot, o Sanctum e a arena combinam arte 2D com interfaces hi-tech, fontes modernas e formação em perspectiva. Os 15 heróis têm coreografias próprias com antecipação, deslocamento, projéteis, rastros, pausa no impacto e retorno; cinco representantes têm quatro poses desenhadas. Os demais usam movimento procedural sobre uma ilustração. Supremos têm preparação e efeitos prolongados; não há modelos 3D nem animação esquelética nesta versão.
+
+O protótipo web anterior preserva ruínas sob eclipse e o HUD de obsidiana e ouro. Sua apresentação e seus controles seguem abaixo; a interface nativa está descrita em [godot/README.md](godot/README.md).
 
 O som é sintetizado localmente e ativado no topo. O guia oferece **Reduzir animações** e respeita inicialmente a preferência do sistema. No celular, **Ver ficha** abre atributos, história e habilidades.
 
@@ -107,14 +111,20 @@ O som é sintetizado localmente e ativado no topo. O guia oferece **Reduzir anim
 
 | Arquivo                        | Responsabilidade                                        |
 | ------------------------------ | ------------------------------------------------------- |
-| [src/data.js](src/data.js)     | Elenco, atributos, habilidades e ciclo de classes       |
+| [src/kits.js](src/kits.js)     | Atributos nomeados, habilidades e sinergias dos 15 heróis |
+| [src/balance.json](src/balance.json) | Parâmetros globais de dano, energia, crítico, estados, escudos e Fratura |
+| [src/data.js](src/data.js)     | Identidade, afinidades, elenco e montagem dos kits       |
 | [src/engine.js](src/engine.js) | Motor de combate independente da interface e IA         |
+| [godot/scripts/combat.gd](godot/scripts/combat.gd) | Motor nativo equivalente, lendo os parâmetros sincronizados |
+| [godot/scripts/campaign.gd](godot/scripts/campaign.gd) | Missões, minions, chefe, gemas e progresso local |
 | [src/app.js](src/app.js)       | Formação, HUD, diálogos, som e coreografias             |
 | [src/art.js](src/art.js)       | Ícones e recortes do atlas de personagens               |
 | [styles.css](styles.css)       | Identidade visual, responsividade e efeitos individuais |
 | [server.mjs](server.mjs)       | Servidor estático sem dependências de produção          |
 
-Os números são uma **base inicial para balancear**, não uma alegação de equilíbrio competitivo. A IA respeita os mesmos custos, alvos e recargas. Veja [docs/DESIGN.md](docs/DESIGN.md) para o conceito, elenco e decisões em aberto.
+Para ajustar um herói ou uma fórmula, comece pelo **[guia de balanceamento](godot/BALANCING.md)**. Os atributos de `KITS.<id>.stats` têm campos `hp`, `attack`, `defense` e `speed`; `src/balance.json` concentra os parâmetros globais. `npm run sync:godot` gera `godot/data/catalog.json` e `godot/data/combat-rules.json`. Não edite essas cópias geradas. A reorganização preserva as regras **0.5.0** e a paridade entre os motores.
+
+Os números são uma **base inicial para balancear**, não uma alegação de equilíbrio competitivo. A IA respeita os mesmos custos, alvos e recargas. Consulte [as simulações](godot/SIMULATIONS.md) antes de interpretar uma taxa de vitória isolada e [docs/DESIGN.md](docs/DESIGN.md) para o conceito original.
 
 ## Verificar
 
@@ -131,4 +141,4 @@ O teste de navegador inicia e encerra seu servidor na porta 5199. Usa `CHROMIUM_
 
 ## Recursos
 
-Arena e atlas de personagens foram gerados para este protótipo. Cinzel e Manrope são fontes sob SIL Open Font License, com licenças em `assets/`. Todos os recursos são servidos localmente.
+Arena, Sanctum e atlas de personagens foram gerados para este protótipo. Cinzel, Manrope e Space Grotesk são fontes sob SIL Open Font License; as licenças acompanham os recursos em `assets/` e `godot/assets/`. Todos os recursos são servidos localmente.

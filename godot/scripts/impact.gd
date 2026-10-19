@@ -1,5 +1,7 @@
 extends Control
 ## Six deliberately different effect languages, shared by combat and the gallery.
+const GLOW_SHADER = preload("res://shaders/ultimate_glow.gdshader")
+static var painted_atlas: Texture2D
 var origin := Vector2.ZERO
 var destination := Vector2.ZERO
 var tint := Color.WHITE
@@ -10,13 +12,44 @@ var elapsed := 0.0
 var duration := 0.8
 var ultimate := false
 var phase := "impact"
+var tier := "basic"
+var painted_sprite: TextureRect
 
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	if phase == "impact" and tier == "skill" and kind not in ["shieldExpired", "energy"]:
+		if not painted_atlas and ResourceLoader.exists("res://assets/ultimate-atlas.png"): painted_atlas = load("res://assets/ultimate-atlas.png")
+		if painted_atlas:
+			var index: int = 5 if kind in ["heal", "support", "supportAll"] else {"igneo": 0, "natural": 1, "tecnico": 2, "arcano": 3, "sombrio": 4}.get(affinity, 3)
+			var cell := Vector2(painted_atlas.get_size()) / Vector2(3, 2)
+			var atlas := AtlasTexture.new()
+			atlas.atlas = painted_atlas
+			atlas.filter_clip = true
+			atlas.region = Rect2(Vector2(index % 3, index / 3) * cell, cell)
+			painted_sprite = TextureRect.new()
+			painted_sprite.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+			painted_sprite.stretch_mode = TextureRect.STRETCH_SCALE
+			painted_sprite.mouse_filter = Control.MOUSE_FILTER_IGNORE
+			painted_sprite.modulate.a = 0.48
+			var glow := ShaderMaterial.new()
+			glow.shader = GLOW_SHADER
+			glow.set_shader_parameter("region_rect", Vector4(atlas.region.position.x / painted_atlas.get_width(), atlas.region.position.y / painted_atlas.get_height(), 1.0 / 3.0, 0.5))
+			glow.set_shader_parameter("vortex", affinity in ["arcano", "sombrio"])
+			glow.set_shader_parameter("progress", 0.0)
+			painted_sprite.material = glow
+			painted_sprite.size = Vector2(135, 165) * 0.68
+			painted_sprite.position = destination - painted_sprite.size * Vector2(0.5, 0.58)
+			painted_sprite.texture = atlas
+			add_child(painted_sprite)
 
 func _process(delta: float) -> void:
 	elapsed += delta
+	if is_instance_valid(painted_sprite):
+		var p := clampf(elapsed / duration, 0, 1)
+		painted_sprite.material.set_shader_parameter("progress", p)
+		painted_sprite.size = Vector2(135, 165) * (0.68 + sin(p * PI * 0.5) * 0.45)
+		painted_sprite.position = destination - painted_sprite.size * Vector2(0.5, 0.58)
 	queue_redraw()
 	if elapsed >= duration: queue_free()
 
@@ -27,15 +60,21 @@ func _draw() -> void:
 	var scale_factor := 1.45 if ultimate else 1.0
 	var at := destination
 	if phase == "charge":
+		_charge_signature(at, p, color, scale_factor)
 		var radius := (38 - p * 15) * scale_factor
-		_polygon(at, radius, 6 if affinity == "tecnico" else 3 if affinity == "arcano" else 8, color, p * 2)
-		draw_arc(at, radius + 10, p * TAU, p * TAU + PI * 1.5, 32, color, 2, true)
-		for i in range(9):
+		draw_arc(at, radius + 10, p * TAU, p * TAU + PI * 1.5, 40, Color(tint, fade * 0.4), 1, true)
+		for i in range(16):
 			var point := at + Vector2.from_angle(i * TAU / 9 + p) * (75 * (1 - p) + 10)
-			draw_circle(point, 2.5, Color(tint, fade))
+			draw_circle(point, 1.5 + i % 2, Color(tint.lightened(0.45), fade * 0.8))
 		return
 	if phase == "travel":
-		var point := origin.lerp(at, p)
+		var velocity := (at - origin).normalized()
+		var eased := p * p * (3 - 2 * p)
+		var point := origin.lerp(at, eased)
+		for i in range(7):
+			var tail: Vector2 = origin.lerp(at, maxf(0, eased - i * 0.035))
+			draw_circle(tail, (8 - i) * scale_factor * 0.65, Color(tint, fade * (0.17 - i * 0.018)))
+		draw_line(point - velocity * 21, point + velocity * 4, Color(tint.lightened(0.75), fade), 2.5, true)
 		if signature in ["volley", "daggers", "thorns"]:
 			for i in range(3):
 				var tip := point + Vector2(0, (i - 1) * 18)
@@ -59,6 +98,7 @@ func _draw() -> void:
 			draw_circle(point, 5 * scale_factor, Color(tint.lightened(0.5), fade))
 			_polygon(point, 18 * scale_factor, 5 if affinity == "natural" else 4, color, p * 4)
 		return
+	_contact_flash(at, p, tint, scale_factor)
 	if kind == "shieldExpired":
 		draw_arc(at, 45 * (1 + p), 0, TAU * (1 - p), 32, Color("83d8ff", 1 - p), 2, true)
 		return
@@ -69,6 +109,9 @@ func _draw() -> void:
 			var center := at + Vector2.from_angle(angle) * p * (45 if kind == "shieldBreak" else 5)
 			draw_line(center + Vector2.from_angle(angle) * 46, center + Vector2.from_angle(angle + TAU / 6) * 46, shield_color, 4, true)
 		_particles(at, p, Color("9be8ff"), 16, scale_factor)
+		for i in range(3):
+			var spread := (35 + p * (80 if kind == "shieldBreak" else 28) + i * 6) * scale_factor
+			draw_arc(at, spread, -PI * 0.8 + i * 0.3, PI * 0.8 + i * 0.3, 48, Color("d4f5ff", fade * 0.5), 1.5, true)
 		if kind == "shieldHit": return
 	if kind in ["shield", "shieldAll", "guard"]:
 		var sides := 4 if signature == "prism" else 3 if signature == "crescent" else 5 if signature == "roots" else 8 if signature in ["crater", "volley"] else 6
@@ -77,6 +120,7 @@ func _draw() -> void:
 			var from := at + Vector2(-35 + i * 24, 50)
 			draw_line(from, from - Vector2(0, 100), Color(tint, fade * 0.25), 2, true)
 		return
+	# A contact frame precedes the signature's follow-through and dispersing embers.
 	# Each active hero has a distinct impact silhouette, rather than a recolored class burst.
 	if kind in ["heal", "support", "supportAll", "energy"]:
 		var healing := Color("9ce5bd", fade)
@@ -184,10 +228,113 @@ func _draw() -> void:
 			draw_arc(at, 44 * scale_factor, 0, TAU, 48, color, 2, true)
 			_particles(at, p, Color("fff3ce"), 12, scale_factor)
 
+func _charge_signature(at: Vector2, p: float, color: Color, scale_factor: float) -> void:
+	var radius := (26 + p * 14) * scale_factor
+	var bright := Color(tint.lightened(0.6), color.a)
+	# Distinct preparation silhouettes make even shared class colors recognizable.
+	match signature:
+		"sweep":
+			for i in range(3): draw_arc(at, radius + i * 9, -PI * 0.9 + p * 1.3, PI * 0.2 + p * 1.3, 48, bright if i == 1 else color, 2 + i, true)
+		"crater":
+			_floor_ring(at + Vector2(0, 77), radius + 38, color, 2)
+			for i in range(7):
+				var point := at + Vector2((i - 3) * 15, 61 - p * (16 + i % 3 * 12))
+				_polygon(point, 4 + i % 3, 4, bright, i + p)
+		"volley":
+			for i in range(3):
+				var y := at.y + (i - 1) * 20
+				draw_line(Vector2(at.x - 36 + p * 12, y), Vector2(at.x + 24, y), color, 2, true)
+				_polygon(Vector2(at.x + 26, y), 6, 3, bright, PI * 0.5)
+		"bloom":
+			for i in range(5):
+				var angle := i * TAU / 5 + p * 0.45
+				var petal := at + Vector2.from_angle(angle) * radius
+				draw_set_transform(petal, angle, Vector2(1, 0.5))
+				draw_arc(Vector2.ZERO, 20 + p * 6, 0, TAU, 32, color, 2, true)
+				draw_set_transform(Vector2.ZERO)
+		"roots":
+			_floor_ring(at + Vector2(0, 77), radius + 32, color, 2)
+			for i in range(5):
+				var path := PackedVector2Array()
+				for j in range(13):
+					var t := j / 12.0
+					path.append(at + Vector2((i - 2) * 20 + sin(t * TAU + i) * 6, 77 - t * p * 80))
+				draw_polyline(path, color, 2, true)
+		"thorns":
+			for i in range(5):
+				var angle := -PI + i * PI / 4
+				var tip := at + Vector2.from_angle(angle) * (radius + 12)
+				draw_line(tip, at, Color(tint, color.a * 0.35), 2, true)
+				_polygon(tip, 9, 3, bright, angle + PI * 0.5)
+		"hex":
+			_polygon(at, radius, 6, color, p)
+			_polygon(at, radius * 0.63, 6, bright, -p)
+			for i in range(6):
+				var point := at + Vector2.from_angle(i * TAU / 6 + p) * (radius + 13)
+				draw_circle(point, 2, bright)
+		"rail":
+			for y in [-9.0, 9.0]:
+				draw_line(at + Vector2(-55, y), at + Vector2(45, y), color, 2, true)
+				draw_line(at + Vector2(-25 + p * 55, y - 4), at + Vector2(-25 + p * 55, y + 4), bright, 3, true)
+			_glow(at + Vector2(38, 0), 16 + p * 12, color, 0.15)
+		"drones":
+			for i in range(3):
+				var point := at + Vector2.from_angle(i * TAU / 3 + p * 2) * (radius + 12)
+				_polygon(point, 10, 6, bright, 0)
+				draw_line(at, point, Color(tint, color.a * 0.35), 1, true)
+		"orbit":
+			for i in range(3):
+				draw_set_transform(at, i * PI / 3, Vector2(1, 0.42))
+				draw_arc(Vector2.ZERO, radius + 11, 0, TAU, 48, color, 1.5, true)
+				draw_circle(Vector2.from_angle(p * TAU + i) * (radius + 11), 4, bright)
+				draw_set_transform(Vector2.ZERO)
+		"prism":
+			for i in range(3): _polygon(at + Vector2(0, (i - 1) * 9), radius + i * 7, 3, bright if i == 1 else color, p * 0.4 + i * PI)
+		"runes":
+			for i in range(7):
+				var point := at + Vector2.from_angle(i * TAU / 7 - p) * (radius + 9)
+				_polygon(point, 5, 4, bright, i)
+				draw_line(point, at, Color(tint, color.a * 0.18), 1, true)
+		"crescent":
+			for i in range(3): draw_arc(at, radius + i * 8, -PI * 0.7 - p * 0.6, PI * 0.65 - p * 0.6, 48, bright if i == 0 else color, 3 if i == 0 else 1, true)
+		"threads":
+			for i in range(5):
+				var path := PackedVector2Array()
+				for j in range(25):
+					var t := j / 24.0
+					path.append(at + Vector2((t - 0.5) * 90, sin(t * TAU + p * TAU + i) * (7 + i * 4)))
+				draw_polyline(path, color, 1.5, true)
+		"daggers":
+			for i in range(2):
+				var direction := Vector2.from_angle((PI * 0.25 if i == 0 else PI * 0.75) + p * 0.15)
+				draw_line(at - direction * radius, at + direction * radius, color, 4, true)
+				draw_line(at - direction * radius, at + direction * radius, bright, 1.5, true)
+		_:
+			_polygon(at, radius, 6, color, p)
+
+func _contact_flash(at: Vector2, p: float, color: Color, scale_factor: float) -> void:
+	var flash := pow(1 - p, 4)
+	_glow(at, (32 + p * 65) * scale_factor, color, flash * 0.18)
+	for i in range(8):
+		var direction := Vector2.from_angle(i * TAU / 8 + 0.2)
+		var inner := (8 + p * 25) * scale_factor
+		var outer := (27 + p * 85 + i % 3 * 8) * scale_factor
+		draw_line(at + direction * inner, at + direction * outer, Color(color.lightened(0.65), flash), (2.8 if i % 2 == 0 else 1.2) * scale_factor, true)
+	draw_arc(at, (12 + p * 80) * scale_factor, 0, TAU, 48, Color(color, flash * 0.65), 1.5, true)
+
+func _floor_ring(at: Vector2, radius: float, color: Color, width: float) -> void:
+	draw_set_transform(at, 0, Vector2(1, 0.25))
+	draw_arc(Vector2.ZERO, radius, 0, TAU, 64, color, width, true)
+	draw_set_transform(Vector2.ZERO)
+
+func _glow(at: Vector2, radius: float, color: Color, strength: float) -> void:
+	for i in range(4, 0, -1): draw_circle(at, radius * i / 4.0, Color(color, strength * (5 - i) * 0.18))
+
 func _particles(at: Vector2, p: float, color: Color, count: int, scale_factor: float) -> void:
 	for i in range(count):
 		var direction := Vector2.from_angle(i * 2.39996)
 		var point := at + direction * (20 + p * (35 + i % 5 * 12)) * scale_factor + Vector2(0, p * p * 25)
+		draw_line(point - direction * (4 + i % 4), point, Color(color, sin(p * PI) * 0.65), 1.0, true)
 		draw_circle(point, (1 - p) * (2 + i % 3), Color(color, sin(p * PI)))
 
 func _polygon(center: Vector2, radius: float, sides: int, color: Color, rotation_value: float) -> void:

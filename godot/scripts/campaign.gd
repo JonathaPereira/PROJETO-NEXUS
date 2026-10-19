@@ -1,10 +1,12 @@
 extends RefCounted
 ## Campaign progression is local and separate from the baseline combat catalog.
 const STORE := "user://campaign-0.7.json"
+const SLOT_COUNT := 3
+const STARTING_COPIES := 3
 const GEMS := [
-	{"id": "ember", "name": "Brasa lapidada", "effect": "+4% ATQ", "detail": "Aumenta o ataque em 4%. Não altera recargas, críticos ou duração dos efeitos.", "color": "f49b70", "stat": "attack", "factor": 1.04},
-	{"id": "sap", "name": "Seiva cristalizada", "effect": "+5% VIDA", "detail": "Aumenta a vida máxima e inicial em 5%. O limite de escudo continua sendo 25% da vida máxima.", "color": "8bd5a4", "stat": "maxHp", "factor": 1.05},
-	{"id": "pulse", "name": "Pulso de éter", "effect": "+8 EN inicial", "detail": "Começa cada missão com 48 de energia, em vez de 40. Não aumenta a energia gerada durante o combate.", "color": "a9a0f6", "stat": "energy", "factor": 1.0},
+	{"id": "ember", "name": "Brasa lapidada", "effect": "+4% ATQ", "detail": "Cada cópia soma 4% do ataque base na campanha; três somam 12%. Não altera recargas, críticos ou duração dos efeitos.", "color": "f49b70", "stat": "attack", "bonus": 0.04},
+	{"id": "sap", "name": "Seiva cristalizada", "effect": "+5% VIDA", "detail": "Cada cópia soma 5% da vida base na campanha; três somam 15%. O limite de escudo continua sendo 25% da vida máxima.", "color": "8bd5a4", "stat": "maxHp", "bonus": 0.05},
+	{"id": "pulse", "name": "Pulso de éter", "effect": "+8 EN inicial", "detail": "Cada cópia soma 8 de energia no início da missão: 48, 56 ou 64. Não aumenta a energia gerada durante o combate.", "color": "a9a0f6", "stat": "energy", "bonus": 8},
 ]
 const MISSIONS := [
 	{"id": "gate", "name": "01 · Os portões quebrados", "location": "ARREDORES DO FAROL", "story": "O Farol silenciou. Sentinelas de pedra abandonaram seus postos e as raízes ganharam vida. Seu trio precisa abrir caminho até o pátio.", "enemies": ["minion-sentinel", "minion-root", "minion-acolyte"], "scale": 1.0, "reward": "ember", "tip": "Elimine o Acólito para impedir exposição da defesa. Ataques básicos podem escolher qualquer alvo.", "ending": "Os sentinelas caem. Nos cacos há um fragmento de gema e o mesmo selo que Vesper carrega em sua lâmina."},
@@ -17,6 +19,7 @@ var equipped: Dictionary = {}
 var error_text := ""
 var catalog
 var store_path := STORE
+var _backup_suffix := ""
 
 func _init(source = null, path: String = STORE) -> void:
 	catalog = source
@@ -26,7 +29,7 @@ func _init(source = null, path: String = STORE) -> void:
 		load_progress()
 
 func active_hero(id: String) -> bool:
-	return catalog.heroes.any(func(hero): return hero.id == id)
+	return catalog != null and catalog.heroes.any(func(hero): return hero.id == id)
 
 func gem(id: String) -> Dictionary:
 	for item in GEMS:
@@ -35,39 +38,120 @@ func gem(id: String) -> Dictionary:
 
 func copies(id: String) -> int:
 	if gem(id).is_empty(): return 0
-	var count := 1
-	for index in range(cleared):
+	var count := STARTING_COPIES
+	for index in range(clampi(cleared, 0, MISSIONS.size())):
 		if MISSIONS[index].reward == id: count += 1
 	return count
 
-func available(id: String, excluding: String = "") -> int:
+func slots(hero: String) -> Array:
+	var result: Array = ["", "", ""]
+	var saved: Variant = equipped.get(hero, [])
+	if saved is Array:
+		for index in range(mini(saved.size(), SLOT_COUNT)):
+			if saved[index] is String and not gem(saved[index]).is_empty(): result[index] = saved[index]
+	return result
+
+func available(id: String, excluding_hero: String = "", excluding_slot: int = -1) -> int:
+	if gem(id).is_empty(): return 0
 	var used := 0
 	for hero in equipped:
-		if hero != excluding and equipped[hero] == id: used += 1
-	return copies(id) - used
+		var items := slots(hero)
+		for index in range(SLOT_COUNT):
+			if hero == excluding_hero and index == excluding_slot: continue
+			if items[index] == id: used += 1
+	return maxi(0, copies(id) - used)
+
+func bonuses(hero: String) -> Dictionary:
+	var result := {"attack": 0.0, "health": 0.0, "energy": 0}
+	for type in slots(hero):
+		var item := gem(type)
+		if item.is_empty(): continue
+		var key: String = "health" if item.stat == "maxHp" else item.stat
+		result[key] += item.bonus
+	return result
+
+func summary(hero: String) -> String:
+	var labels: PackedStringArray = []
+	var items := slots(hero)
+	for index in range(SLOT_COUNT):
+		var item := gem(items[index])
+		labels.append("%d · %s" % [index + 1, "Vazio" if item.is_empty() else item.name + " (" + item.effect + ")"])
+	return " | ".join(labels)
 
 func can_play(index: int) -> bool:
 	return index >= 0 and index < MISSIONS.size() and index <= cleared
 
 func load_progress() -> void:
+	cleared = 0
+	equipped.clear()
+	error_text = ""
+	_backup_suffix = ""
+	if catalog != null: team = catalog.default_teams[0].duplicate()
 	if not FileAccess.file_exists(store_path): return
 	var parser := JSON.new()
 	var parse_error := parser.parse(FileAccess.get_file_as_string(store_path))
 	var data: Variant = parser.data
-	if parse_error != OK or not data is Dictionary or data.get("schemaVersion") != 1:
-		error_text = "O progresso salvo não pôde ser lido. O arquivo foi preservado; uma nova gravação o substituirá."
+	var schema: Variant = data.get("schemaVersion") if data is Dictionary else null
+	var known_schema: bool = (schema is int or schema is float) and (schema == 1 or schema == 2)
+	if parse_error != OK or not data is Dictionary or not known_schema:
+		_backup_suffix = ".invalid.bak"
+		error_text = "O progresso salvo não pôde ser lido. O arquivo foi preservado; uma cópia será guardada antes de uma nova gravação."
 		return
+	var legacy: bool = data.schemaVersion == 1
+	if legacy: _backup_suffix = ".v1.bak"
+	var repaired := false
 	var count: Variant = data.get("cleared", 0)
 	if (count is int or count is float) and is_finite(float(count)):
-		cleared = clampi(int(count), 0, MISSIONS.size())
+		cleared = int(clampf(float(count), 0, MISSIONS.size()))
+		repaired = float(count) != float(cleared)
+	else: repaired = true
 	var saved_team: Variant = data.get("team", [])
 	if catalog.valid_team(saved_team) and saved_team.all(func(id): return active_hero(id)): team = saved_team.duplicate()
+	else: repaired = true
 	var saved_gems: Variant = data.get("equipped", {})
 	if saved_gems is Dictionary:
+		equipped.clear()
 		for id in saved_gems:
-			if not id is String or not active_hero(id) or not saved_gems[id] is String: continue
-			var type: String = saved_gems[id]
-			if not gem(type).is_empty() and available(type) > 0: equipped[id] = type
+			if not id is String or not active_hero(id):
+				repaired = true
+				continue
+			var saved: Variant = saved_gems[id]
+			if legacy and saved is String: saved = [saved, "", ""]
+			if not saved is Array:
+				repaired = true
+				continue
+			if saved.size() != SLOT_COUNT: repaired = true
+			var items: Array = ["", "", ""]
+			for index in range(mini(saved.size(), SLOT_COUNT)):
+				var type: Variant = saved[index]
+				if type is String and type == "": continue
+				if not type is String or gem(type).is_empty() or available(type) <= 0:
+					repaired = true
+					continue
+				items[index] = type
+				# Register every accepted slot immediately so repeated gems consume real copies.
+				equipped[id] = items.duplicate()
+	else: repaired = true
+	if repaired:
+		if not legacy: _backup_suffix = ".invalid.bak"
+		error_text = "Alguns dados do progresso eram inválidos e foram corrigidos. O original será guardado em uma cópia antes de salvar."
+
+func _preserve_source() -> bool:
+	if _backup_suffix == "" or not FileAccess.file_exists(store_path): return true
+	var backup := store_path + _backup_suffix
+	if DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(backup)):
+		error_text = "Não foi possível preservar o progresso anterior: há uma pasta no caminho da cópia. O arquivo original não foi substituído."
+		return false
+	if FileAccess.file_exists(backup):
+		if FileAccess.get_file_as_string(backup) == FileAccess.get_file_as_string(store_path): return true
+		var suffix := 1
+		while FileAccess.file_exists(backup + ".%d" % suffix) or DirAccess.dir_exists_absolute(ProjectSettings.globalize_path(backup + ".%d" % suffix)): suffix += 1
+		backup += ".%d" % suffix
+	var error := DirAccess.copy_absolute(ProjectSettings.globalize_path(store_path), ProjectSettings.globalize_path(backup))
+	if error != OK:
+		error_text = "Não foi possível preservar o progresso anterior: " + error_string(error) + ". O arquivo original não foi substituído."
+		return false
+	return true
 
 func save_progress() -> bool:
 	var temporary := store_path + ".tmp"
@@ -75,18 +159,20 @@ func save_progress() -> bool:
 	if file == null:
 		error_text = "Não foi possível salvar o progresso: " + error_string(FileAccess.get_open_error())
 		return false
-	file.store_string(JSON.stringify({"schemaVersion": 1, "cleared": cleared, "team": team, "equipped": equipped}, "\t"))
+	file.store_string(JSON.stringify({"schemaVersion": 2, "cleared": cleared, "team": team, "equipped": equipped}, "\t"))
 	file.flush()
 	var write_error := file.get_error()
 	file.close()
 	if write_error != OK:
 		error_text = "Não foi possível gravar o progresso: " + error_string(write_error)
 		return false
+	if not _preserve_source(): return false
 	var error := DirAccess.rename_absolute(ProjectSettings.globalize_path(temporary), ProjectSettings.globalize_path(store_path))
 	if error != OK:
 		error_text = "Não foi possível concluir o salvamento: " + error_string(error)
 		return false
 	error_text = ""
+	_backup_suffix = ""
 	return true
 
 func set_team(ids: Array) -> bool:
@@ -97,12 +183,14 @@ func set_team(ids: Array) -> bool:
 	team = before
 	return false
 
-func equip(hero: String, type: String) -> bool:
-	if not active_hero(hero): return false
-	if type != "" and (gem(type).is_empty() or available(type, hero) <= 0): return false
-	var before := equipped.duplicate()
-	if type == "": equipped.erase(hero)
-	else: equipped[hero] = type
+func equip(hero: String, type: String, slot: int = 0) -> bool:
+	if not active_hero(hero) or slot < 0 or slot >= SLOT_COUNT: return false
+	if type != "" and (gem(type).is_empty() or available(type, hero, slot) <= 0): return false
+	var before := equipped.duplicate(true)
+	var items := slots(hero)
+	items[slot] = type
+	if items.all(func(id): return id == ""): equipped.erase(hero)
+	else: equipped[hero] = items
 	if save_progress(): return true
 	equipped = before
 	return false
@@ -154,14 +242,13 @@ func battle(engine, index: int) -> Dictionary:
 			actor.attack = engine.rounded(actor.attack * mission.scale)
 			if actor.heroId == "boss-vesper": actor.energy = 64
 		else:
-			var item := gem(equipped.get(actor.heroId, ""))
-			if item.is_empty(): continue
-			match item.stat:
-				"attack": actor.attack = engine.rounded(actor.attack * item.factor)
-				"maxHp":
-					actor.maxHp = engine.rounded(actor.maxHp * item.factor)
-					actor.hp = actor.maxHp
-				"energy": actor.energy = mini(100, actor.energy + 8)
-			actor.gem = item.name + " · " + item.effect
+			if slots(actor.heroId).all(func(id): return id == ""): continue
+			var bonus := bonuses(actor.heroId)
+			# Add percentages first, then round exactly once against baseline stats.
+			actor.attack = engine.rounded(actor.attack * (1.0 + bonus.attack))
+			actor.maxHp = engine.rounded(actor.maxHp * (1.0 + bonus.health))
+			actor.hp = actor.maxHp
+			actor.energy = mini(int(engine.rules.energy.maximum), actor.energy + bonus.energy)
+			actor.gem = summary(actor.heroId)
 	state.campaignMission = index
 	return state

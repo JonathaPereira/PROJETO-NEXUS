@@ -90,6 +90,7 @@ func _run() -> void:
 		check(heal.cleansed == ["bleed"] and not combat.has_status(support, "bleed"), "Native purifying heal records its penalty before removing bleeding")
 	var before_ui := checks
 	await preload("res://tests/campaign.gd").run(self, MainScene, check)
+	await preload("res://tests/presentation.gd").run(self, MainScene, check)
 	await _ui()
 	if not failures.is_empty():
 		quit(1)

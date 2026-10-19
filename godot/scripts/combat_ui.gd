@@ -5,6 +5,7 @@ const Meter = preload("res://scripts/meter.gd")
 const Backdrop = preload("res://scripts/arena_backdrop.gd")
 const Lessons = preload("res://scripts/lessons.gd")
 const Sound = preload("res://scripts/sound.gd")
+const RulesText = preload("res://scripts/rules_text.gd")
 
 static func build(app) -> void:
 	var margin := MarginContainer.new()
@@ -24,9 +25,9 @@ static func build(app) -> void:
 	brand.add_theme_constant_override("separation", 0)
 	header.add_child(brand)
 	var title = app._label("NEXUS", 28, app.GOLD)
-	title.add_theme_font_override("font", preload("res://assets/cinzel.ttf"))
+	title.add_theme_font_override("font", preload("res://assets/space-grotesk.ttf"))
 	brand.add_child(title)
-	brand.add_child(app._label("ECOS DO CREPÚSCULO  /  ALPHA 0.7", 10, app.MUTED))
+	brand.add_child(app._label("ECOS DO CREPÚSCULO  /  ALPHA 0.8", 10, app.MUTED))
 	header.add_child(app._button("Menu", app._open_menu))
 	app.roster_button = app._button("Equipes", app._open_roster)
 	header.add_child(app.roster_button)
@@ -59,7 +60,7 @@ static func build(app) -> void:
 	turn_text.custom_minimum_size.x = 260
 	turn_text.add_theme_constant_override("separation", 2)
 	brief_row.add_child(turn_text)
-	app.phase_label = app._label("", 18, Color("f4e1b8"))
+	app.phase_label = app._label("", 18, Color("d8f6ff"))
 	turn_text.add_child(app.phase_label)
 	app.initiative = app._label("PRÓXIMOS TURNOS →", 11, app.MUTED)
 	turn_text.add_child(app.initiative)
@@ -158,7 +159,8 @@ static func build(app) -> void:
 	identity_text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	identity_text.add_theme_constant_override("separation", 2)
 	portrait_row.add_child(identity_text)
-	app.active_label = app._label("", 21, Color("f1ddb8"))
+	app.active_label = app._label("", 21, Color("d8f6ff"))
+	app.active_label.add_theme_font_override("font", preload("res://assets/space-grotesk.ttf"))
 	identity_text.add_child(app.active_label)
 	app.active_class = app._label("", 12, app.MUTED)
 	identity_text.add_child(app.active_class)
@@ -213,8 +215,8 @@ static func build(app) -> void:
 	targets.add_child(app.target_buttons)
 	app.execute_button = app._button("Confirmar ação", app._execute)
 	app.execute_button.custom_minimum_size = Vector2(195, 34)
-	app.execute_button.add_theme_stylebox_override("normal", app._style(Color("d2b17b"), Color("e8d4a8")))
-	app.execute_button.add_theme_color_override("font_color", Color("151a24"))
+	app.execute_button.add_theme_stylebox_override("normal", app._style(Color("5bdbed"), Color("b9f7ff")))
+	app.execute_button.add_theme_color_override("font_color", Color("051622"))
 	targets.add_child(app.execute_button)
 	var footer := HBoxContainer.new()
 	layout.add_child(footer)
@@ -229,8 +231,8 @@ static func build(app) -> void:
 	footer.add_child(app._button("Reiniciar", app._ask_restart))
 	app.start_button = app._button("INICIAR COMBATE", app._start)
 	app.start_button.custom_minimum_size.x = 186
-	app.start_button.add_theme_stylebox_override("normal", app._style(Color("d2b17b"), Color("f2deb5")))
-	app.start_button.add_theme_color_override("font_color", Color("111a28"))
+	app.start_button.add_theme_stylebox_override("normal", app._style(Color("5bdbed"), Color("b9f7ff")))
+	app.start_button.add_theme_color_override("font_color", Color("051622"))
 	footer.add_child(app.start_button)
 	app.restart_dialog = ConfirmationDialog.new()
 	app.restart_dialog.title = "Reiniciar batalha?"
@@ -269,9 +271,11 @@ static func refresh(app) -> void:
 	app.difficulty_picker.disabled = (app.started and app.state.phase == "playing") or app.mode == "local" or app.tutorial_index >= 0
 	app.start_button.visible = not app.started
 	app.phase_label.text = "Prepare sua equipe" if not app.started else ("Batalha encerrada" if app.state.phase == "finished" else "%s · %s" % [hero.name, "sua vez" if app._human_turn() else "vez do rival"])
-	app.round_label.text = "RODADA %02d  ·  FRATURA EM %d RODADAS" % [app.state.round, 12 - app.state.round]
-	app.round_label.tooltip_text = "Fratura a partir da rodada 12: dano antes da ação, atravessa escudos. Cura recebida −10 pontos percentuais por rodada, até −100% na rodada 21."
-	if app.state.round >= 12: app.round_label.text = "FRATURA · DANO %.1f%% PV · CURA −%d%%" % [minf(0.85, 0.04 + (app.state.round - 12) * 0.025) * 100, mini(100, (app.state.round - 11) * 10)]
+	var fracture: Dictionary = app.combat.rules.fracture
+	app.round_label.text = "RODADA %02d  ·  FRATURA EM %d RODADAS" % [app.state.round, int(fracture.startRound) - app.state.round]
+	app.round_label.tooltip_text = "Fratura a partir da rodada %d: dano antes da ação, atravessa escudos. Cura recebida diminui %s adicionais por rodada, até zero." % [int(fracture.startRound), RulesText.percent(fracture.healingReductionPerRound)]
+	if app.state.round >= fracture.startRound:
+		app.round_label.text = "FRATURA · DANO %s PV · CURA −%s" % [RulesText.percent(minf(fracture.maxHpRatioCap, fracture.initialMaxHpRatio + (app.state.round - fracture.startRound) * fracture.perRoundMaxHpRatio)), RulesText.percent(minf(1.0, (app.state.round - fracture.startRound + 1) * fracture.healingReductionPerRound))]
 	app.active_label.text = hero.name
 	app.active_class.text = "%s\n%s" % [app.catalog.class_by_id[hero.classId].name, hero.role]
 	app.active_class.add_theme_color_override("font_color", app.catalog.affinity_color(hero.classId))
@@ -281,7 +285,9 @@ static func refresh(app) -> void:
 	for index in range(app.ACTIONS.size()):
 		var id: String = app.ACTIONS[index]
 		var card = app.action_buttons[id]
-		card.configure(app.combat.get_action(actor, id), id, index + 1, app.catalog.affinity_color(hero.classId), int(actor.energy), int(actor.cooldowns.get(id, 0)), app._can_inspect(), int(hero.index))
+		var presented_action: Dictionary = app.combat.get_action(actor, id).duplicate()
+		if id in ["basic", "guard"]: presented_action.energyGain = app.combat.rules.energy.basicGain if id == "basic" else app.combat.rules.energy.guardGain
+		card.configure(presented_action, id, index + 1, app.catalog.affinity_color(hero.classId), int(actor.energy), int(actor.cooldowns.get(id, 0)), app._can_inspect(), int(hero.index))
 		if id == "skill":
 			card.glyph.symbol = hero.classId
 			card.glyph.queue_redraw()
@@ -296,7 +302,7 @@ static func refresh(app) -> void:
 		var label: String = target_hero.name
 		if target.side != actor.side:
 			var multiplier: float = app.combat.advantage(hero.classId, target_hero.classId)
-			label += " +25%" if multiplier > 1 else (" −15%" if multiplier < 1 else "")
+			label += " +" + RulesText.percent(multiplier - 1) if multiplier > 1 else (" −" + RulesText.percent(1 - multiplier) if multiplier < 1 else "")
 		var button = app._button(label, app._select_target.bind(target.id))
 		button.toggle_mode = true
 		button.set_pressed_no_signal(target.id == app.target_id)
@@ -330,10 +336,11 @@ static func update_actor_stats(app, actor: Dictionary) -> void:
 	app.active_numbers.text = "VIDA   %d / %d" % [actor.hp, actor.maxHp]
 	app.active_health.max_value = actor.maxHp
 	app.active_health.value = actor.hp
-	app.active_shield.max_value = round(actor.maxHp * 0.25)
+	app.active_shield.max_value = round(actor.maxHp * float(app.combat.rules.shield.maxHpRatio))
 	app.active_shield.value = actor.shield
 	app.active_shield_label.text = "ESCUDO   %d / %d" % [actor.shield, int(app.active_shield.max_value)]
-	app.active_energy_label.text = "ENERGIA   %d / 100" % actor.energy
+	app.active_energy.max_value = app.combat.rules.energy.maximum
+	app.active_energy_label.text = "ENERGIA   %d / %d" % [actor.energy, int(app.combat.rules.energy.maximum)]
 	app.active_energy.value = actor.energy
 	app.active_health.caption = app.active_numbers.text
 	app.active_energy.caption = app.active_energy_label.text
@@ -351,9 +358,9 @@ static func event_detail(event: Dictionary) -> String:
 			if event.get("absorbed", 0) > 0:
 				detail += "  ·  [color=#83d8ff]−%d ESCUDO · resta %d[/color]" % [event.absorbed, event.shieldAfter]
 				if event.shieldAfter == 0: detail += "  ·  [color=#83d8ff]ESCUDO QUEBRADO[/color]"
-			if event.get("advantage", 1.0) != 1.0: detail += "  ·  " + ("Vulnerável +25%" if event.advantage > 1 else "Resistente −15%")
+			if event.get("advantage", 1.0) != 1.0: detail += "  ·  " + RulesText.relationship(float(event.advantage))
 		"heal": detail = "[color=#a1e6b3]+%d VIDA%s[/color]" % [event.amount, (" · REGENERAÇÃO" if event.has("remaining") else " · SEMENTE" if event.get("source", "") == "seed" else " · DRENO DE VIDA") if event.get("passive", false) else ""]
-		"shield", "guard": detail = "[color=#83d8ff]%s · total %d · %dT[/color]" % ["+%d ESCUDO" % event.amount if event.amount > 0 else "ESCUDO MANTIDO/RENOVADO", event.get("shieldAfter", event.amount), event.get("shieldTurns", 2)]
+		"shield", "guard": detail = "[color=#83d8ff]%s · total %d · %dT[/color]" % ["+%d ESCUDO" % event.amount if event.amount > 0 else "ESCUDO MANTIDO/RENOVADO", event.get("shieldAfter", event.amount), event.get("shieldTurns", int(RulesText.rules.shield.durationActions))]
 		"shieldExpired": detail = "ESCUDO EXPIROU · −%d · resta 0" % event.amount
 		"energy": detail = "+%d ENERGIA · total %d" % [event.amount, event.energyAfter]
 		"converted": detail = "%d ESCUDO CONVERTIDO EM DANO" % event.shieldSpent
@@ -363,7 +370,7 @@ static func event_detail(event: Dictionary) -> String:
 			detail = "[color=#ffb49b]%s · −%d VIDA[/color]  ·  atravessa escudos" % [{"burn": "QUEIMADURA", "bleed": "SANGRAMENTO", "fracture": "FRATURA"}[event.type], event.amount]
 			if event.has("remaining"): detail += "  ·  %d ativação(ões) restante(s)" % event.remaining
 	if event.get("healingPenalty", 0) > 0: detail += "  ·  [color=#ffc18a]CURA −%d%%[/color]" % event.healingPenalty
-	if event.has("extraEffect"): detail += "  ·  %s 2T" % Fighter.STATUS_NAMES.get(event.extraEffect, event.extraEffect)
+	if event.has("extraEffect"): detail += "  ·  %s %dT" % [Fighter.STATUS_NAMES.get(event.extraEffect, event.extraEffect), int(RulesText.rules.status.durationTurns)]
 	if event.has("effect"):
 		if event.effect == "cleanse": detail += "  ·  PURIFICADO (%d efeito(s))" % event.cleansed.size()
 		else: detail += "  ·  [color=#eac4ee]%s %dT[/color]" % [Fighter.STATUS_NAMES.get(event.effect, event.effect).to_upper(), event.effectTurns]
@@ -419,9 +426,9 @@ static func show_report(app, events: Array, title: String) -> void:
 		if counters > 0: totals.append("%d CONTRA-ATAQUE(S)" % counters)
 		if not remaining.is_empty(): totals.append("Escudos: " + ", ".join(remaining))
 		if not statuses.is_empty(): totals.append(", ".join(statuses))
-		app.feedback.text = "[center][color=#d5b480]%s · %d alvo(s)%s[/color]\n%s[/center]" % [title, recipients.size(), " · %d CRÍTICO(S)" % criticals if criticals > 0 else "", "  ·  ".join(totals)]
+		app.feedback.text = "[center][color=#67e8f9]%s · %d alvo(s)%s[/color]\n%s[/center]" % [title, recipients.size(), " · %d CRÍTICO(S)" % criticals if criticals > 0 else "", "  ·  ".join(totals)]
 	else:
-		app.feedback.text = "[center][color=#d5b480]%s[/color]\n%s[/center]" % [title, "".join(lines)]
+		app.feedback.text = "[center][color=#67e8f9]%s[/color]\n%s[/center]" % [title, "".join(lines)]
 
 static func _plain(value: String) -> String:
 	var regex := RegEx.new()
@@ -493,5 +500,5 @@ static func _preview(app, action: Dictionary) -> void:
 		if energy > 0: label += " · +%d energia" % energy
 		if not has_damage and not statuses.is_empty(): label += " · " + ", ".join(statuses.map(func(k): return Fighter.STATUS_NAMES.get(k, "Purificação")))
 		totals.append(label.trim_prefix(" · "))
-	app.feedback.text = "[center][color=#d5b480]PRÉVIA · %s · custo %d EN[/color]\n%s[/center]" % [action.name, action.get("cost", 0), "  |  ".join(totals)]
-	app.feedback.tooltip_text = "\n".join(details) + "\n" + action.description + "\nCrítico: chance de 10%. Valores excluem efeitos do próximo turno; incluem reações ao golpe."
+	app.feedback.text = "[center][color=#67e8f9]PRÉVIA · %s · custo %d EN[/color]\n%s[/center]" % [action.name, action.get("cost", 0), "  |  ".join(totals)]
+	app.feedback.tooltip_text = "\n".join(details) + "\n" + action.description + "\nCrítico: chance de %s. Valores excluem efeitos do próximo turno; incluem reações ao golpe." % RulesText.percent(app.combat.rules.critical.chance)

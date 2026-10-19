@@ -14,6 +14,7 @@ const mime = {
   ".html": "text/html; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".js": "text/javascript; charset=utf-8",
+  ".json": "application/json; charset=utf-8",
   ".png": "image/png",
   ".svg": "image/svg+xml",
   ".ttf": "font/ttf",
@@ -88,7 +89,7 @@ test("static project site loads its artwork and fonts, all 15 heroes, and a play
     });
     assert.deepEqual(decoded.images, [["heroes.png", 1024, 1536], ["arena.png", 1672, 941]]);
     assert.deepEqual(decoded.fonts, [true, true]);
-    for (const file of ["src/app.js", "src/art.js", "src/data.js", "src/engine.js", "styles.css", "assets/cinzel.ttf", "assets/manrope.ttf", "assets/heroes.png", "assets/arena.png"])
+    for (const file of ["src/app.js", "src/art.js", "src/data.js", "src/engine.js", "src/balance.json", "styles.css", "assets/cinzel.ttf", "assets/manrope.ttf", "assets/heroes.png", "assets/arena.png"])
       assert(requests.has(origin + file), `Loaded separate resource: ${file}`);
     await expect(page.locator(".hero-art image").first()).toHaveAttribute("href", origin + "assets/heroes.png");
     await page.locator('.nav-link[data-act="roster"]').click();

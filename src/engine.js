@@ -1,8 +1,13 @@
 import { HERO_BY_ID, CLASS_BY_ID, GUARD } from "./data.js";
+// Shared formula parameters; hero-specific stats/powers live in kits.js.
+// Godot reads a generated copy. See godot/BALANCING.md before changing rules.
+import RULES from "./balance.json" with { type: "json" };
+export { RULES };
+const FRACTURE_HEALING_PERCENT = RULES.fracture.healingReductionPerRound * 100;
 export function advantage(from, to) {
   const c = CLASS_BY_ID[from];
   if (!c || !CLASS_BY_ID[to]) throw Error("Afinidade desconhecida.");
-  return c.strongAgainst === to ? 1.25 : c.weakAgainst === to ? 0.85 : 1;
+  return c.strongAgainst === to ? RULES.affinity.advantageMultiplier : c.weakAgainst === to ? RULES.affinity.resistanceMultiplier : RULES.affinity.neutralMultiplier;
 }
 export function validateTeam(ids) {
   return (
@@ -25,7 +30,7 @@ export function createBattle(
     ids.map((heroId, slot) => {
       const hero = HERO_BY_ID[heroId],
         scale =
-          side === 1 ? { easy: 0.82, normal: 1, hard: 1.15 }[difficulty] : 1;
+          side === 1 ? RULES.difficulty.enemyStatMultiplier[difficulty] : 1;
       return {
         id: `${side}-${heroId}`,
         heroId,
@@ -36,7 +41,7 @@ export function createBattle(
         attack: Math.round(hero.attack * scale),
         defense: hero.defense,
         speed: hero.speed,
-        energy: 40,
+        energy: RULES.energy.initial,
         shield: 0,
         shieldTurns: 0,
         guarding: false,
@@ -109,8 +114,8 @@ function checkVictory(state) {
   return false;
 }
 export function healingMultiplier(state, target) {
-  const fracture = Math.max(0, 1 - Math.max(0, state.round - 11) * .1);
-  return fracture * (has(target, 'bleed') ? .65 : 1);
+  const fracture = Math.max(0, 1 - Math.max(0, state.round - (RULES.fracture.startRound - 1)) * RULES.fracture.healingReductionPerRound);
+  return fracture * (has(target, 'bleed') ? RULES.status.bleedHealingMultiplier : 1);
 }
 function heal(state, target, amount, metadata = {}) {
   const multiplier = healingMultiplier(state, target);
@@ -124,8 +129,8 @@ function addStatus(target, type, owner = null) {
     return;
   }
   const s = target.statuses.find((s) => s.type === type);
-  if (s) { s.turns = 2; if (type === "cover") s.owner = owner; }
-  else target.statuses.push(type === "cover" ? { type, turns: 2, owner } : { type, turns: 2 });
+  if (s) { s.turns = RULES.status.durationTurns; if (type === "cover") s.owner = owner; }
+  else target.statuses.push(type === "cover" ? { type, turns: RULES.status.durationTurns, owner } : { type, turns: RULES.status.durationTurns });
 }
 function beginTurn(state, turnEvents = []) {
   // At most six dead units can be encountered; rounds are rebuilt from survivors.
@@ -151,11 +156,11 @@ function beginTurn(state, turnEvents = []) {
       actor.cooldowns[id] = Math.max(0, actor.cooldowns[id] - 1);
     // A public, increasing hazard prevents permanent healing/barrier stalemates.
     // It bypasses barriers and is resolved before regeneration, never reviving a casualty.
-    if (state.round >= 12) {
+    if (state.round >= RULES.fracture.startRound) {
       const amount = Math.min(
         actor.hp,
         Math.ceil(
-          actor.maxHp * Math.min(0.85, 0.04 + (state.round - 12) * 0.025),
+          actor.maxHp * Math.min(RULES.fracture.maxHpRatioCap, RULES.fracture.initialMaxHpRatio + (state.round - RULES.fracture.startRound) * RULES.fracture.perRoundMaxHpRatio),
         ),
       );
       actor.hp -= amount;
@@ -164,7 +169,7 @@ function beginTurn(state, turnEvents = []) {
         actor: actor.id,
         target: actor.id,
         amount,
-        healingPenalty: Math.min(100, (state.round - 11) * 10),
+        healingPenalty: Math.min(100, (state.round - (RULES.fracture.startRound - 1)) * FRACTURE_HEALING_PERCENT),
       });
       if (actor.hp <= 0)
         report({ type: "defeated", actor: actor.id, target: actor.id });
@@ -173,7 +178,7 @@ function beginTurn(state, turnEvents = []) {
       if (actor.hp <= 0) break;
       if (s.turns <= 0) continue;
       if (s.type === "burn" || s.type === "bleed") {
-        const n = Math.min(actor.hp, Math.round(actor.maxHp * 0.065));
+        const n = Math.min(actor.hp, Math.round(actor.maxHp * (s.type === 'burn' ? RULES.status.burnMaxHpRatio : RULES.status.bleedMaxHpRatio)));
         actor.hp -= n;
         report({
           type: s.type,
@@ -189,7 +194,7 @@ function beginTurn(state, turnEvents = []) {
       }
       if (s.type === "regen") {
         report({
-          ...heal(state, actor, actor.maxHp * 0.04),
+          ...heal(state, actor, actor.maxHp * RULES.status.regenMaxHpRatio),
           actor: actor.id,
           passive: true,
           remaining: s.turns - 1,
@@ -211,12 +216,12 @@ function beginTurn(state, turnEvents = []) {
 function has(unit, type) { return unit.statuses.some(s => s.type === type); }
 function remove(unit, type) { unit.statuses = unit.statuses.filter(s => s.type !== type); }
 // One finite shield per unit: stronger value wins; weaker applications do not extend it.
-export const SHIELD_CAP = .25;
+export const SHIELD_CAP = RULES.shield.maxHpRatio;
 function shield(unit, power) {
   const before = unit.shield;
   const grant = Math.min(Math.round(unit.maxHp * SHIELD_CAP), Math.round(unit.maxHp * power));
   const remaining = unit.shieldTurns === 0 ? 0 : before;
-  if (grant >= remaining) unit.shieldTurns = 2;
+  if (grant >= remaining) unit.shieldTurns = RULES.shield.durationActions;
   unit.shield = Math.max(remaining, grant);
   return {type:'shield',target:unit.id,amount:unit.shield-remaining,shieldBefore:before,shieldAfter:unit.shield,shieldTurns:unit.shieldTurns};
 }
@@ -249,9 +254,9 @@ export function act(state, actionId, targetId, criticalOverride = null) {
   if (storedShield) { actor.shield = 0; actor.shieldTurns = 0; emit({type:'converted',target:actor.id,shieldSpent:storedShield}); }
   if (action.kind === 'guard') {
     actor.guarding = true;
-    const e = shield(actor,.06); e.type = 'guard'; emit(e);
+    const e = shield(actor,RULES.guard.shieldMaxHpRatio); e.type = 'guard'; emit(e);
     actor.stats.shieldGranted += e.amount;
-    actor.energy = Math.min(100,actor.energy+25);
+    actor.energy = Math.min(RULES.energy.maximum,actor.energy+RULES.energy.guardGain);
   } else {
     for (const target of recipients) {
       let event;
@@ -263,23 +268,31 @@ export function act(state, actionId, targetId, criticalOverride = null) {
       } else if (action.kind.startsWith('support')) {
         event = {type:'support',target:target.id,amount:0};
       } else {
-        const weak = has(actor,'weaken') ? .8 : 1, empowered = has(actor,'empower') ? 1.2 : 1;
-        const defense = target.defense * (has(target,'expose') ? .75 : 1) * (hero.classId === 'arcano' ? .75 : 1);
+        const weak = has(actor,'weaken') ? RULES.status.weakenAttackMultiplier : 1, empowered = has(actor,'empower') ? RULES.status.empowerAttackMultiplier : 1;
+        const defense = target.defense * (has(target,'expose') ? RULES.status.exposeDefenseMultiplier : 1) * (hero.classId === 'arcano' ? RULES.classPassives.arcanoDefenseMultiplier : 1);
         const multiplier = advantage(hero.classId,HERO_BY_ID[target.heroId].classId);
-        let critical = random(state) < .1;
+        let critical = random(state) < RULES.critical.chance;
         if (criticalOverride !== null) critical = criticalOverride;
         let bonus = 1, combo = '';
         if (action.combo && has(target,action.combo.status)) {
           bonus *= action.combo.multiplier; combo = action.combo.status; actor.stats.combos++;
           if (action.combo.consume) remove(target,action.combo.status);
         }
-        if (has(target,'focus')) { bonus *= 1.25; remove(target,'focus'); combo = combo || 'focus'; actor.stats.combos++; }
+        if (has(target,'focus')) { bonus *= RULES.status.focusDamageMultiplier; remove(target,'focus'); combo = combo || 'focus'; actor.stats.combos++; }
         if (action.executeThreshold && target.hp / target.maxHp < action.executeThreshold) { bonus *= action.executeMultiplier; combo = combo || 'execute'; actor.stats.combos++; }
-        let total = Math.max(1,Math.round((actor.attack*weak*empowered*action.power+storedShield*(action.shieldScale||0)) * 100/(100+defense*.5) * multiplier * (target.guarding ? .65 : 1) * (has(target,'fortify') ? .85 : 1) * bonus * (critical?1.4:1)));
+        // Order matters: one rounding after offense, defense, affinity and bonuses.
+        let total = Math.max(RULES.damage.minimumHit, Math.round(
+          (actor.attack * weak * empowered * action.power + storedShield * (action.shieldScale || 0))
+          * RULES.damage.defenseBaseline / (RULES.damage.defenseBaseline + defense * RULES.damage.defenseWeight)
+          * multiplier
+          * (target.guarding ? RULES.guard.incomingDamageMultiplier : 1)
+          * (has(target, 'fortify') ? RULES.status.fortifyIncomingDamageMultiplier : 1)
+          * bonus * (critical ? RULES.critical.damageMultiplier : 1)
+        ));
         const protection = action.kind === 'damage' && target.statuses.find(s => s.type === 'cover');
         const guardian = protection && state.units.find(u => u.id === protection.owner && u.hp > 0 && u.side === target.side && u.id !== target.id);
         if (guardian) {
-          const share = Math.round(total*.25); total -= share;
+          const share = Math.round(total*RULES.status.coverRedirectRatio); total -= share;
           const e = hit(guardian,share,action.pierce||0,{intercepted:true}); emit(e);
           guardian.stats.protected += e.amount; actor.stats.damage += e.amount; actor.stats.shieldDamage += e.absorbed;
           if (!guardian.hp) emit({type:'defeated',target:guardian.id});
@@ -288,26 +301,26 @@ export function act(state, actionId, targetId, criticalOverride = null) {
         if (combo) event.combo = combo;
         actor.stats.damage += event.amount; actor.stats.shieldDamage += event.absorbed;
         if (has(target,'seed') && actor.hp > 0) {
-          remove(target,'seed'); const receipt = heal(state,actor,actor.maxHp*.1,{passive:true,source:'seed'});
+          remove(target,'seed'); const receipt = heal(state,actor,actor.maxHp*RULES.status.seedHealMaxHpRatio,{passive:true,source:'seed'});
           emit(receipt); actor.stats.healing += receipt.amount;
         }
         if (hero.classId === 'sombrio' && event.amount > 0 && actor.hp > 0) {
-          const receipt = heal(state,actor,event.amount*.15,{passive:true,source:'drain'});
+          const receipt = heal(state,actor,event.amount*RULES.classPassives.sombrioDrainRatio,{passive:true,source:'drain'});
           if (receipt.amount) { emit(receipt); actor.stats.healing += receipt.amount; }
         }
         if (target.hp > 0 && actor.hp > 0) {
-          const retaliation = (has(target,'mirror') ? Math.round(event.amount*.2) : 0) + (has(target,'riposte') ? Math.round(target.attack*.4) : 0);
+          const retaliation = (has(target,'mirror') ? Math.round(event.amount*RULES.status.mirrorDamageRatio) : 0) + (has(target,'riposte') ? Math.round(target.attack*RULES.status.riposteAttackRatio) : 0);
           if (retaliation > 0) {
             const e = hit(actor,retaliation,0,{reaction:true}); emit(e);
             target.stats.damage += e.amount; target.stats.shieldDamage += e.absorbed;
             if (!actor.hp) emit({type:'defeated',target:actor.id});
           }
-          if (has(target,'emberguard') && actor.hp > 0) { addStatus(actor,'burn'); emit({type:'status',target:actor.id,effect:'burn',effectTurns:2,source:'emberguard'}); }
+          if (has(target,'emberguard') && actor.hp > 0) { addStatus(actor,'burn'); emit({type:'status',target:actor.id,effect:'burn',effectTurns:RULES.status.durationTurns,source:'emberguard'}); }
         }
       }
       if (target.hp > 0) {
         for (const effect of [action.effect,action.extraEffect].filter(Boolean)) {
-          if (!event.effect) { event.effect = effect; event.effectTurns = effect === 'cleanse' ? 0 : 2; }
+          if (!event.effect) { event.effect = effect; event.effectTurns = effect === 'cleanse' ? 0 : RULES.status.durationTurns; }
           else event.extraEffect = effect;
           if (effect === 'cleanse') event.cleansed = target.statuses.filter(s => !POSITIVE.includes(s.type)).map(s => s.type);
           addStatus(target,effect,actor.id);
@@ -325,10 +338,10 @@ export function act(state, actionId, targetId, criticalOverride = null) {
         const power = (extra.power||0) * (boostedSecondary ? extra.multiplier : 1);
         if (extra.kind === 'heal') { const receipt = heal(state,target,target.maxHp*power,{source:'secondary'}); actor.stats.healing += receipt.amount; emit(receipt); }
         if (extra.kind === 'shield') { const e = shield(target,power); actor.stats.shieldGranted += e.amount; emit(e); }
-        if (extra.kind === 'energy') { const amount = Math.min(100-target.energy,extra.amount); target.energy += amount; actor.stats.energyGiven += amount; emit({type:'energy',target:target.id,amount,energyAfter:target.energy}); }
+        if (extra.kind === 'energy') { const amount = Math.min(RULES.energy.maximum-target.energy,extra.amount); target.energy += amount; actor.stats.energyGiven += amount; emit({type:'energy',target:target.id,amount,energyAfter:target.energy}); }
       }
     }
-    if (actionId === 'basic') actor.energy = Math.min(100,actor.energy+24);
+    if (actionId === 'basic') actor.energy = Math.min(RULES.energy.maximum,actor.energy+RULES.energy.basicGain);
   }
   if (actor.shield > 0 && actor.shieldTurns === 0) {
     const amount = actor.shield; actor.shield = 0;
@@ -354,13 +367,13 @@ export function chooseAI(state) {
       if (action.kind.startsWith('heal')) {
         target = [...targets].sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];
         const cleansing = action.effect === 'cleanse' && targets.some(t=>t.statuses.some(s=>!POSITIVE.includes(s.type)));
-        if ((target.hp/target.maxHp >= .78 || healingMultiplier(state,target) === 0) && !cleansing) continue;
+        if ((target.hp/target.maxHp >= RULES.ai.healingHealthThreshold || healingMultiplier(state,target) === 0) && !cleansing) continue;
       } else if (action.kind.startsWith('shield')) {
-        target = targets.find(t=>t.shield<t.maxHp*.14 || (action.effect && !has(t,action.effect)));
+        target = targets.find(t=>t.shield<t.maxHp*RULES.ai.shieldRefreshMaxHpRatio || (action.effect && !has(t,action.effect)));
         if (!target) continue;
       } else {
         target = [...targets].sort((a,b)=>a.energy-b.energy)[0];
-        if (target.energy > 75 && !targets.some(t=>t.statuses.some(s=>!POSITIVE.includes(s.type)))) continue;
+        if (target.energy > RULES.ai.supportEnergyThreshold && !targets.some(t=>t.statuses.some(s=>!POSITIVE.includes(s.type)))) continue;
       }
       return {actionId,targetId:target.id};
     }

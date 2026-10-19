@@ -6,8 +6,11 @@ const Director = preload("res://scripts/animation_director.gd")
 const Showcase = preload("res://scripts/showcase.gd")
 const Campaign = preload("res://scripts/campaign.gd")
 const Hub = preload("res://scripts/hub.gd")
-const GOLD := Color("d5b480")
-const MUTED := Color("9aacbf")
+const UITheme = preload("res://scripts/ui_theme.gd")
+const RulesText = preload("res://scripts/rules_text.gd")
+const ACCENT := UITheme.ACCENT
+const GOLD := ACCENT # Legacy view API; the visual accent is now cyan.
+const MUTED := UITheme.MUTED
 const ACTIONS := ["basic", "skill", "ultimate", "guard"]
 var combat = Combat.new()
 var catalog = combat.catalog
@@ -103,39 +106,10 @@ func _ready() -> void:
 	if DisplayServer.get_name() != "headless": _apply_display.call_deferred()
 
 func _style(color: Color, border: Color = Color("37353f")) -> StyleBoxFlat:
-	var box := StyleBoxFlat.new()
-	box.bg_color = color
-	box.border_color = border
-	box.set_border_width_all(1)
-	box.set_corner_radius_all(8)
-	box.content_margin_left = 10
-	box.content_margin_right = 10
-	box.content_margin_top = 8
-	box.content_margin_bottom = 8
-	return box
+	return UITheme.panel(color, border)
 
 func _build_theme() -> void:
-	theme = Theme.new()
-	var body_font := FontVariation.new()
-	body_font.base_font = preload("res://assets/manrope.ttf")
-	body_font.variation_opentype = {TextServerManager.get_primary_interface().name_to_tag("wght"): 600.0}
-	theme.default_font = body_font
-	theme.default_font_size = 15
-	theme.set_color("font_color", "Label", Color("eff4ff"))
-	theme.set_color("font_color", "Button", Color("eff4ff"))
-	theme.set_color("font_disabled_color", "Button", Color("8497b3"))
-	for type in ["Button", "OptionButton"]:
-		theme.set_stylebox("normal", type, _style(Color("152238")))
-		theme.set_stylebox("hover", type, _style(Color("263a55"), GOLD))
-		theme.set_stylebox("pressed", type, _style(Color("3a3540"), GOLD))
-		theme.set_stylebox("disabled", type, _style(Color("0d1828"), Color("1e3047")))
-		theme.set_stylebox("focus", type, _style(Color(0, 0, 0, 0), GOLD))
-	theme.set_stylebox("panel", "PanelContainer", _style(Color("101c2df5")))
-	theme.set_stylebox("panel", "AcceptDialog", _style(Color("101c2d"), GOLD))
-	theme.set_constant("separation", "VBoxContainer", 10)
-	theme.set_constant("separation", "HBoxContainer", 12)
-	theme.set_constant("h_separation", "GridContainer", 10)
-	theme.set_constant("v_separation", "GridContainer", 10)
+	theme = UITheme.build()
 
 func _label(text_value: String, font_size := 15, color := Color("eff4ff")) -> Label:
 	var label := Label.new()
@@ -212,8 +186,9 @@ func _new_battle() -> void:
 	selected_action = "basic"
 	preview_requested = true
 	target_id = ""
-	if is_instance_valid(feedback): feedback.text = "[center][color=#d5b480]LEITURA DO COMBATE[/color]  ·  Dano à vida e ao escudo aparecem separados.[/center]"
+	if is_instance_valid(feedback): feedback.text = "[center][color=#67e8f9]LEITURA DO COMBATE[/color]  ·  Dano à vida e ao escudo aparecem separados.[/center]"
 	state = campaign.battle(combat, campaign_mission) if campaign_mission >= 0 else combat.new_battle(teams[0], teams[1], difficulty if mode == "training" else "normal")
+	backdrop.encounter_kind = maxi(0, campaign_mission)
 	if tutorial_index >= 0:
 		tutorial_progress = {}
 		Lessons.prepare(state, tutorial_index)
@@ -419,8 +394,8 @@ func _show_classes() -> void:
 	dialog.title = "Ciclo de afinidades"
 	var text := "Cada personagem possui uma afinidade permanente.\n\n"
 	for affinity in catalog.classes:
-		text += "%s → %s  (+25%% de dano)\n%s\n\n" % [affinity.name, catalog.class_by_id[affinity.strongAgainst].name, affinity.description]
-	text += "Classe define afinidade; tanque, suporte e dano são funções dos kits. Cada classe tem as três funções. Lumi e nove personagens estão arquivados para esta fase de testes.\n\nAtacar quem supera sua classe causa 15% menos dano.\nAs demais relações são neutras."
+		text += "%s → %s  (+%s de dano)\n%s\n\n" % [affinity.name, catalog.class_by_id[affinity.strongAgainst].name, RulesText.percent(combat.rules.affinity.advantageMultiplier - 1), affinity.description]
+	text += "Classe define afinidade; tanque, suporte e dano são funções dos kits. Cada classe tem as três funções. Lumi e nove personagens estão arquivados para esta fase de testes.\n\nAtacar quem supera sua classe causa %s menos dano.\nAs demais relações são neutras." % RulesText.percent(1 - combat.rules.affinity.resistanceMultiplier)
 	dialog.dialog_text = text
 	add_child(dialog)
 	var help_text: String = dialog.dialog_text
@@ -436,7 +411,7 @@ func _show_classes() -> void:
 func _show_help() -> void:
 	var dialog := AcceptDialog.new()
 	dialog.title = "Como jogar"
-	dialog.dialog_text = "1. Monte duas equipes de três personagens diferentes.\n2. Escolha treino contra IA ou duelo no mesmo dispositivo.\n3. Inicie o combate e acompanhe a ordem dos turnos.\n4. Escolha uma ação, depois o alvo e confirme.\n5. Derrote os três rivais.\n\nAtaque básico: acerta UM inimigo escolhido, na frente ou atrás, e recupera 24 de energia.\nTécnica: custa 30; recarga de dois turnos pessoais.\nSupremo: custa 80; o alcance varia por personagem.\nDefesa: reduz dano, concede escudo e recupera 25 de energia.\nCuras e escudos escolhem aliados.\n\nVerde = vida; azul = escudo; violeta = energia.\nOs números separam vida perdida, escudo absorvido e escudo restante.\nCrítico: 10% de chance, +40% de dano, inclusive contra escudos.\nQueimadura e sangramento: 6,5% da vida máxima no início de 2 turnos.\nAtravessam escudos; reaplicar renova a duração. Sangramento reduz TODA cura recebida em 35%, inclusive regeneração, Semente e dreno. Purificação remove ambos. Curas com purificação curam antes de remover o efeito.\nRegen: +4% da vida máxima no início de 2 turnos.\nATQ↓ = enfraquecimento (−20%); DEF↓ = exposição (−25%).\nPasse o mouse sobre a ficha para consultar nomes e duração dos estados.\nVulnerável: +25% de dano; Resistente: −15%, em relação ao herói que age.\nFRENTE: centro do trio, mais perto do adversário. ATRÁS: alto e baixo da lateral.\nA posição é visual: qualquer inimigo vivo pode ser escolhido. Provocação restringe ataques individuais ao provocador; área atinge todos.\nEscudos não somam: mantém o maior, até 25% da vida, por 2 ações do protegido. Aplicar um menor não renova a duração do maior.\nSombrio drena 15% do dano direto à vida; escudo absorvido não gera cura.\nTela: escolha 1920×1080 e tela cheia. F11 alterna; Esc volta à janela.\n\nFratura: começa na rodada 12 com 4% da vida máxima antes de cada ação pessoal. Cresce 2,5 pontos percentuais por rodada (limite 85%) e ignora escudos. Também reduz TODA cura recebida: −10% na rodada 12, −20% na 13, até −100% na 21. O valor aparece no alto da arena; não pode ser purificado. A redução de Sangramento é multiplicada pela da Fratura. Evita esperar pela Fratura apenas se curando.\nProvocação limita ataques individuais ao tanque; ataques em área ignoram isso.\nProteção de Oren desvia 25% de um ataque individual ao protetor vivo.\nFortificação reduz dano em 15%; inspiração aumenta ATQ em 20%.\nSemente cura o próximo atacante aliado; Foco amplia o próximo golpe em 25%.\nCombos e condições próprias aparecem na descrição de cada habilidade.\nA formação fica salva; a batalha em andamento não.\nDuelo local usa atributos iguais para os dois lados."
+	dialog.dialog_text = RulesText.help_text()
 	add_child(dialog)
 	var help_text: String = dialog.dialog_text
 	dialog.dialog_text = ""

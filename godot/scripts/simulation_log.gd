@@ -2,7 +2,7 @@ extends RefCounted
 ## Full actions live only for the last batch; the compact statistics history stays bounded separately.
 const STORE := "user://simulations-0.6.json"
 const RULES_VERSION := "0.5.0"
-const GAME_VERSION := "0.7.0"
+const GAME_VERSION := "0.8.0"
 
 static func snapshot(state: Dictionary) -> Dictionary:
 	return {"round": state.round, "phase": state.phase, "winner": state.winner, "random": state.random,

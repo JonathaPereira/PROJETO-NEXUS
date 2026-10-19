@@ -5,8 +5,11 @@ import { fileURLToPath } from "node:url";
 import { resolve } from "node:path";
 import { HEROES, ARCHIVED_HEROES, CLASS_BY_ID, DEFAULT_TEAMS, GUARD } from "../src/data.js";
 import { createBattle, chooseAI, act, currentUnit, preview, getAction } from "../src/engine.js";
+import RULES from "../src/balance.json" with {type: "json"};
 
 const root = fileURLToPath(new URL("../", import.meta.url));
+assert.deepEqual(JSON.parse(await readFile(resolve(root, "godot/data/combat-rules.json"), "utf8")), RULES,
+  "Shared formula parameters are current; run npm run sync:godot after editing src/balance.json");
 assert.deepEqual(JSON.parse(await readFile(resolve(root, "godot/data/catalog.json"), "utf8")), {
   schemaVersion: 1, heroes: HEROES, archivedHeroes: ARCHIVED_HEROES, classes: Object.values(CLASS_BY_ID), defaultTeams: DEFAULT_TEAMS, guard: GUARD,
 }, "Shared catalog is current; run npm run sync:godot after editing src/data.js");
@@ -57,7 +60,7 @@ const env = { ...process.env,
   XDG_CACHE_HOME: resolve(scratch, "cache"),
 };
 const executable = process.env.GODOT_EXECUTABLE || "godot";
-function run(args, timeout = 180000) {
+function run(args, timeout = 240000) {
   const result = spawnSync(executable, args, { cwd: root, env, encoding: "utf8", timeout, maxBuffer: 4 * 1024 * 1024 });
   const log = (result.stdout || "") + (result.stderr || "");
   if (result.error || result.status !== 0 || /SCRIPT ERROR|Parse Error|ERROR:/i.test(log))

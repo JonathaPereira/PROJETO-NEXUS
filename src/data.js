@@ -1,4 +1,5 @@
 import { KITS, applyKit } from "./kits.js";
+import RULES from "./balance.json" with { type: "json" };
 export const ALL_CLASSES = [
   {
     id: "igneo",
@@ -638,6 +639,8 @@ export const DEFAULT_TEAMS = [
   ["axion", "veyra", "astra"],
   ["vesper", "oren", "kira"],
 ];
+// Keep the shared defensive action's description aligned with global balance.
+const rulePercent = (value) => Number((value * 100).toFixed(1)).toString().replace(".", ",");
 export const GUARD = {
   id: "guard",
   name: "Postura defensiva",
@@ -645,5 +648,5 @@ export const GUARD = {
   cost: 0,
   cooldown: 0,
   description:
-    "Recebe 35% menos dano até seu próximo turno, ganha escudo de 6% da vida máxima por 2 ações e recupera 25 de energia. Escudos não somam.",
+    `Recebe ${rulePercent(1 - RULES.guard.incomingDamageMultiplier)}% menos dano até seu próximo turno, ganha escudo de ${rulePercent(RULES.guard.shieldMaxHpRatio)}% da vida máxima por ${RULES.shield.durationActions} ações e recupera ${RULES.energy.guardGain} de energia. Escudos não somam.`,
 };

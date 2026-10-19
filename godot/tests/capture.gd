@@ -14,7 +14,9 @@ func shot(filename: String) -> void:
 		quit(1)
 
 func wait_hit(director, baseline: int) -> void:
-	var deadline := Time.get_ticks_msec() + 6000
+	# Software-rendered Full HD can advance slowly on shared CI CPUs.
+	# Animation duration and callback counts are checked separately without rendering.
+	var deadline := Time.get_ticks_msec() + 20000
 	while director.impact_count <= baseline and Time.get_ticks_msec() < deadline: await process_frame
 	if director.impact_count <= baseline:
 		push_error("Rendered attack did not reach impact")
@@ -22,7 +24,7 @@ func wait_hit(director, baseline: int) -> void:
 	await create_timer(0.01).timeout
 
 func wait_done(node) -> void:
-	var deadline := Time.get_ticks_msec() + 15000
+	var deadline := Time.get_ticks_msec() + 45000
 	while (node.playing if node is AcceptDialog else node.busy) and Time.get_ticks_msec() < deadline: await process_frame
 	if node.playing if node is AcceptDialog else node.busy:
 		push_error("Rendered action did not recover")
@@ -234,12 +236,20 @@ func campaign_review(app) -> void:
 	await shot("godot-menu")
 	app.hub.story_button.pressed.emit()
 	await shot("godot-story")
-	app.hub.open("gems")
+	app.hub.open("heroes")
 	app.hub.selected_hero = "veyra"
-	app.hub.open("gems")
-	app.hub.gem_buttons.ember.pressed.emit()
-	app.campaign.equip("axion", "sap")
-	app.campaign.equip("astra", "pulse")
+	app.hub._choose_hero("veyra")
+	app.hub.hero_details.current_tab = 0
+	await shot("godot-heroes")
+	app.hub.hero_details.current_tab = 1
+	await shot("godot-hero-lore")
+	app.hub.hero_details.current_tab = 2
+	for slot in range(3):
+		app.hub.slot_buttons[slot].pressed.emit()
+		app.hub.gem_buttons.ember.pressed.emit()
+		app.campaign.equip("axion", "sap", slot)
+		app.campaign.equip("astra", "pulse", slot)
+	await shot("godot-hero-gems")
 	app.hub.open("gems")
 	await shot("godot-gems")
 	app.hub.open("story")
@@ -277,4 +287,7 @@ func campaign_review(app) -> void:
 	await shot("godot-gems-small")
 	app.hub.open("menu")
 	await shot("godot-menu-small")
+	app.hub.open("heroes")
+	app.hub.hero_details.current_tab = 0
+	await shot("godot-heroes-small")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))

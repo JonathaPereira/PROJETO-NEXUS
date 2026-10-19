@@ -5,7 +5,8 @@ const Glyph = preload("res://scripts/glyph.gd")
 const ATLAS = preload("res://assets/clean-atlas.png")
 const CHARACTER_SHADER = preload("res://shaders/character.gdshader")
 const SPECIAL = {0: "veyra", 4: "sylva", 8: "axion", 12: "astra", 16: "vesper", 20: "auren"}
-const STATUS_NAMES = {"burn": "Queimadura", "bleed": "Sangramento: cura −35%", "regen": "Regeneração", "weaken": "Ataque −20%", "expose": "Defesa −25%", "empower": "Ataque +20%", "fortify": "Dano recebido −15%", "cover": "Proteção: desvia 25%", "mirror": "Reflete 20% do dano à vida", "riposte": "Contra-ataca: 40% ATQ", "taunt": "Provocação", "emberguard": "Retalia com queimadura", "focus": "Próximo golpe +25%", "seed": "Semente: próximo atacante cura 10%"}
+const RulesText = preload("res://scripts/rules_text.gd")
+static var STATUS_NAMES: Dictionary = RulesText.status_names()
 static var texture_cache: Dictionary = {}
 static var region_cache: Dictionary = {}
 static var pose_regions: Dictionary = {}
@@ -121,17 +122,22 @@ func setup(hero: Dictionary, id: String, color: Color) -> void:
 	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	plate.z_index = 50
 	var box := StyleBoxFlat.new()
-	box.bg_color = Color("07111bf2")
-	box.border_color = color.darkened(0.4)
+	box.bg_color = Color("081525f5")
+	box.border_color = color.darkened(0.32)
 	box.set_border_width_all(1)
-	box.set_corner_radius_all(5)
+	box.set_corner_radius_all(7)
+	box.shadow_color = Color(0, 0, 0, 0.30)
+	box.shadow_size = 4
+	box.shadow_offset = Vector2(0, 2)
 	plate.add_theme_stylebox_override("panel", box)
 	add_child(plate)
 	remove_child(indicator)
 	plate.add_child(indicator)
 	indicator.position = Vector2(154, 2)
 	indicator.size = Vector2(14, 18)
-	title = _label(hero.name, 14, Color("f0f4ff"))
+	title = _label(hero.name, 14, Color("f3f8ff"))
+	if ResourceLoader.exists("res://assets/space-grotesk.ttf"):
+		title.add_theme_font_override("font", load("res://assets/space-grotesk.ttf"))
 	title.position = Vector2(8, 1)
 	title.size = Vector2(146, 20)
 	plate.add_child(title)
@@ -156,16 +162,17 @@ func setup(hero: Dictionary, id: String, color: Color) -> void:
 	relationship.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	relationship.add_theme_font_size_override("font_size", 11)
 	health = Meter.new()
+	health.fill = Color("59d9aa")
 	health.position = Vector2(8, 38)
 	health.size = Vector2(180, 16)
 	plate.add_child(health)
 	energy = Meter.new()
-	energy.fill = Color("8c76d9")
+	energy.fill = Color("9b8af0")
 	energy.position = Vector2(8, 57)
 	energy.size = Vector2(180, 13)
 	plate.add_child(energy)
 	shield = Meter.new()
-	shield.fill = Color("328fbd")
+	shield.fill = Color("429fcc")
 	shield.position = Vector2(8, 73)
 	shield.size = Vector2(180, 13)
 	plate.add_child(shield)
@@ -175,12 +182,12 @@ func setup(hero: Dictionary, id: String, color: Color) -> void:
 	shield_label = _label("", 11, Color("83d8ff"))
 	shield_label.visible = false
 	plate.add_child(shield_label)
-	status_label = _label("", 10, Color("f2c59c"))
+	status_label = _label("", 10, Color("ffc394"))
 	status_label.position = Vector2(8, 88)
 	status_label.size = Vector2(180, 14)
 	status_label.max_lines_visible = 1
 	plate.add_child(status_label)
-	position_label = _label("", 11, Color("d9d7c1"))
+	position_label = _label("", 11, Color("c5d8e9"))
 	position_label.position = Vector2(-5, 259)
 	position_label.size = Vector2(196, 18)
 	position_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -209,7 +216,7 @@ func set_depth(value: float) -> void:
 func set_relationship(multiplier: float, relevant: bool) -> void:
 	relationship.visible = relevant and not dead and multiplier != 1.0
 	affinity_label.visible = not relationship.visible
-	relationship.text = affinity_label.text.split(" · ")[0] + " · " + ("VULNERÁVEL +25%" if multiplier > 1 else "RESISTENTE −15%")
+	relationship.text = affinity_label.text.split(" · ")[0] + " · " + RulesText.relationship(multiplier).to_upper()
 	relationship.add_theme_color_override("font_color", Color("ffb998") if multiplier > 1 else Color("a6d9fa"))
 
 func foot_position() -> Vector2:
@@ -286,18 +293,19 @@ func refresh(data: Dictionary, is_active: bool, is_chosen: bool, can_target: boo
 	health.max_value = data.maxHp
 	health.value = data.hp
 	energy.value = data.energy
-	shield.max_value = round(data.maxHp * 0.25)
+	energy.max_value = RulesText.rules.energy.maximum
+	shield.max_value = round(data.maxHp * float(RulesText.rules.shield.maxHpRatio))
 	shield.value = data.shield
 	shield_label.text = "ESCUDO  %d" % data.shield
 	health.caption = "VIDA  %d / %d" % [data.hp, data.maxHp]
-	energy.caption = "ENERGIA  %d / 100" % data.energy
+	energy.caption = "ENERGIA  %d / %d" % [data.energy, int(RulesText.rules.energy.maximum)]
 	shield.caption = "ESCUDO  %d / %d%s" % [data.shield, int(shield.max_value), (" · %dT" % data.get("shieldTurns", 0)) if data.shield > 0 and data.get("shieldTurns", 0) > 0 else " · AGORA" if data.shield > 0 else ""]
 	shield_label.modulate.a = 1.0 if data.shield > 0 else 0.55
 	stats.text = "%d/%d PV · %d EN" % [data.hp, data.maxHp, data.energy]
 	var states: Array = []
 	var compact: Array = []
 	if data.guarding:
-		states.append("Defesa: −35% de dano até o próximo turno")
+		states.append("Defesa: −%s de dano até o próximo turno" % RulesText.percent(1 - RulesText.rules.guard.incomingDamageMultiplier))
 		compact.append("Defesa")
 	for status in data.statuses:
 		var duration: int = int(status.turns)
@@ -306,13 +314,18 @@ func refresh(data: Dictionary, is_active: bool, is_chosen: bool, can_target: boo
 	if compact.size() > 2: compact = compact.slice(0, 1) + ["+%d estados" % (compact.size() - 1)]
 	status_label.text = "DERROTADO" if dead else " · ".join(compact)
 	status_label.tooltip_text = "\n".join(states)
-	tooltip_text = base_tooltip + "\nEscudo único; dura 2 ações do protegido. Não acumula.\nEscudo: %d / %d máximo" % [data.shield, int(shield.max_value)] + ("\n\nESTADOS\n" + "\n".join(states) if not states.is_empty() else "")
-	if data.has("gem"): tooltip_text += "\n\nGEMA DE CAMPANHA · " + data.gem
+	tooltip_text = base_tooltip + "\nEscudo único; dura %d ações do protegido. Não acumula.\nEscudo: %d / %d máximo" % [int(RulesText.rules.shield.durationActions), data.shield, int(shield.max_value)] + ("\n\nESTADOS\n" + "\n".join(states) if not states.is_empty() else "")
+	if data.has("gem"):
+		var gems: Variant = data.gem
+		var summary: String = " · ".join(gems) if gems is Array else str(gems)
+		tooltip_text += "\n\nENGASTES DE CAMPANHA\n" + summary
 	artwork.modulate = Color(0.35, 0.4, 0.5, 0.4) if dead else Color.WHITE
-	indicator.text = "◆" if chosen and available else "●"
+	indicator.text = "◇" if chosen and available else "●"
 	indicator.visible = (active or (chosen and available)) and not dead
+	indicator.add_theme_color_override("font_color", Color("f6da97") if chosen and available else Color("99f5e5"))
 	var box: StyleBoxFlat = plate.get_theme_stylebox("panel")
-	box.border_color = tint if active else (Color("e5c38c") if chosen and available else tint.darkened(0.6))
+	box.bg_color = Color("102438fa") if active else Color("081525f5")
+	box.border_color = tint.lightened(0.15) if active else (Color("e5c38c") if chosen and available else tint.darkened(0.45))
 	box.set_border_width_all(2 if active or (chosen and available) else 1)
 	plate.queue_redraw()
 	queue_redraw()
@@ -339,14 +352,27 @@ func _draw() -> void:
 	for i in range(49): contact.append(center + Vector2(cos(TAU * i / 48.0) * 30 * depth, sin(TAU * i / 48.0) * 5 * depth))
 	draw_colored_polygon(contact, Color(0, 0, 0, 0.55))
 	if active or chosen or available:
-		var ring := tint if active else Color("e5c38c")
-		ring.a = 0.9 if active or chosen else 0.25
-		draw_polyline(points, ring, 2 if active or chosen else 1, true)
+		var ring := tint.lightened(0.2) if active else Color("f1c98f")
+		var pulse: float = 0.88 + sin(elapsed * 2.6) * 0.12 if motion_enabled else 1.0
+		ring.a = 0.86 * pulse if active or chosen else 0.24
+		# Short arcs describe an active targeting ring while preserving the broad
+		# contact shadow that grounds every body on the arena floor.
+		for sector in range(4):
+			var arc := PackedVector2Array()
+			for i in range(13):
+				var angle: float = TAU * (float(sector) / 4 + float(i) / 64)
+				arc.append(center + Vector2(cos(angle) * 57 * depth, sin(angle) * 11 * depth))
+			draw_polyline(arc, ring, 2 if active or chosen else 1, true)
+		if active or chosen:
+			var soft := ring
+			soft.a *= 0.14
+			draw_colored_polygon(points, soft)
 
 func set_formation(slot: int) -> void:
 	formation_slot = slot
 	var caption: String = ["FRENTE", "ATRÁS ↑", "ATRÁS ↓"][slot] if slot >= 0 else ""
 	title.text = hero_name + (" · " + caption if slot >= 0 else "")
+	title.tooltip_text = title.text
 	position_label.text = ("CHEFE · " if role_name == "Chefe" else "") + caption
 	position_label.visible = slot >= 0
 	position_label.tooltip_text = "Posição visual. Qualquer inimigo pode ser escolhido, salvo Provocação."

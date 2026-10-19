@@ -1,5 +1,7 @@
 # Revisão de proteção e cura — Alpha 0.5
 
+As regras desta revisão permanecem no combate livre da Alpha 0.8. Consulte [Como ler as simulações](SIMULATIONS.md) para os resultados reproduzidos em 19/10/2026, taxas por herói, limites da amostra e exportação dos seus logs.
+
 A Alpha 0.4 somava escudos até 60% da vida, sem expiração. Vesper combinava escudo próprio de 28%, cura de 18% no supremo e dreno de 25%. Oren concedia escudos e regeneração para o trio. A proteção prolongava partidas, incluindo Vesper/Kira/Oren. Saira/Maura/Sylva também mantinham curas, purificação e energia até rodadas avançadas da Fratura.
 
 ## Regras revisadas
