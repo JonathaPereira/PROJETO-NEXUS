@@ -2,7 +2,7 @@ extends RefCounted
 const Fighter = preload("res://scripts/fighter.gd")
 const Card = preload("res://scripts/skill_card.gd")
 const Meter = preload("res://scripts/meter.gd")
-const Backdrop = preload("res://scripts/arena_backdrop.gd")
+const Backdrop = preload("res://scripts/battle_stage_3d.gd")
 const Lessons = preload("res://scripts/lessons.gd")
 const Sound = preload("res://scripts/sound.gd")
 const RulesText = preload("res://scripts/rules_text.gd")
@@ -27,15 +27,23 @@ static func build(app) -> void:
 	var title = app._label("NEXUS", 28, app.GOLD)
 	title.add_theme_font_override("font", preload("res://assets/space-grotesk.ttf"))
 	brand.add_child(title)
-	brand.add_child(app._label("ECOS DO CREPÚSCULO  /  ALPHA 0.8", 10, app.MUTED))
+	brand.add_child(app._label("ECOS DO CREPÚSCULO  /  3D · EM DESENVOLVIMENTO", 10, app.MUTED))
 	header.add_child(app._button("Menu", app._open_menu))
 	app.roster_button = app._button("Equipes", app._open_roster)
 	header.add_child(app.roster_button)
-	header.add_child(app._button("Afinidades", app._show_classes))
-	header.add_child(app._button("Ajuda", app._show_help))
-	header.add_child(app._button("Golpes", app._open_showcase))
-	header.add_child(app._button("Aprender", app._show_lessons))
-	header.add_child(app._button("Balanço", app._show_lab))
+	# Secondary tools stay available without occupying the battle HUD.
+	var tools_popup := PopupPanel.new()
+	app.add_child(tools_popup)
+	var tools := VBoxContainer.new()
+	tools.custom_minimum_size.x = 240
+	tools_popup.add_child(tools)
+	var tools_button: Button = app._button("Opções  ···", func(): tools_popup.popup_centered())
+	header.add_child(tools_button)
+	for item in [["Afinidades", app._show_classes], ["Ajuda", app._show_help], ["Galeria 2D", app._open_showcase], ["Aprender", app._show_lessons], ["Balanço", app._show_lab]]:
+		var callback: Callable = item[1]
+		tools.add_child(app._button(item[0], func():
+			tools_popup.hide()
+			callback.call()))
 	app.log_dialog = AcceptDialog.new()
 	app.log_dialog.title = "Registro da batalha"
 	app.add_child(app.log_dialog)
@@ -46,9 +54,9 @@ static func build(app) -> void:
 	app.log_dialog.add_child(app.log_view)
 	header.add_child(app._button("Registro", func(): app.log_dialog.popup_centered()))
 	app.sound_button = app._button("Som: desligado", app._toggle_sound)
-	header.add_child(app.sound_button)
+	tools.add_child(app.sound_button)
 	app.screen_button = app._button("⛶ Tela", app._show_display)
-	header.add_child(app.screen_button)
+	tools.add_child(app.screen_button)
 	app.sound = Sound.new()
 	app.add_child(app.sound)
 	var brief := PanelContainer.new()
@@ -324,6 +332,8 @@ static func refresh(app) -> void:
 		fighter.set_relationship(multiplier, data.side != actor.side and action.kind in ["damage", "aoe"] and app.state.phase == "playing")
 		fighter.disabled = not app._can_act() or not data.id in ids
 	app.backdrop.motion_enabled = not app.reduced_motion
+	app.backdrop.sync_units(app.state.units)
+	app.backdrop.select_unit(actor.id if app.started else "", app.target_id if app._can_act() else "")
 	if app.preview_requested and app._can_inspect(): _preview(app, action)
 	if app.tutorial_index >= 0:
 		var goals: Array = Lessons.GOALS[app.tutorial_index]

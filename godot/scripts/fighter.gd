@@ -41,6 +41,9 @@ var shield_label: Label
 var stats: Label
 var status_label: Label
 var indicator: Label
+var spatial_presentation := false
+var spatial_foot := Vector2.ZERO
+var spatial_head := Vector2.ZERO
 var affinity_label: Label
 var relationship: Label
 var plate: Panel
@@ -220,10 +223,24 @@ func set_relationship(multiplier: float, relevant: bool) -> void:
 	relationship.add_theme_color_override("font_color", Color("ffb998") if multiplier > 1 else Color("a6d9fa"))
 
 func foot_position() -> Vector2:
+	if spatial_presentation: return spatial_foot
 	return position + visual_root.position
 
 func hit_position() -> Vector2:
+	if spatial_presentation: return spatial_head.lerp(spatial_foot, 0.3)
 	return foot_position() - Vector2(0, 108 * depth)
+
+func use_spatial_presentation() -> void:
+	spatial_presentation = true
+	visual_root.hide()
+	position_label.hide()
+	queue_redraw()
+
+func set_spatial_anchor(foot: Vector2, head: Vector2) -> void:
+	spatial_foot = foot
+	spatial_head = head
+	position = foot - Vector2(93, 257)
+	depth = clampf((foot.y - head.y) / 200.0, 0.45, 1.3)
 
 func set_pose(frame: int) -> void:
 	pose_index = frame
@@ -262,9 +279,14 @@ func _rest_pose() -> void:
 	artwork.position = Vector2(-artwork.size.x * 0.5, -artwork.size.y)
 
 func _has_point(point: Vector2) -> bool:
+	if spatial_presentation:
+		var height := maxf(60, spatial_foot.y - spatial_head.y)
+		var plate_point := plate.get_transform().affine_inverse() * point
+		return Rect2(spatial_head - position - Vector2(height * 0.3, 8), Vector2(height * 0.6, height + 8)).has_point(point) or Rect2(Vector2.ZERO, plate.size).has_point(plate_point)
 	return Rect2(Vector2(93 - 90 * depth, 257 - 200 * depth), Vector2(180 * depth, 200 * depth)).has_point(point) or plate.get_rect().has_point(point)
 
 func _process(delta: float) -> void:
+	if spatial_presentation: return
 	if not is_instance_valid(visual_root): return
 	elapsed += delta
 	if not posing and Time.get_ticks_msec() >= reaction_until:
@@ -343,6 +365,7 @@ func apply_tick(event: Dictionary) -> void:
 	refresh(data, true, false, false)
 
 func _draw() -> void:
+	if spatial_presentation: return
 	if not is_instance_valid(visual_root): return
 	var center := Vector2(93, 258)
 	var points := PackedVector2Array()

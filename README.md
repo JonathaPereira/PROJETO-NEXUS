@@ -8,6 +8,8 @@ Protótipo jogável de RPG tático original: equipes de três, cinco afinidades 
 
 O projeto Godot está em **[godot/](godot/README.md)**. Use **Godot 4.6 Standard**, gratuito, sem a edição .NET. Importe [godot/project.godot](godot/project.godot), aguarde a importação dos recursos e pressione **F5**.
 
+A **Alpha 0.9** inicia a apresentação 3D do combate: arena com profundidade real, personagens articulados construídos com malhas procedurais, preparação/contato/recuperação dos ataques e janelas flutuantes com dano, escudo e efeitos positivos ou negativos. História e combate livre usam a nova arena; a galeria preserva a apresentação 2D anterior. Esta primeira etapa ainda precisa de modelos e animações de arte final para atingir o acabamento do conceito aprovado. [Detalhes, execução e validação da etapa 3D](godot/GRAPHICS-3D.md).
+
 A **Alpha 0.8** moderniza o menu e o combate com a ambientação hi-tech do Sanctum, painéis azul-escuros, acentos ciano e a fonte Space Grotesk. A aba **Heróis** reúne os 15 personagens, suas três habilidades ilustradas, custos, efeitos, sinergias, origem, motivação e história. **O Farol Partido** mantém três missões, minions próprios e **Vesper como chefe**, agora com mais contexto sobre o Farol, sua queda e o vínculo dos heróis com esse conflito.
 
 Cada herói pode carregar **três engastes**, inclusive gemas repetidas. Você começa com **três cópias de cada tipo**: ataque +4%, vida +5% ou energia inicial +8 por cópia. Bônus iguais somam: três dão +12% ataque, +15% vida ou energia inicial de 40 para 64. Trocas são gratuitas; primeiras vitórias concedem uma cópia extra da gema da missão. Trio, engastes e avanço ficam salvos localmente, com leitura automática do progresso anterior. [Como jogar a campanha](godot/CAMPAIGN.md).

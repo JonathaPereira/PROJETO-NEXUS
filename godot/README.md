@@ -1,13 +1,15 @@
-# NEXUS em Godot — Alpha 0.8
+# NEXUS em Godot — Alpha 0.9 / primeira etapa 3D
 
 Godot 4.6 Standard / GDScript, gratuito e sem addons pagos. Validado com Godot 4.6.3 em Linux.
 
+O combate principal agora usa uma arena e personagens **3D reais**, com articulações procedurais, formações triangulares, efeitos e câmera de supremo. As janelas flutuantes mostram dano à vida e ao escudo separadamente, crítico, cura e efeitos positivos/negativos com duração. A arte final dos modelos e animações continua em desenvolvimento. A campanha, os engastes e as regras descritos abaixo permanecem disponíveis; a galeria **Golpes** mantém a apresentação 2D para comparação. [Guia da etapa 3D](GRAPHICS-3D.md).
+
 ## Atualizar e abrir no Windows
 
-1. Feche o Godot. Abra a [branch atualizada](https://github.com/JonathaPereira/PROJETO-NEXUS/tree/codex/nexus-jogavel).
-2. Clique em **Code → Download ZIP** e depois **Extrair tudo**, em uma pasta nova.
+1. Feche o Godot. Use a pasta desta revisão do projeto, que contém `godot/scripts/battle_stage_3d.gd`. Branches anteriores e a versão web não incluem esta etapa.
+2. Se baixar as fontes pelo GitHub, selecione a revisão com esta etapa, use **Code → Download ZIP** e depois **Extrair tudo**, em uma pasta nova.
 3. No gerenciador do Godot, clique em **Importar** e selecione `godot/project.godot` dentro da pasta extraída.
-4. Aguarde a importação, pressione **F5** e confira **ALPHA 0.8** no menu inicial.
+4. Aguarde a importação, pressione **F5** e entre em **Combate livre** para abrir a arena 3D. O cabeçalho da batalha identifica a apresentação em desenvolvimento.
 5. Abra **Heróis** para ver fichas e equipar gemas. Para jogar, clique em **Começar história → Jogar próxima missão → Iniciar missão**. **Combate livre** mantém os modos anteriores.
 
 Sua cópia anterior não atualiza automaticamente. Quem usa Git pode atualizar a branch com `git pull --ff-only`, preservando alterações locais.
@@ -95,7 +97,9 @@ A coluna de vitórias agora exibe **vitórias/aparições e porcentagem**; amost
 
 O [relatório das simulações](SIMULATIONS.md) separa os resultados das 60 formações variadas e dos 96 testes de sustentação, incluindo os extremos por herói e como enviar seus logs. Essas amostras usam os atributos base, sem gemas.
 
-## Apresentação preservada e refinada
+## Referência da apresentação 2D anterior
+
+Os parágrafos e as capturas desta seção descrevem a apresentação da Alpha 0.8, mantida na galeria **Opções → Galeria 2D**. A batalha principal da Alpha 0.9 usa os modelos, a arena e os efeitos do [guia 3D](GRAPHICS-3D.md).
 
 O chão é reenquadrado pela borda inferior para aparecer sob todos os pés. Silhuetas ficam ancoradas ao chão, com sombras de contato; a distância altera escala e altura. É uma apresentação 2.5D com artes em perspectiva, sem modelos 3D. A referência de disposição é o Marvel Avengers Alliance: **um personagem mais próximo do adversário, no centro, e dois atrás, um acima e outro abaixo**. As fichas acompanham cada integrante, com **VIDA**, **ENERGIA** e **ESCUDO** em barras independentes, valores exatos e duração do escudo. O trio padrão novo leva Axion à frente; equipes já salvas são preservadas. Em **Equipes**, use o seletor **Personagem na FRENTE** para ordenar seu trio sem remover integrantes.
 

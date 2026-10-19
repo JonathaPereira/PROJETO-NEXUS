@@ -67,7 +67,7 @@ func _ready() -> void:
 	var logo := _heading(masthead, "NEXUS", 30, WHITE)
 	logo.autowrap_mode = TextServer.AUTOWRAP_OFF
 	logo.size_flags_horizontal = SIZE_SHRINK_BEGIN
-	var subtitle := _text(masthead, "ECOS DO CREPÚSCULO  /  ALPHA 0.8", 11, CYAN)
+	var subtitle := _text(masthead, "ECOS DO CREPÚSCULO  /  ALPHA 0.9 · COMBATE 3D", 11, CYAN)
 	subtitle.size_flags_vertical = SIZE_SHRINK_CENTER
 	masthead.add_child(app._button("⛶ Tela", app._show_display))
 	masthead.add_child(app._button("Sair", func(): get_tree().quit()))

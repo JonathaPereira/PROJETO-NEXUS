@@ -1,5 +1,7 @@
 # Progressão e próximas etapas
 
+**Etapa 3D (Alpha 0.9):** a batalha principal usa arena, iluminação e personagens volumétricos com articulações procedurais, ataques com contato sincronizado e janelas de resultado detalhadas. Esta é a base jogável para evoluir o conceito visual; modelos e animações de arte final, novos capítulos e PvP online continuam sendo entregas futuras. [Escopo e validação](GRAPHICS-3D.md).
+
 Pedidos do jogador em 18 e 19/10/2026, com a primeira etapa na Alpha 0.7 e os refinamentos da **Alpha 0.8**.
 
 Implementado:

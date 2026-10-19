@@ -270,10 +270,12 @@ func _layout(app) -> void:
 		var bodies: Array[Rect2] = []
 		for member in app.state.units:
 			var actor = app.fighters[member.id]
-			var foot: Vector2 = bounds.position + actor.foot_position()
-			check(actor.foot_position().y > app.backdrop.floor_line() + 20, "Every fighter stands on the visible floor rather than the skyline")
-			check(is_zero_approx(actor.artwork.position.y + actor.artwork.size.y), "Resting artwork is anchored at its lower edge, without a centering gap under the feet")
-			bodies.append(Rect2(foot - Vector2(94, 200) * actor.depth, Vector2(188, 200) * actor.depth))
+			var model = app.backdrop.models[member.id]
+			check(is_equal_approx(model.home.y, 0.055) and model.position.distance_to(model.home) < 0.02, "Every resting model stands at its world-space arena position")
+			check(actor.spatial_presentation and not actor.visual_root.visible and actor.foot_position().distance_to(app.backdrop.ground_position(member.id)) < 1.0, "HUD target anchors follow the projected model rather than a 2D sprite")
+			var body: Rect2 = app.backdrop.projected_body_rect(member.id)
+			check(body.has_area(), "Actual 3D mesh bounds project to a visible body region")
+			bodies.append(Rect2(body.position + bounds.position, body.size))
 		for body in bodies: check(bounds.encloses(body), "Idle character body stays inside the battlefield")
 		for data in app.state.units:
 			var fighter = app.fighters[data.id]
@@ -294,11 +296,11 @@ func _layout(app) -> void:
 				check(fighter.status_label.get_theme_font("font").get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, 10).x <= fighter.status_label.size.x, "All simultaneous status labels fit their allocated row")
 		for side in range(2):
 			var team: Array = app.state.units.filter(func(u): return u.side == side)
-			var front = app.fighters[team[0].id]
-			var rear_a = app.fighters[team[1].id]
-			var rear_b = app.fighters[team[2].id]
-			check(front.foot_position().y - rear_a.foot_position().y > 90 and rear_b.foot_position().y - front.foot_position().y > 70, "One vanguard and two rear positions form a triangle")
-			check(front.depth > rear_a.depth and is_equal_approx(front.depth, rear_b.depth), "Vanguard is visually closer than the rear line")
+			var front: Vector3 = app.backdrop.models[team[0].id].home
+			var rear_a: Vector3 = app.backdrop.models[team[1].id].home
+			var rear_b: Vector3 = app.backdrop.models[team[2].id].home
+			check((rear_a - front).cross(rear_b - front).length() > 1.0, "One vanguard and two rear positions form a real 3D triangle")
+			check(absf(front.x) < absf(rear_a.x) and absf(front.x) < absf(rear_b.x) and rear_a.z < front.z and rear_b.z > front.z, "Vanguard is closest to the enemy while rear allies occupy different depths")
 		for fighter in app.fighters.values():
 			if fighter.relationship.visible: check(bounds.encloses(fighter.relationship.get_global_rect()), "Weakness badge remains inside arena")
 		check(root.get_visible_rect().encloses(app.execute_button.get_global_rect()), "Confirmation stays visible at %s" % dimensions)

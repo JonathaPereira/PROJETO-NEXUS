@@ -69,6 +69,9 @@ function run(args, timeout = 240000) {
 }
 console.log("Importando o projeto com Godot…");
 run(["--headless", "--path", "godot", "--editor", "--import", "--quit"]);
+for (const suite of ["damage_receipt", "stage_3d"]) {
+  console.log(run(["--headless", "--audio-driver", "Dummy", "--path", "godot", "--script", `res://tests/${suite}.gd`]).trim());
+}
 console.log("Executando paridade do motor e teste de interface…");
 const log = run(["--headless", "--audio-driver", "Dummy", "--path", "godot", "--script", "res://tests/run.gd", "--", fixturePath, outputPath]);
 const actual = JSON.parse(await readFile(outputPath, "utf8"));

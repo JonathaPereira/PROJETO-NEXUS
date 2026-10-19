@@ -162,6 +162,7 @@ func _open_menu() -> void:
 func _leave_battle(page: String = "menu") -> void:
 	battle_version += 1
 	director.cancel()
+	backdrop.cancel()
 	sound.stop()
 	started = false
 	busy = false
@@ -178,6 +179,7 @@ func _result_confirmed() -> void:
 func _new_battle() -> void:
 	battle_version += 1
 	director.cancel()
+	backdrop.cancel()
 	if is_instance_valid(sound): sound.stop()
 	started = false
 	busy = false
@@ -192,6 +194,7 @@ func _new_battle() -> void:
 	if tutorial_index >= 0:
 		tutorial_progress = {}
 		Lessons.prepare(state, tutorial_index)
+	backdrop.configure(state.units, catalog)
 	for fighter in fighters.values():
 		field.remove_child(fighter)
 		fighter.queue_free()
@@ -201,6 +204,7 @@ func _new_battle() -> void:
 		var hero: Dictionary = catalog.hero_by_id[data.heroId]
 		var fighter = Fighter.new()
 		fighter.setup(hero, data.id, catalog.affinity_color(hero.classId))
+		fighter.use_spatial_presentation()
 		fighter.targeted.connect(_select_target)
 		field.add_child(fighter)
 		fighters[data.id] = fighter
@@ -213,19 +217,25 @@ func _position_fighters() -> void:
 		var data: Dictionary = state.units[index]
 		var fighter = fighters.get(data.id)
 		if is_instance_valid(fighter):
-			# MAA reference: the vanguard is at center/inward, rear units above and below.
 			var slot: int = data.slot
-			var x: float = [0.29, 0.12, 0.12][slot]
-			if data.side == 1: x = 1.0 - x
-			var foot := Vector2(field.size.x * x, field.size.y * [0.73, 0.40, 0.95][slot])
-			if slot == 1: foot.y = maxf(174, foot.y)
-			fighter.position = foot - Vector2(93, 257)
-			fighter.set_depth([0.95, 0.82, 0.95][slot])
+			var foot: Vector2 = backdrop.ground_position(data.id)
+			var head: Vector2 = backdrop.head_position(data.id)
+			fighter.set_spatial_anchor(foot, head)
 			fighter.set_formation(slot)
-			fighter.z_index = [2, 1, 3][slot]
-			var plate_x: float = foot.x + 92 if data.side == 0 else foot.x - 92 - fighter.plate.size.x
-			var plate_y: float = [foot.y - 110, maxf(4, foot.y - 200 * fighter.depth - 10), foot.y - 88][slot]
-			fighter.plate.position = Vector2(plate_x, plate_y) - fighter.position
+			fighter.position_label.hide()
+			fighter.z_index = 10 + slot
+			fighter.plate.scale = Vector2.ONE * 0.88
+			var panel_size: Vector2 = fighter.plate.size * fighter.plate.scale
+			# Stable side columns keep six independent resource meters readable while
+			# models advance, cast and return. Body hit areas still follow the camera.
+			var row: int = [1, 0, 2][slot]
+			var stack_height := panel_size.y * 3 + 24
+			var panel_at := Vector2(14 if data.side == 0 else field.size.x - panel_size.x - 14, maxf(8, (field.size.y - stack_height) * 0.5) + row * (panel_size.y + 12))
+			fighter.plate.position = panel_at - fighter.position
+
+func _process(_delta: float) -> void:
+	if is_instance_valid(combat_view) and combat_view.visible and not fighters.is_empty():
+		_position_fighters()
 
 func _human_turn() -> bool:
 	return (campaign_mission < 0 and mode == "local") or combat.current(state).get("side", 1) == 0
@@ -308,9 +318,10 @@ func _play_turn(action_id: String, target: String) -> void:
 		sound.play_cue(cue)
 		for data in result.impactUnits:
 			fighters[data.id].refresh(data, data.id == actor.id, false, false)
+		backdrop.sync_units(result.impactUnits)
 		CombatUI.update_actor_stats(self, result.impactUnits.filter(func(u): return u.id == actor.id)[0])
 		CombatUI.show_report(self, result.events, action.name)
-	var completed: bool = await director.play(self, effects, fighters, hero, action, result, reduced_motion, hit)
+	var completed: bool = await director.play_spatial(self, backdrop, effects, fighters, hero, action, result, reduced_motion, hit)
 	if version != battle_version or not completed: return
 	if not result.turnEvents.is_empty():
 		var ticks_done: bool = await director.play_ticks(self, effects, fighters, result.turnEvents, reduced_motion, func(event):
@@ -318,6 +329,7 @@ func _play_turn(action_id: String, target: String) -> void:
 			var fighter = fighters[event.target]
 			for member in fighters.values(): member.refresh(member.display_data, member == fighter, false, false)
 			fighter.apply_tick(event)
+			backdrop.sync_units(fighters.values().map(func(member): return member.display_data))
 			var tick_hero: Dictionary = catalog.hero_by_id[combat.unit(pending, event.target).heroId]
 			phase_label.text = "%s · efeitos de turno" % tick_hero.name
 			active_label.text = tick_hero.name

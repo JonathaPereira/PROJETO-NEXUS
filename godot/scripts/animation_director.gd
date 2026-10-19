@@ -16,18 +16,24 @@ var transients: Array[Node] = []
 var posed_fighters: Array = []
 var receipt_bounds: Array[Rect2] = []
 var last_timing: Dictionary = {}
+var spatial_body_bounds: Array[Rect2] = []
 
-func cancel() -> void:
+func cancel(preserve_receipts := false) -> void:
 	generation += 1
 	for tween in tweens: tween.kill()
 	tweens.clear()
 	for fighter in posed_fighters:
 		if is_instance_valid(fighter) and not fighter.is_queued_for_deletion(): fighter.reset_pose()
 	posed_fighters.clear()
+	var retained: Array[Node] = []
 	for node in transients:
-		if is_instance_valid(node): node.queue_free()
-	transients.clear()
+		if not is_instance_valid(node): continue
+		if preserve_receipts and (node is Receipt or node is ReceiptLink) and not node.is_queued_for_deletion():
+			retained.append(node)
+		else: node.queue_free()
+	transients = retained
 	receipt_bounds.clear()
+	spatial_body_bounds.clear()
 
 func _tween(owner: Node) -> Tween:
 	var tween := owner.create_tween()
@@ -49,6 +55,60 @@ func _effect(effects: Control, origin: Vector2, destination: Vector2, hero: Dict
 	effect.z_index = -18 # Energy passes behind the fixed vitality cards.
 	effects.add_child(effect)
 	transients.append(effect)
+
+func play_spatial(owner: Node, stage: Control, effects: Control, fighters: Dictionary, hero: Dictionary, action: Dictionary, result: Dictionary, reduced: bool, on_impact: Callable) -> bool:
+	cancel(true)
+	last_numbers.clear()
+	last_profile = hero.animation
+	var version := generation
+	var actor = fighters[result.actor]
+	actor.posing = true
+	posed_fighters.append(actor)
+	var cue := Label.new()
+	cue.text = "%s  /  %s" % [hero.name.to_upper(), action.name.to_upper()]
+	cue.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	cue.add_theme_font_size_override("font_size", 17)
+	cue.add_theme_color_override("font_color", Color("f3d5a2") if result.actionId == "ultimate" else Color("c8f5ff"))
+	cue.add_theme_color_override("font_outline_color", Color("050c16"))
+	cue.add_theme_constant_override("outline_size", 6)
+	cue.position = Vector2(maxf(0, effects.size.x * 0.5 - 260), 12)
+	cue.size = Vector2(520, 28)
+	cue.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	effects.add_child(cue)
+	transients.append(cue)
+	var targets: Array = []
+	for event in result.events:
+		if event.type in ["damage", "heal", "shield", "guard", "support", "status"] and not event.get("passive", false) and not event.get("reaction", false) and not event.get("intercepted", false) and not event.target in targets:
+			targets.append(event.target)
+	if targets.is_empty(): targets.append(result.actor)
+	var presentation := action.duplicate(true)
+	presentation.tier = result.actionId
+	presentation.animation = hero.animation
+	presentation.classId = hero.classId
+	# The stage calls this once, at physical contact. Pending combat state is only
+	# committed by main after recovery, exactly as in the original presentation.
+	var impact := func():
+		if version != generation: return
+		if is_instance_valid(cue): cue.hide()
+		on_impact.call()
+		impact_count += 1
+		var groups: Dictionary = {}
+		for event in result.events:
+			if not fighters.has(event.get("target", "")): continue
+			if not groups.has(event.target): groups[event.target] = []
+			groups[event.target].append(event)
+		for id in groups:
+			var target = fighters[id]
+			spatial_body_bounds.clear()
+			for body_id in fighters:
+				spatial_body_bounds.append(stage.projected_body_rect(body_id))
+			_number(owner, effects, target.hit_position() + Vector2(-105, -30), {"events": groups[id], "actionName": action.name}, target, fighters)
+	var completed: bool = await stage.play_attack(result.actor, targets, presentation, reduced, impact)
+	last_timing = stage.last_timing.duplicate()
+	if version != generation or not completed: return false
+	if is_instance_valid(cue): cue.queue_free()
+	actor.reset_pose()
+	return true
 
 func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary, action: Dictionary, result: Dictionary, reduced: bool, on_impact: Callable) -> bool:
 	cancel()
@@ -270,7 +330,7 @@ static func number_lines(event: Dictionary) -> Array:
 	return lines
 
 func _number(_owner: Node, effects: Control, at: Vector2, event: Dictionary, target = null, fighters: Dictionary = {}) -> void:
-	var lines := number_lines(event)
+	var lines: Array = Receipt.event_lines(event.events) if event.has("events") else Receipt.event_lines([event]) if event.has("type") else number_lines(event)
 	if lines.is_empty(): return
 	for line in lines: last_numbers.append(str(line[0]))
 	var receipt := Receipt.new()
@@ -282,7 +342,13 @@ func _number(_owner: Node, effects: Control, at: Vector2, event: Dictionary, tar
 		capacity = int(target.shield.max_value)
 		if lines.any(func(line): return str(line[0]).contains("ESCUDO") or str(line[0]).contains("Escudo")):
 			remaining = int(target.display_data.get("shield", 0))
-	receipt.configure(lines, name_value, capacity, remaining)
+	if event.has("events"):
+		remaining = int(target.display_data.get("shield", 0)) if is_instance_valid(target) else -1
+		receipt.configure_events(event.events, name_value, capacity, remaining, event.get("actionName", ""))
+	elif event.has("type"):
+		receipt.configure_events([event], name_value, capacity, remaining)
+	else:
+		receipt.configure(lines, name_value, capacity, remaining)
 	receipt_bounds.clear()
 	for transient in transients:
 		if is_instance_valid(transient) and transient is Receipt and not transient.is_queued_for_deletion():
@@ -307,17 +373,20 @@ func _receipt_position(effects: Control, preferred: Vector2, dimensions: Vector2
 	for fighter in fighters.values():
 		if not is_instance_valid(fighter): continue
 		plate_bounds.append(effects.get_global_transform().affine_inverse() * fighter.plate.get_global_rect())
-	var best := Vector2(clampf(preferred.x, 6, maxf(6, effects.size.x - dimensions.x - 6)), clampf(preferred.y, 62, maxf(62, effects.size.y - dimensions.y - 6)))
+	var top := 8.0 if not spatial_body_bounds.is_empty() else 62.0
+	var best := Vector2(clampf(preferred.x, 6, maxf(6, effects.size.x - dimensions.x - 6)), clampf(preferred.y, top, maxf(top, effects.size.y - dimensions.y - 6)))
 	var best_score := INF
-	for y in [preferred.y, preferred.y - dimensions.y - 12, preferred.y + dimensions.y + 12, 62.0, effects.size.y - dimensions.y - 6]:
-		for x in [preferred.x, preferred.x - dimensions.x - 12, preferred.x + dimensions.x + 12, effects.size.x * 0.5 - dimensions.x * 0.5]:
-			var candidate := Vector2(clampf(x, 6, maxf(6, effects.size.x - dimensions.x - 6)), clampf(y, 62, maxf(62, effects.size.y - dimensions.y - 6)))
+	for y in [preferred.y, preferred.y - dimensions.y - 12, preferred.y + dimensions.y + 12, top, effects.size.y - dimensions.y - 6]:
+		for x in [preferred.x, preferred.x - dimensions.x - 12, preferred.x + dimensions.x + 12, effects.size.x * 0.5 - dimensions.x * 0.5, 202.0, effects.size.x - 202.0 - dimensions.x]:
+			var candidate := Vector2(clampf(x, 6, maxf(6, effects.size.x - dimensions.x - 6)), clampf(y, top, maxf(top, effects.size.y - dimensions.y - 6)))
 			var bounds := Rect2(candidate, dimensions)
 			var score := candidate.distance_to(preferred)
 			for plate in plate_bounds:
 				if bounds.intersects(plate.grow(4)): score += bounds.intersection(plate.grow(4)).get_area() * 1000
 			for previous in receipt_bounds:
 				if bounds.intersects(previous.grow(5)): score += bounds.intersection(previous.grow(5)).get_area() * 40
+			for body in spatial_body_bounds:
+				if bounds.intersects(body.grow(8)): score += bounds.intersection(body.grow(8)).get_area() * 60
 			if score < best_score:
 				best = candidate
 				best_score = score
