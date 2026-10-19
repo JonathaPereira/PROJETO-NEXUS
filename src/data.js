@@ -1,4 +1,6 @@
-export const CLASSES = [
+import { KITS, applyKit } from "./kits.js";
+import RULES from "./balance.json" with { type: "json" };
+export const ALL_CLASSES = [
   {
     id: "igneo",
     name: "Ígneo",
@@ -60,14 +62,15 @@ export const CLASSES = [
       "Proteção e renovação. Dissipa efeitos negativos e cura a equipe.",
   },
 ];
+export const CLASSES = ALL_CLASSES.filter(c => c.id !== "lumi");
 export const CLASS_BY_ID = Object.fromEntries(
   CLASSES.map((c, i) => [
     c.id,
     {
       ...c,
       index: i,
-      strongAgainst: CLASSES[(i + 1) % 6].id,
-      weakAgainst: CLASSES[(i + 5) % 6].id,
+      strongAgainst: CLASSES[(i + 1) % CLASSES.length].id,
+      weakAgainst: CLASSES[(i + CLASSES.length - 1) % CLASSES.length].id,
     },
   ]),
 );
@@ -450,7 +453,7 @@ const roster = [
     "daggers",
     "damage",
     1.8,
-    "burn",
+    "bleed",
     "Vende lembranças alheias para comprar o próprio passado.",
   ],
   [
@@ -530,7 +533,7 @@ const roster = [
     "Leva mensagens de uma era que ainda não começou.",
   ],
 ];
-export const HEROES = roster.map((r, index) => {
+export const ALL_HEROES = roster.map((r, index) => {
   const [
     id,
     name,
@@ -603,16 +606,17 @@ export const HEROES = roster.map((r, index) => {
         ? "Recupera 42% da vida máxima de toda a equipe e purifica efeitos negativos."
         : protecting
           ? "Concede barreira de 36% da vida máxima e regeneração a toda a equipe."
-          : "Atinge todos os rivais com 205% do poder de ataque e aplica o efeito da técnica.",
+          : skillDescription("aoe", effect, 2.05),
     },
   };
 });
 function skillDescription(kind, effect, power) {
   const statuses = {
-    burn: "Aplica queimadura por 2 turnos.",
+    burn: "Queimadura: perde 6,5% da vida máxima no início de 2 turnos, atravessando escudos.",
+    bleed: "Sangramento: perde 6,5% da vida máxima no início de 2 turnos, atravessando escudos. Reduz toda cura recebida em 35% enquanto durar.",
     weaken: "Reduz o ataque do alvo em 20% por 2 turnos.",
     expose: "Reduz a defesa do alvo em 25% por 2 turnos.",
-    regen: "Concede regeneração por 2 turnos.",
+    regen: "Regeneração: recupera 4% da vida máxima no início de 2 turnos.",
     cleanse: "Remove efeitos negativos.",
   };
   return (
@@ -628,11 +632,15 @@ function skillDescription(kind, effect, power) {
     statuses[effect]
   );
 }
+export const HEROES = ALL_HEROES.filter(h => KITS[h.id]).map(applyKit);
+export const ARCHIVED_HEROES = ALL_HEROES.filter(h => !KITS[h.id]);
 export const HERO_BY_ID = Object.fromEntries(HEROES.map((h) => [h.id, h]));
 export const DEFAULT_TEAMS = [
-  ["veyra", "astra", "axion"],
-  ["vesper", "oren", "auren"],
+  ["axion", "veyra", "astra"],
+  ["vesper", "oren", "kira"],
 ];
+// Keep the shared defensive action's description aligned with global balance.
+const rulePercent = (value) => Number((value * 100).toFixed(1)).toString().replace(".", ",");
 export const GUARD = {
   id: "guard",
   name: "Postura defensiva",
@@ -640,5 +648,5 @@ export const GUARD = {
   cost: 0,
   cooldown: 0,
   description:
-    "Recebe 35% menos dano até seu próximo turno, ganha barreira de 12% da vida máxima e recupera 25 de energia.",
+    `Recebe ${rulePercent(1 - RULES.guard.incomingDamageMultiplier)}% menos dano até seu próximo turno, ganha escudo de ${rulePercent(RULES.guard.shieldMaxHpRatio)}% da vida máxima por ${RULES.shield.durationActions} ações e recupera ${RULES.energy.guardGain} de energia. Escudos não somam.`,
 };

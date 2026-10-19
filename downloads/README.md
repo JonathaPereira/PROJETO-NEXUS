@@ -1,10 +1,7 @@
-# Jogar Nexus
+# Download retirado
 
-1. No GitHub, abra **NEXUS-v0.1.zip** nesta pasta.
-2. Use **Download raw file**, o ícone de download na página do arquivo.
-3. Extraia o ZIP no seu computador.
-4. Abra **NEXUS-JOGAR.html** no Chrome, Edge ou Firefox.
+O pacote `NEXUS-v0.1.zip` foi retirado desta branch após um relato de bloqueio por antivírus com a mensagem “Falha — Vírus detectado”. A causa da detecção ainda não foi estabelecida. Não restaure, execute, libere nem adicione esse arquivo às exceções do antivírus.
 
-O pacote contém o jogo completo desta versão, as instruções e as licenças das fontes. Não exige instalação, servidor ou conexão à internet depois do download. Para jogar, abra o HTML extraído no navegador; a pré-visualização de arquivos do GitHub ou do chat não executa o jogo.
+Os testes anteriores verificavam funcionamento, não forneciam um diagnóstico antivírus. O arquivo sinalizado não será redistribuído como outro ZIP ou HTML avulso. A entrega web passa a usar código legível e recursos separados.
 
-Esta é uma versão inicial: 24 heróis, equipes de três, treino contra IA e duelo local. Obtenção de personagens e progressão continuam em aberto.
+Consulte [o registro do alerta](../docs/ALERTA-DO-DOWNLOAD.md) e as instruções atualizadas no [README](../README.md).

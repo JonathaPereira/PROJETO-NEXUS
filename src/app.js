@@ -150,8 +150,8 @@ function render() {
     c = CLASS_BY_ID[h.classId];
   const canAct = started && !busy && battle.phase === "playing" && human();
   root.innerHTML = `
- <header class="topbar"><a class="brand" href="/" aria-label="Nexus, início">${crest()}<span>NEXUS<small>ECOS DO CREPÚSCULO</small></span></a>
-  <nav aria-label="Navegação principal"><button class="nav-link active" data-act="battle">${icon("swords")}<span>Batalha</span></button><button class="nav-link" data-act="roster">${icon("people")}<span>Personagens</span><b>24</b></button><button class="nav-link" data-act="classes">${icon("diamond")}<span>Afinidades</span></button></nav>
+ <header class="topbar"><a class="brand" href="./" aria-label="Nexus, início">${crest()}<span>NEXUS<small>ECOS DO CREPÚSCULO</small></span></a>
+  <nav aria-label="Navegação principal"><button class="nav-link active" data-act="battle">${icon("swords")}<span>Batalha</span></button><button class="nav-link" data-act="roster">${icon("people")}<span>Personagens</span><b>15</b></button><button class="nav-link" data-act="classes">${icon("diamond")}<span>Afinidades</span></button></nav>
   <div class="top-tools"><span class="prototype"><i></i> VERSÃO ALPHA <b>0.1</b></span><button class="icon-button" data-act="sound" aria-label="${sound ? "Desativar" : "Ativar"} som" title="${sound ? "Desativar" : "Ativar"} som">${icon(sound ? "volume" : "muted")}</button><button class="icon-button" data-act="help" aria-label="Como jogar" title="Como jogar">${icon("help")}</button></div>
  </header>
  <main class="main-shell">
@@ -197,7 +197,7 @@ function render() {
      <div class="active-hero"><div class="active-portrait">${heroArt(h, true)}${classIcon(h.classId)}</div><div><span class="eyebrow">${started ? (human() ? "SUA VEZ" : "VEZ DO RIVAL") : "PRIMEIRO A AGIR"}</span><h2>${h.name}</h2><span>${h.title}</span><div class="active-energy">${icon("bolt")} <b>${actor.energy}</b> / 100 energia</div></div></div>
      <div class="ability-grid">${["basic", "skill", "ultimate", "guard"].map((id, i) => abilityButton(actor, id, i, canAct)).join("")}</div>
      ${targetSelector(actor, canAct)}
-     <div class="action-bottom"><span id="action-hint">${icon("help")} ${!started ? "Monte sua equipe ou inicie o combate para jogar." : !human() ? "Aguarde a ação da equipe rival." : getAction(actor, actionId).description}</span>${started && battle.phase === "playing" ? `<button class="execute-button" data-act="execute" ${!canAct ? "disabled" : ""}>${icon(getAction(actor, actionId).kind.startsWith("heal") ? "leaf" : getAction(actor, actionId).kind.startsWith("shield") ? "shield" : "swords")} ${actionId === "guard" ? "Defender" : `Usar em ${heroName(targetId)}`} ${icon("arrow")}</button>` : '<span class="keyboard-hint">TECLAS <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd></span>'}</div>
+     <div class="action-bottom"><span id="action-hint">${icon("help")} ${!started ? "Monte sua equipe ou inicie o combate para jogar." : !human() ? "Aguarde a ação da equipe rival." : getAction(actor, actionId).description}</span>${started && battle.phase === "playing" ? `<button class="execute-button" data-act="execute" ${!canAct ? "disabled" : ""}>${icon(getAction(actor, actionId).kind.startsWith("heal") ? "leaf" : getAction(actor, actionId).kind.startsWith("shield") || getAction(actor, actionId).kind.startsWith("support") ? "shield" : "swords")} ${actionId === "guard" ? "Defender" : `Usar em ${heroName(targetId)}`} ${icon("arrow")}</button>` : '<span class="keyboard-hint">TECLAS <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd></span>'}</div>
     </section>
    </section>
    <aside class="right-column">
@@ -205,7 +205,7 @@ function render() {
     <section class="tip-card"><span class="eyebrow">UM PASSO À FRENTE</span>${icon("spark")}<h3>Conheça seu rival.</h3><p>Uma afinidade favorável pode virar uma batalha. Planeje além do próximo golpe.</p><button class="text-button" data-act="help">Guia de combate ${icon("arrow")}</button></section>
    </aside>
   </div>
-  <footer class="page-footer"><span>${crest()} UM UNIVERSO ORIGINAL. SUA PRÓXIMA HISTÓRIA.</span><span>24 heróis disponíveis <i>·</i> Sem progressão ou obtenção definidas</span><button class="text-button" data-act="restart">${icon("reset")} ${started ? "Reiniciar combate" : "Nova preparação"}</button></footer>
+  <footer class="page-footer"><span>${crest()} UM UNIVERSO ORIGINAL. SUA PRÓXIMA HISTÓRIA.</span><span>15 heróis disponíveis <i>·</i> Sem progressão ou obtenção definidas</span><button class="text-button" data-act="restart">${icon("reset")} ${started ? "Reiniciar combate" : "Nova preparação"}</button></footer>
  </main>`;
   const log = $("#combat-log");
   if (log) log.scrollTop = log.scrollHeight;
@@ -247,7 +247,7 @@ function targetSelector(actor, enabled) {
   const action = getAction(actor, actionId);
   const friendly =
     action.kind.startsWith("heal") ||
-    action.kind.startsWith("shield") ||
+    action.kind.startsWith("shield") || action.kind.startsWith("support") ||
     action.kind === "guard";
   const targets = legalTargets(battle, actor, action);
   return `<div class="target-selector" aria-label="Selecionar alvo"><span>${icon("target")} ${friendly ? "ALIADO" : "ALVO"}</span>${targets
@@ -262,7 +262,7 @@ function targetSelector(actor, enabled) {
 }
 function logEntry(e) {
   if (e.type === "fracture")
-    return `<div class="log-message fracture"><span class="log-mark">${icon("diamond")}</span><p>A <em>Fratura do Nexus</em> causou <b>${e.amount}</b> de dano a <strong>${heroName(e.target)}</strong>.<time>RODADA ${String(e.round).padStart(2, "0")}</time></p></div>`;
+    return `<div class="log-message fracture"><span class="log-mark">${icon("diamond")}</span><p>A <em>Fratura do Nexus</em> causou <b>${e.amount}</b> de dano a <strong>${heroName(e.target)}</strong>. Cura recebida −${e.healingPenalty}%.<time>RODADA ${String(e.round).padStart(2, "0")}</time></p></div>`;
   const name = heroName(e.actor),
     target = heroName(e.target);
   const message =
@@ -271,13 +271,13 @@ function logEntry(e) {
       : e.type === "damage"
         ? `<strong>${target}</strong> recebeu <b>${e.amount}</b> de dano.${e.advantage > 1 ? '<small class="advantage-text">Vantagem de afinidade</small>' : ""}${e.critical ? "<small>Acerto crítico!</small>" : ""}${e.absorbed ? `<small>${e.absorbed} absorvidos pela barreira.</small>` : ""}`
         : e.type === "heal"
-          ? `<strong>${target}</strong> recuperou <b>${e.amount}</b> PV.`
+          ? `<strong>${target}</strong> recuperou <b>${e.amount}</b> PV.${e.healingPenalty ? `<small>Cura reduzida em ${e.healingPenalty}%.</small>` : ""}`
           : e.type === "shield" || e.type === "guard"
             ? `<strong>${target}</strong> recebeu uma barreira.`
             : e.type === "defeated"
               ? `<strong>${target}</strong> deixou o combate.`
-              : e.type === "burn"
-                ? `Queimadura causou <b>${e.amount}</b> de dano a <strong>${target}</strong>.`
+              : e.type === "burn" || e.type === "bleed"
+                ? `${STATUS_LABELS[e.type]} causou <b>${e.amount}</b> de dano a <strong>${target}</strong>.`
                 : "";
   return `<div class="log-message ${e.type}"><span class="log-mark">${icon(e.type === "action" ? "swords" : e.type === "heal" ? "leaf" : e.type === "defeated" ? "skull" : e.type === "burn" ? "flame" : e.type === "shield" || e.type === "guard" ? "shield" : "bolt")}</span><p>${message}<time>RODADA ${String(e.round).padStart(2, "0")}</time></p></div>`;
 }
@@ -357,7 +357,7 @@ async function animateAction(result, hero, id) {
   await wait(240);
   for (const event of result.events) {
     const node = $(`[data-unit="${event.target}"]`);
-    if (!node || event.type === "defeated") continue;
+    if (!node || !Object.hasOwn(event,"amount")) continue;
     const r = node.getBoundingClientRect(),
       x = r.x + r.width * 0.5,
       y = r.y + r.height * 0.48;
@@ -457,7 +457,7 @@ function renderDialog() {
         "Toda lenda começa aqui.",
         "Combate por turnos, escolhas com consequências e uma equipe inteiramente sua.",
       ) +
-      `<div class="help-grid"><article><span>01</span>${icon("people")}<h3>Forme seu trio</h3><p>Escolha 3 dos 24 heróis. Combine atacantes, guardiões e suportes. Todos estão disponíveis neste protótipo.</p></article><article><span>02</span>${icon("reset")}<h3>Leia a iniciativa</h3><p>A velocidade define a ordem de cada rodada. Cada herói vivo realiza uma ação. Vença ao derrotar os três rivais.</p></article><article><span>03</span>${icon("bolt")}<h3>Gerencie a energia</h3><p>Todos começam com 40 de energia. Ataques recuperam 24; defesa, 25. Técnicas custam 30 e supremas, 80.</p></article><article><span>04</span>${icon("target")}<h3>Escolha seu alvo</h3><p>Selecione uma ação, clique no herói ou no seu nome no painel e confirme em “Usar em”. Curas e barreiras escolhem aliados.</p></article></div><div class="help-extra"><div><h3>Mais do que dano</h3><p>Queimadura tira 6,5% da vida máxima por turno; regeneração cura 7%. Exposição reduz a defesa em 25%; enfraquecimento reduz o ataque em 20%. Efeitos duram 2 turnos do alvo. Sombrio rouba 25% do dano causado. Arcano ignora 25% da defesa.</p><p>Defesa reduz o dano recebido em 35% até seu próximo turno. Barreiras absorvem dano e acumulam até 60% da vida máxima. Técnicas recarregam por 2 turnos pessoais. A partir da rodada 12, a Fratura do Nexus causa dano direto antes do turno de cada herói: 4% da vida máxima, mais 2,5 pontos percentuais por rodada, até 85%. Barreiras não absorvem esse desgaste. Críticos têm 10% de chance e causam +40% de dano.</p></div><div><h3>No seu ritmo</h3><label class="setting-toggle"><input type="checkbox" id="motion-setting" ${reduced ? "checked" : ""}> Reduzir animações</label><label class="setting-toggle"><input type="checkbox" id="sound-setting" ${sound ? "checked" : ""}> Efeitos sonoros</label><p><kbd>1</kbd>–<kbd>4</kbd> escolher ação<br><kbd>←</kbd> <kbd>→</kbd> alternar alvo<br><kbd>Enter</kbd> confirmar ação<br><kbd>Esc</kbd> fechar painel</p></div></div><button class="gold-button help-start" data-act="close">Entendi. Vamos ao combate. ${icon("arrow")}</button>`;
+      `<div class="help-grid"><article><span>01</span>${icon("people")}<h3>Forme seu trio</h3><p>Escolha 3 dos 15 heróis. Combine atacantes, guardiões e suportes. Todos estão disponíveis neste protótipo.</p></article><article><span>02</span>${icon("reset")}<h3>Leia a iniciativa</h3><p>A velocidade define a ordem de cada rodada. Cada herói vivo realiza uma ação. Vença ao derrotar os três rivais.</p></article><article><span>03</span>${icon("bolt")}<h3>Gerencie a energia</h3><p>Todos começam com 40 de energia. Ataques recuperam 24; defesa, 25. Técnicas custam 30 e supremas, 80.</p></article><article><span>04</span>${icon("target")}<h3>Escolha seu alvo</h3><p>Selecione uma ação, clique no herói ou no seu nome no painel e confirme em “Usar em”. Curas e barreiras escolhem aliados.</p></article></div><div class="help-extra"><div><h3>Mais do que dano</h3><p>Queimadura e sangramento tiram 6,5% da vida máxima por turno; sangramento também reduz toda cura recebida em 35%. Regeneração cura 4%. Exposição reduz a defesa em 25%; enfraquecimento reduz o ataque em 20%. Efeitos duram 2 turnos do alvo. Sombrio rouba 15% do dano causado. Arcano ignora 25% da defesa.</p><p>Defesa reduz o dano recebido em 35% até seu próximo turno. Escudos não somam: conserva o maior, até 25% da vida máxima, por 2 ações do protegido. Técnicas recarregam por 2 turnos pessoais. A partir da rodada 12, a Fratura do Nexus causa dano direto antes do turno de cada herói: 4% da vida máxima, mais 2,5 pontos percentuais por rodada, até 85%. Barreiras não absorvem esse desgaste. Fratura também reduz toda cura: −10% na rodada 12, −20% na 13, até −100% na 21. Multiplica a redução de sangramento. Curas com purificação curam antes de remover os efeitos. Críticos têm 10% de chance e causam +40% de dano.</p></div><div><h3>No seu ritmo</h3><label class="setting-toggle"><input type="checkbox" id="motion-setting" ${reduced ? "checked" : ""}> Reduzir animações</label><label class="setting-toggle"><input type="checkbox" id="sound-setting" ${sound ? "checked" : ""}> Efeitos sonoros</label><p><kbd>1</kbd>–<kbd>4</kbd> escolher ação<br><kbd>←</kbd> <kbd>→</kbd> alternar alvo<br><kbd>Enter</kbd> confirmar ação<br><kbd>Esc</kbd> fechar painel</p></div></div><button class="gold-button help-start" data-act="close">Entendi. Vamos ao combate. ${icon("arrow")}</button>`;
   if (modal === "mode")
     dialog.innerHTML =
       dialogHeader(
@@ -488,7 +488,7 @@ function rosterDialog() {
     dialogHeader(
       "O PODER ESTÁ NA COMBINAÇÃO",
       "Encontre a sua formação.",
-      "24 histórias originais. Seis afinidades. Escolha os três heróis da sua próxima batalha.",
+      "15 kits ativos. Cinco afinidades. Escolha os três heróis da sua próxima batalha.",
     ) +
     `
  <div class="formation-bar"><div class="formation-tabs"><button data-roster-side="0" class="${rosterSide === 0 ? "active" : ""}">${smallLabel(0)}</button><button data-roster-side="1" class="${rosterSide === 1 ? "active" : ""}">${smallLabel(1)}</button></div><div class="formation-slots">${Array.from(
@@ -502,7 +502,7 @@ function rosterDialog() {
  ).join(
    "",
  )}</div><b class="formation-count">${draft[rosterSide].length}<span> / 3</span></b></div>
- <div class="roster-content ${detailMobile ? "show-mobile-detail" : ""}"><div class="roster-library"><div class="class-filters" role="group" aria-label="Filtrar personagens por afinidade"><button data-filter="all" class="${filter === "all" ? "selected" : ""}">Todos <b>24</b></button>${CLASSES.map((cl) => `<button data-filter="${cl.id}" class="${filter === cl.id ? "selected" : ""}" style="--affinity:${cl.color}">${classIcon(cl.id)}${cl.name}</button>`).join("")}</div><button class="mobile-detail-open" data-act="mobile-detail">${icon("eye")} Ver ficha de ${h.name} ${icon("arrow")}</button><div class="hero-grid">${HEROES.filter(
+ <div class="roster-content ${detailMobile ? "show-mobile-detail" : ""}"><div class="roster-library"><div class="class-filters" role="group" aria-label="Filtrar personagens por afinidade"><button data-filter="all" class="${filter === "all" ? "selected" : ""}">Todos <b>15</b></button>${CLASSES.map((cl) => `<button data-filter="${cl.id}" class="${filter === cl.id ? "selected" : ""}" style="--affinity:${cl.color}">${classIcon(cl.id)}${cl.name}</button>`).join("")}</div><button class="mobile-detail-open" data-act="mobile-detail">${icon("eye")} Ver ficha de ${h.name} ${icon("arrow")}</button><div class="hero-grid">${HEROES.filter(
    (hero) => filter === "all" || hero.classId === filter,
  )
    .map((hero) => {
@@ -687,7 +687,7 @@ document.addEventListener("click", (e) => {
       notify(
         "Essa ação precisa de " +
           (getAction(actor, actionId).kind.startsWith("heal") ||
-          getAction(actor, actionId).kind.startsWith("shield")
+          getAction(actor, actionId).kind.startsWith("shield") || getAction(actor, actionId).kind.startsWith("support")
             ? "um aliado."
             : "um rival."),
       );

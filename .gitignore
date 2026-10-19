@@ -1,4 +1,6 @@
 node_modules/
 artifacts/
+dist/
+godot/.godot/
 .DS_Store
 *.log
