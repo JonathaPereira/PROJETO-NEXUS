@@ -2,6 +2,8 @@
 
 Godot 4.6 Standard / GDScript, gratuito e sem addons pagos. Validado com Godot 4.6.3 em Linux.
 
+**Novo estudo do Vesper:** no menu, escolha **VESPER · ATELIÊ 3D** para ver o personagem com modelo próprio, esqueleto, capa deformável, foice e seis animações. O mesmo modelo está integrado às batalhas. [Controles, direção de arte e fonte Blender](VESPER.md).
+
 O combate principal agora usa uma arena e personagens **3D reais**, com articulações procedurais, formações triangulares, efeitos e câmera de supremo. As janelas flutuantes mostram dano à vida e ao escudo separadamente, crítico, cura e efeitos positivos/negativos com duração. A arte final dos modelos e animações continua em desenvolvimento. A campanha, os engastes e as regras descritos abaixo permanecem disponíveis; a galeria **Golpes** mantém a apresentação 2D para comparação. [Guia da etapa 3D](GRAPHICS-3D.md).
 
 ## Atualizar e abrir no Windows

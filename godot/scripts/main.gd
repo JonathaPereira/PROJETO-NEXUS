@@ -87,6 +87,7 @@ var campaign_mission := -1
 var roster_campaign := false
 var mission_label: Label
 var menu_dialog: ConfirmationDialog
+var vesper_atelier: Control
 const Lessons = preload("res://scripts/lessons.gd")
 const Lab = preload("res://scripts/lab.gd")
 
@@ -132,6 +133,17 @@ func _clear(node: Node) -> void:
 
 func _build_interface() -> void:
 	CombatUI.build(self)
+
+func _open_vesper() -> void:
+	if is_instance_valid(vesper_atelier): return
+	hub.hide()
+	combat_view.hide()
+	vesper_atelier = load("res://scenes/vesper/atelier.tscn").instantiate()
+	add_child(vesper_atelier)
+	vesper_atelier.return_requested.connect(func():
+		vesper_atelier.queue_free()
+		vesper_atelier = null
+		hub.open("menu"))
 
 func _enter_free() -> void:
 	campaign_mission = -1
@@ -582,6 +594,7 @@ func _open_showcase() -> void:
 	showcase.popup_centered_clamped(Vector2i(1080, 740), 0.95)
 
 func _input(event: InputEvent) -> void:
+	if is_instance_valid(vesper_atelier): return
 	if not event is InputEventKey or not event.pressed or event.echo: return
 	if event.keycode == KEY_F11:
 		_toggle_fullscreen()

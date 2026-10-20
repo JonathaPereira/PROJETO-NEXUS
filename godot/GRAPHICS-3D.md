@@ -1,5 +1,7 @@
 # Primeira etapa da apresentação 3D
 
+**Estudo dedicado posterior:** Vesper recebeu um modelo próprio com esqueleto e seis animações; o ateliê pode ser aberto pelo menu. Os demais personagens preservam a apresentação desta primeira etapa. [Vesper — direção de arte e controles](VESPER.md).
+
 O combate principal passa a usar uma arena 3D e personagens volumétricos no Godot. Esta é a primeira implementação jogável da direção visual aprovada: três integrantes em formação triangular de cada lado, profundidade real, iluminação e efeitos de ataque, com vida, energia e escudo independentes no HUD.
 
 Os modelos desta etapa são construídos com malhas e articulações procedurais. Eles permitem jogar, testar silhuetas, enquadramento, movimento e leitura dos golpes sem depender de modelos externos. Ainda será necessário produzir modelos e animações de maior detalhe para alcançar o acabamento da arte conceitual. A arte conceitual continua sendo a referência de qualidade desejada.

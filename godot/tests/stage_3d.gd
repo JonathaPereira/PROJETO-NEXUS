@@ -70,8 +70,12 @@ func geometry(app) -> void:
 		check(field.has_point(foot) and field.has_point(head) and foot.y - head.y > 30, "%s has visible projected feet and head" % data.id)
 		var fighter = app.fighters[data.id]
 		var model = stage.models[data.id]
-		check(model is Node3D and model.parts.size() >= 15 and model.parts.all(func(part): return part is MeshInstance3D and part.mesh != null), "%s has an articulated model made of volumetric meshes" % data.id)
-		check(is_instance_valid(model.right_arm) and is_instance_valid(model.left_arm) and is_instance_valid(model.right_leg) and is_instance_valid(model.left_leg), "%s has independent arm and leg joints" % data.id)
+		if model.has_method("prepare_action"):
+			check(model.parts.any(func(part): return part is MeshInstance3D and part.skin != null) and model.skeleton.get_bone_count() >= 32, "%s uses an imported skinned mesh and a complete skeleton" % data.id)
+			check(model.animation_player.has_animation("Vesper_ReapingArc") and model.animation_player.has_animation("Vesper_Eclipse"), "%s has authored skeletal attack and supreme animation clips" % data.id)
+		else:
+			check(model is Node3D and model.parts.size() >= 15 and model.parts.all(func(part): return part is MeshInstance3D and part.mesh != null), "%s has an articulated model made of volumetric meshes" % data.id)
+			check(is_instance_valid(model.right_arm) and is_instance_valid(model.left_arm) and is_instance_valid(model.right_leg) and is_instance_valid(model.left_leg), "%s has independent arm and leg joints" % data.id)
 		check(fighter.spatial_presentation and not fighter.visual_root.visible, "%s uses its 3D body with a separate HUD plate" % data.id)
 		check(fighter.foot_position().distance_to(foot) < 1.0 and fighter.hit_position().distance_to(head.lerp(foot, 0.3)) < 1.0, "%s HUD and attack anchors follow the camera projection" % data.id)
 		points[data.id] = foot

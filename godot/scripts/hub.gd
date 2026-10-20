@@ -84,6 +84,11 @@ func _ready() -> void:
 	free.add_theme_font_size_override("font_size", 12)
 	nav.add_child(free)
 	play_button = free
+	var vesper: Button = app._button("VESPER · ATELIÊ 3D", app._open_vesper)
+	vesper.custom_minimum_size = Vector2(190,37)
+	vesper.add_theme_font_size_override("font_size",12)
+	vesper.add_theme_color_override("font_color",Color("c7a3ec"))
+	nav.add_child(vesper)
 	var filler := Control.new()
 	filler.size_flags_horizontal = SIZE_EXPAND_FILL
 	nav.add_child(filler)

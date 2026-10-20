@@ -2,6 +2,7 @@ extends Control
 ## Self-contained 3D presentation. Combat, targeting, and all UI stay in main.gd.
 ## Projected coordinates returned by this class are local to this Control.
 const HeroModel = preload("res://scripts/hero_model_3d.gd")
+const VesperChampion = preload("res://scripts/vesper/vesper_champion.gd")
 const CombatVFX = preload("res://scripts/combat_vfx_3d.gd")
 
 var viewport: SubViewport
@@ -243,7 +244,7 @@ func configure(data: Array, hero_catalog) -> void:
 	models.clear()
 	for unit in data:
 		var hero: Dictionary = catalog.hero_by_id[unit.heroId]
-		var model := HeroModel.new()
+		var model = VesperChampion.new() if str(hero.get("visualHero", hero.id)) == "vesper" else HeroModel.new()
 		model.configure(hero, catalog.affinity_color(hero.classId))
 		model.name = str(unit.id).validate_node_name()
 		model.position = _formation(int(unit.side), int(unit.slot))
@@ -402,6 +403,7 @@ func play_attack(actor_id: String, target_ids: Array, action: Dictionary, reduce
 	if not models.has(actor_id): return false
 	var token := generation
 	var actor: Node3D = models[actor_id]
+	if actor.has_method("prepare_action"): actor.prepare_action(action)
 	var targets: Array[Node3D] = []
 	for id in target_ids:
 		if models.has(str(id)): targets.append(models[str(id)])
