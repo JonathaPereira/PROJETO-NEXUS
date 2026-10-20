@@ -63,7 +63,7 @@ func screen_impact(at: Vector2, color: Color, supreme: bool) -> void:
 	screen_material.set_shader_parameter("progress",0.0)
 	screen_material.set_shader_parameter("focus",at/size.max(Vector2.ONE))
 	screen_material.set_shader_parameter("tint",color)
-	screen_material.set_shader_parameter("strength",0.25 if supreme else 0.11)
+	screen_material.set_shader_parameter("strength",0.60 if supreme else 0.28)
 	screen.show()
 
 func _process(delta: float) -> void:

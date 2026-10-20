@@ -79,7 +79,7 @@ function run(args, timeout = 240000) {
 }
 console.log("Importando o projeto com Godot…");
 run(["--headless", "--path", "godot", "--editor", "--import", "--quit"]);
-for (const suite of ["damage_receipt", "progression", "two_d", "stage_3d", "vesper"]) {
+for (const suite of ["damage_receipt", "progression", "polish_012", "two_d", "stage_3d", "vesper"]) {
   console.log(run(["--headless", "--audio-driver", "Dummy", "--path", "godot", "--script", `res://tests/${suite}.gd`]).trim());
 }
 console.log("Executando paridade do motor e teste de interface…");

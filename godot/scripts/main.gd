@@ -46,8 +46,10 @@ var start_button: Button
 var roster_button: Button
 var mode_picker: OptionButton
 var difficulty_picker: OptionButton
+var audio_enabled := true
+var audio_level := .8
 var sound_button: Button
-var sound: AudioStreamPlayer
+var sound
 var restart_dialog: ConfirmationDialog
 var result_dialog: AcceptDialog
 var roster_dialog: AcceptDialog
@@ -180,7 +182,7 @@ func _leave_battle(page: String = "menu") -> void:
 	ai_request += 1
 	director.cancel()
 	backdrop.cancel()
-	sound.stop()
+	sound.stop_all()
 	started = false
 	busy = false
 	ai_pending = false
@@ -200,7 +202,7 @@ func _new_battle() -> void:
 	ai_request += 1
 	director.cancel()
 	backdrop.cancel()
-	if is_instance_valid(sound): sound.stop()
+	if is_instance_valid(sound): sound.stop_all()
 	started = false
 	busy = false
 	ai_pending = false
@@ -247,13 +249,13 @@ func _position_fighters() -> void:
 			fighter.set_formation(slot)
 			fighter.position_label.hide()
 			fighter.z_index = 10 + slot
-			fighter.plate.scale = Vector2.ONE * 0.88
+			fighter.plate.scale = Vector2.ONE * 0.86
 			var panel_size: Vector2 = fighter.plate.size * fighter.plate.scale
 			# Stable side columns keep six independent resource meters readable while
 			# models advance, cast and return. Body hit areas still follow the camera.
 			var row: int = [1, 0, 2][slot]
-			var stack_height := panel_size.y * 3 + 24
-			var panel_at := Vector2(14 if data.side == 0 else field.size.x - panel_size.x - 14, maxf(8, (field.size.y - stack_height) * 0.5) + row * (panel_size.y + 12))
+			var stack_height := panel_size.y * 3 + 16
+			var panel_at := Vector2(14 if data.side == 0 else field.size.x - panel_size.x - 14, maxf(8, (field.size.y - stack_height) * 0.5) + row * (panel_size.y + 8))
 			fighter.plate.position = panel_at - fighter.position
 
 func _process(_delta: float) -> void:
@@ -279,10 +281,10 @@ func _position_illustrated() -> void:
 		fighter.set_formation(slot)
 		fighter.position_label.hide()
 		fighter.z_index = [12,11,13][slot]
-		fighter.plate.scale = Vector2.ONE * 0.88
+		fighter.plate.scale = Vector2.ONE * 0.86
 		var dimensions: Vector2 = fighter.plate.size * fighter.plate.scale
 		var row: int = [1,0,2][slot]
-		fighter.plate.position = Vector2(12 if data.side == 0 else field.size.x-dimensions.x-12, maxf(6,(field.size.y-(dimensions.y*3+24))*.5)+row*(dimensions.y+12)) - fighter.position
+		fighter.plate.position = Vector2(12 if data.side == 0 else field.size.x-dimensions.x-12, maxf(6,(field.size.y-(dimensions.y*3+16))*.5)+row*(dimensions.y+8)) - fighter.position
 
 func _set_presentation(spatial: bool) -> void:
 	# Retained for the 3D study and its tests; it is absent from primary navigation.
@@ -370,10 +372,7 @@ func _play_turn(action_id: String, target: String) -> void:
 	CombatUI.lock_action(self, hero, action)
 	var hit := func():
 		if version != battle_version: return
-		var cue := int(catalog.class_by_id[hero.classId].index) if action_id != "guard" else 6
-		if result.events.any(func(e): return e.get("critical", false)): cue = 8
-		elif result.events.any(func(e): return e.get("absorbed", 0) > 0): cue = 7
-		sound.play_cue(cue)
+		sound.strike(hero, action, result.events, action_id)
 		for data in result.impactUnits:
 			fighters[data.id].refresh(data, data.id == actor.id, false, false)
 		backdrop.sync_units(result.impactUnits)
@@ -477,7 +476,9 @@ func _ask_restart() -> void:
 func _toggle_sound() -> void:
 	sound.enabled = not sound.enabled
 	sound_button.text = "Som: ligado" if sound.enabled else "Som: desligado"
-	sound.play_cue(5)
+	audio_enabled = sound.enabled
+	_save_preferences()
+	sound.play_layer("ui",-6)
 
 func _show_classes() -> void:
 	var dialog := AcceptDialog.new()
@@ -631,6 +632,10 @@ func _load_preferences() -> void:
 	if saved_resolution in [Vector2i(1280, 720), Vector2i(1600, 900), Vector2i(1920, 1080)]: display_resolution = saved_resolution
 	var saved_motion: Variant = config.get_value("game", "reduced_motion", false)
 	if saved_motion is bool: reduced_motion = saved_motion
+	var saved_audio: Variant = config.get_value("audio","enabled",true)
+	if saved_audio is bool: audio_enabled = saved_audio
+	var saved_level: Variant = config.get_value("audio","level",.8)
+	if saved_level is float or saved_level is int: audio_level = clampf(float(saved_level),0,1)
 
 func _save_preferences() -> void:
 	var config := ConfigFile.new()
@@ -639,13 +644,15 @@ func _save_preferences() -> void:
 	config.set_value("game", "mode", free_settings.get("mode", mode))
 	config.set_value("game", "difficulty", free_settings.get("difficulty", difficulty))
 	config.set_value("game", "reduced_motion", reduced_motion)
+	config.set_value("audio","enabled",audio_enabled)
+	config.set_value("audio","level",audio_level)
 	config.set_value("display", "mode", display_mode)
 	config.set_value("display", "resolution", display_resolution)
 	var error := config.save("user://preferences.cfg")
 	if error != OK: push_warning("Não foi possível salvar as preferências: %s" % error_string(error))
 
 func _any_dialog() -> bool:
-	return get_children().any(func(child): return child is Window and child.visible)
+	return find_children("*","Window",true,false).any(func(child): return child.visible)
 
 func _open_showcase() -> void:
 	if not is_instance_valid(showcase):

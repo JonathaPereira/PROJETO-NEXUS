@@ -6,6 +6,8 @@ Protótipo jogável de RPG tático original: equipes de três, cinco afinidades 
 
 ### Nova base em Godot
 
+**Alpha 0.12 — menu e impacto 2D:** nova tela inicial com jornada e trio, ícones verdes/vermelhos de estados, impactos pintados, propagação em área e áudio estéreo em camadas. [Guia e capturas reais](godot/POLISH-0.12.md). [Proposta de progressão](godot/PROGRESSION.md).
+
 **Alpha 0.11 — classes e oficina de gemas:** identidades e combos entre classes, habilidades revistas, cinco heróis de volta e inventário com personagem, engastes e transferências. [Guia e capturas desta revisão](godot/CLASSES.md).
 
 **Direção 2D preservada:** combate ilustrado, cenários animados, três capítulos com nove missões, menus com submenus e modo automático. [Novidades e como experimentar](godot/TWO-D.md).

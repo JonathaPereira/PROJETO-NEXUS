@@ -158,9 +158,9 @@ func _position() -> void:
 	if fighters.size() != 2: return
 	for pair in [["actor", 0.25], ["target", 0.75]]:
 		var fighter = fighters[pair[0]]
-		fighter.position = Vector2(stage.size.x * pair[1] - 93, stage.size.y - 132 - 257)
+		fighter.position = Vector2(stage.size.x * pair[1] - 93, stage.size.y - 164 - 257)
 		fighter.set_depth(0.95)
-		fighter.plate.position = Vector2(-5, stage.size.y - 104 - fighter.position.y)
+		fighter.plate.position = Vector2(-5, stage.size.y - fighter.plate.size.y - 4 - fighter.position.y)
 
 func _play(action_id: String) -> void:
 	if playing: return
@@ -215,7 +215,7 @@ func _play(action_id: String) -> void:
 	var presentation := {"actor": "actor", "actionId": action_id, "events": mapped}
 	report.text = "Preparação…" + (" Crítico demonstrativo; escudo inicial de 25% da vida." if scenario.selected == 1 and not friendly else "")
 	var completed: bool = await director.play(self, effects, fighters, hero, action, presentation, reduced_motion, func():
-		if is_instance_valid(audio): audio.play_cue(int(catalog.class_by_id[hero.classId].index))
+		if is_instance_valid(audio): audio.strike(hero,action,mapped,action_id)
 		for pair in [["actor", actor_id], ["target", target_id]]:
 			var data: Dictionary = result.impactUnits.filter(func(u): return u.id == pair[1])[0]
 			fighters[pair[0]].refresh(data, pair[0] == "actor", false, false)

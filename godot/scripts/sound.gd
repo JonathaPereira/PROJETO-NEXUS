@@ -1,49 +1,89 @@
 extends AudioStreamPlayer
-## Original layered transients: filtered air, resonant body and short material tails.
-var enabled := false
+## Bounded polyphony: charge, body, element and tail can overlap without cutting one another.
+const NAMES := ["slash","heavy","projectile","fire","shadow","heal","shield_gain","shield_hit","critical","dot"]
+const BANK_NAMES := ["slash","heavy","projectile","fire","water","nature","arcane","shadow","heal","shield_gain","shield_hit","shield_break","critical","dot","charge","area","ui"]
+const BUS := "NexusSFX"
+const VOICES := 8
+var enabled := true:
+	set(next):
+		enabled = next
+		if not next: stop_all()
 var cues: Array[AudioStreamWAV] = []
+var bank: Dictionary = {}
+var voices: Array[AudioStreamPlayer] = []
+var sequence := 0
+var variations: Dictionary = {}
+var level := .8
+var played_events: Array = []
 
 func _ready() -> void:
-	volume_db = -11.0
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 80421
-	for index in range(10):
-		var cue := AudioStreamWAV.new()
-		cue.format = AudioStreamWAV.FORMAT_16_BITS
-		cue.mix_rate = 44100
-		var duration := .54 if index in [0,3,4,5] else .39
-		var count := int(cue.mix_rate*duration)
-		var samples := PackedByteArray()
-		samples.resize(count*2)
-		var low := 0.0
-		var air := 0.0
-		for i in range(count):
-			var t := float(i)/cue.mix_rate
-			var noise := rng.randf_range(-1,1)
-			low = lerpf(low,noise,.055)
-			air = lerpf(air,noise,.38)
-			var high := air-low
-			var attack := 1-exp(-t*450)
-			var body := sin(TAU*(78*t+34*(1-exp(-t*16))))*exp(-t*24)
-			var whoosh := high*exp(-t*12)*attack
-			var tail := low*exp(-t*8)*.4
-			var wave := body*.35+whoosh*.65+tail
-			match index:
-				0: wave=body*.55+high*exp(-t*9)*attack*.65+low*exp(-t*6)*.3
-				1: wave=body*.75+low*exp(-t*16)*2+whoosh*.25
-				2: wave=body*.35+whoosh*.7+sin(TAU*1300*t)*exp(-t*38)*.16
-				3: wave=high*exp(-t*7)*attack*.5+(sin(TAU*440*t)+sin(TAU*659.25*t)*.3)*exp(-t*11)*.14
-				4: wave=low*exp(-t*6)*1.4+body*.35+whoosh*.25
-				5: wave=high*exp(-t*9)*.2+(sin(TAU*523.25*t)+sin(TAU*783.99*t)*.3)*exp(-t*8)*.14
-				6,7: wave=whoosh*.3+(sin(TAU*740*t)+sin(TAU*1174*t)*.4+sin(TAU*1941*t)*.2)*exp(-t*18)*.25+body*.15
-				8: wave=body*.65+whoosh*.6+sin(TAU*(1800*t-700*t*t))*exp(-t*30)*.2
-				9: wave=low*exp(-t*22)+sin(TAU*92*t)*exp(-t*26)*.4
-			var edge := smoothstep(duration,duration-.04,t)
-			samples.encode_s16(i*2,int(clampf(tanh(wave*1.2)*edge,-1,1)*27000))
-		cue.data = samples
-		cues.append(cue)
+	if AudioServer.get_bus_index(BUS) < 0:
+		AudioServer.add_bus()
+		var index := AudioServer.bus_count-1
+		AudioServer.set_bus_name(index,BUS)
+		AudioServer.set_bus_send(index,"Master")
+		var limiter := AudioEffectHardLimiter.new()
+		limiter.ceiling_db = -1.2
+		AudioServer.add_bus_effect(index,limiter)
+	for key in BANK_NAMES:
+		bank[key] = [load("res://assets/audio/%s-0.wav" % key),load("res://assets/audio/%s-1.wav" % key)]
+	for key in NAMES: cues.append(bank[key][0])
+	for index in range(VOICES):
+		var voice := AudioStreamPlayer.new()
+		voice.bus = BUS
+		add_child(voice)
+		voices.append(voice)
+
+func stop_all() -> void:
+	stop()
+	for voice in voices:
+		if is_instance_valid(voice): voice.stop()
+
+func set_mix_level(value: float) -> void:
+	level = clampf(value,0,1)
+	if level == 0: stop_all()
+	else:
+		for voice in voices: voice.volume_db = linear_to_db(level)-6.0+float(voice.get_meta("layer_gain",0.0))
+
+func play_layer(key: String, gain_db := 0.0, pitch := 1.0) -> void:
+	if not enabled or level <= 0 or not bank.has(key) or voices.is_empty(): return
+	var voice: AudioStreamPlayer = voices[sequence % VOICES]
+	for candidate in voices:
+		if not candidate.playing:
+			voice = candidate
+			break
+	var variant: int = int(variations.get(key,0))
+	variations[key] = variant+1
+	voice.stream = bank[key][variant%2]
+	voice.set_meta("layer_gain",gain_db)
+	voice.volume_db = linear_to_db(level)-6.0+gain_db
+	voice.pitch_scale = pitch * [1.0,.975,1.025,1.012][variant%4]
+	voice.play()
+	sequence += 1
+	played_events.append({"key":key,"voice":voices.find(voice),"gainDb":voice.volume_db})
+	if played_events.size() > 64: played_events.pop_front()
 
 func play_cue(index: int) -> void:
-	if enabled and not cues.is_empty():
-		stream = cues[posmod(index,cues.size())]
-		play()
+	play_layer(NAMES[posmod(index,NAMES.size())])
+
+func begin_action(hero: Dictionary, action: Dictionary, tier: String) -> void:
+	if tier == "basic":
+		play_layer("charge",-13,.95 if hero.role == "Tanque" else 1.12)
+	else:
+		play_layer("charge",-7 if tier == "ultimate" else -10,.86 if tier == "ultimate" else 1.0)
+
+func strike(hero: Dictionary, action: Dictionary, events: Array, tier: String) -> void:
+	var damaging: bool = events.any(func(e): return e.type == "damage" and not e.get("reaction",false))
+	if not damaging:
+		play_layer("heal" if action.kind.begins_with("heal") else "shield_gain" if action.kind.begins_with("shield") or action.kind == "guard" else "arcane",-3)
+		return
+	var signature: String = hero.get("animation","")
+	var body := "heavy" if hero.weapon in ["hammer","gauntlet"] else "projectile" if hero.weapon in ["gun","bow"] else "slash"
+	play_layer(body,-2 if tier == "basic" else 0)
+	if tier != "basic" or hero.weapon in ["orb","staff"]:
+		var element: String = "water" if signature == "runes" else {"igneo":"fire","natural":"nature","tecnico":"arcane","arcano":"arcane","sombrio":"shadow"}.get(hero.classId,"arcane")
+		play_layer(element,-5)
+	if action.kind == "aoe": play_layer("area",-8)
+	if events.any(func(e): return e.get("absorbed",0) > 0):
+		play_layer("shield_break" if events.any(func(e): return e.get("absorbed",0) > 0 and e.get("shieldAfter",1) == 0) else "shield_hit",-6)
+	if events.any(func(e): return e.get("critical",false)): play_layer("critical",-6)

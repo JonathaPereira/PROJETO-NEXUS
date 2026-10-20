@@ -5,6 +5,7 @@ const GemIcon = preload("res://scripts/gem_icon.gd")
 const Codex = preload("res://scripts/hero_codex.gd")
 const AbilityArt = preload("res://scripts/ability_art.gd")
 const Backdrop = preload("res://scripts/hub_backdrop.gd")
+const HomeTeam = preload("res://scripts/home_team.gd")
 const RulesText = preload("res://scripts/rules_text.gd")
 const SURFACE := Color("0c1729f5")
 const CYAN := Color("66dcff")
@@ -55,7 +56,7 @@ func _ready() -> void:
 	background.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(background)
 	var shade := ColorRect.new()
-	shade.color = Color("040a15cf")
+	shade.color = Color("040a15b8")
 	shade.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
 	shade.mouse_filter = MOUSE_FILTER_IGNORE
 	add_child(shade)
@@ -76,16 +77,19 @@ func _ready() -> void:
 	var logo := _heading(masthead, "NEXUS", 30, WHITE)
 	logo.autowrap_mode = TextServer.AUTOWRAP_OFF
 	logo.size_flags_horizontal = SIZE_SHRINK_BEGIN
-	var subtitle := _text(masthead, "ECOS DO CREPÚSCULO  /  TÁTICO 2D", 11, CYAN)
+	var subtitle := _text(masthead, "ECOS DO CREPÚSCULO", 11, CYAN)
 	subtitle.size_flags_vertical = SIZE_SHRINK_CENTER
 	masthead.add_child(app._button("⛶ Tela", app._show_display))
 	masthead.add_child(app._button("Sair", func(): get_tree().quit()))
 	var nav := _row(column, 8)
-	for item in [["INÍCIO", "menu"], ["MODO HISTÓRIA", "story"], ["COLEÇÃO", "heroes"], ["JOGAR", "play"], ["EXTRAS", "extras"]]:
+	for item in [["Início", "menu"], ["História", "story"], ["Heróis e gemas", "heroes"], ["Batalhas", "play"], ["Extras", "extras"]]:
 		var target: String = item[1]
 		var button: Button = app._button(item[0], open.bind(target))
-		button.custom_minimum_size = Vector2(132, 42)
-		button.add_theme_font_size_override("font_size", 12)
+		button.custom_minimum_size = Vector2(148, 42)
+		button.icon = load("res://assets/menu/%s.svg" % {"menu":"home","story":"story","heroes":"heroes","play":"battle","extras":"extras"}[target])
+		button.expand_icon = true
+		button.add_theme_constant_override("icon_max_width",18)
+		button.add_theme_font_size_override("font_size", 14)
 		nav.add_child(button)
 		nav_buttons[target] = button
 	subnav = HBoxContainer.new()
@@ -114,6 +118,7 @@ func _resize_page() -> void:
 	if visible: open.call_deferred(page)
 
 func open(target: String = "menu") -> void:
+	if target != page: message = ""
 	page = target
 	visible = true
 	app.combat_view.hide()
@@ -151,7 +156,7 @@ func open(target: String = "menu") -> void:
 		"play": _play_menu()
 		"extras": _extras()
 		_: _menu()
-	footer.text = app.campaign.error_text if app.campaign.error_text != "" else message if message != "" else "Progresso salvo neste dispositivo  ·  Configure sua equipe em Coleção  ·  Tab para navegar, Enter para selecionar"
+	footer.text = app.campaign.error_text if app.campaign.error_text != "" else message if message != "" else "Progresso salvo neste dispositivo  ·  Prepare sua equipe em Heróis e gemas  ·  Tab para navegar, Enter para selecionar"
 	footer.add_theme_color_override("font_color", Color("ffb8a8") if app.campaign.error_text != "" else app.MUTED)
 	scroll.set_deferred("scroll_vertical", 0)
 
@@ -205,50 +210,132 @@ func _row(parent: Node, gap := 14, adaptive := false) -> BoxContainer:
 	return row
 
 func _menu() -> void:
-	var row := _row(body, 28, true)
+	var chapter: int = mini(2,int(mini(app.campaign.cleared,8)/3.0))
+	var record: Dictionary = Campaign.CHAPTERS[chapter]
+	var next_mission: int = mini(app.campaign.cleared,Campaign.MISSIONS.size()-1)
+	var row := _row(body,26,true)
 	var left := VBoxContainer.new()
 	left.size_flags_horizontal = SIZE_EXPAND_FILL
-	left.size_flags_stretch_ratio = 1.20
-	left.add_theme_constant_override("separation", 18)
+	left.size_flags_stretch_ratio = 1.04
+	left.add_theme_constant_override("separation",16)
 	row.add_child(left)
-	_text(left, "UMA CIDADE. CINCO RESSONÂNCIAS.", 12, CYAN)
-	_heading(left, "O mundo ainda\nse lembra.", 58 if wide else 38)
-	_text(left, "Reúna seu trio. Recupere as vozes do Farol.\nEscolha como lutar em uma jornada de três capítulos.", 19)
-	_text(left, "Combate tático em 2D, habilidades que se combinam e uma equipe que cresce com suas escolhas.", 15, app.MUTED)
-	story_button = app._button("COMEÇAR HISTÓRIA  →" if app.campaign.cleared == 0 else "CONTINUAR HISTÓRIA  ·  %d/%d  →" % [app.campaign.cleared, Campaign.MISSIONS.size()], _continue_story)
-	story_button.custom_minimum_size.y = 54
-	story_button.add_theme_stylebox_override("normal", _surface(Color("123b50"), CYAN, 14))
-	story_button.add_theme_color_override("font_color", CYAN)
-	left.add_child(story_button)
-	var choices := _row(left, 10)
-	play_button = app._button("Combate livre", app._enter_free)
-	play_button.custom_minimum_size = Vector2(180,44)
-	choices.add_child(play_button)
-	var collection: Button = app._button("Minha coleção", open.bind("heroes"))
-	collection.custom_minimum_size = Vector2(180,44)
-	choices.add_child(collection)
-	_text(left, "3 capítulos  /  9 missões  /  15 heróis", 12, CYAN)
-	var right := _panel(row, Color("36576d"))
-	right.size_flags_stretch_ratio = 1.0
-	_text(right, "SEU PRÓXIMO DESTINO", 11, CYAN)
-	var chapter: int = mini(2, int(mini(app.campaign.cleared,8)/3.0))
-	var record: Dictionary = Campaign.CHAPTERS[chapter]
-	var art := TextureRect.new()
-	art.texture = _chapter_art(chapter)
-	art.custom_minimum_size = Vector2(0,240 if wide else 160)
-	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
-	art.mouse_filter = MOUSE_FILTER_IGNORE
-	right.add_child(art)
-	_text(right, record.eyebrow, 11, Color(record.color))
-	_heading(right, record.name, 29)
-	_text(right, record.summary, 15, app.MUTED)
-	var progress := ProgressBar.new()
-	progress.max_value = Campaign.MISSIONS.size()
-	progress.value = app.campaign.cleared
-	progress.custom_minimum_size.y = 8
-	progress.show_percentage = false
-	right.add_child(progress)
+	var welcome := VBoxContainer.new()
+	welcome.add_theme_constant_override("separation",6)
+	left.add_child(welcome)
+	_text(welcome,"BEM-VINDO AO FAROL",11,CYAN)
+	_heading(welcome,"Sua jornada continua." if app.campaign.cleared>0 else "O Farol precisa de você.",36)
+	_text(welcome,"Avance na história ou prepare seu trio para o próximo confronto.",15,app.MUTED)
+	var journey := _panel(left,Color("397a94"))
+	journey.get_parent().add_theme_stylebox_override("panel",_surface(Color("10283aef"),Color("397a94"),20))
+	var chapter_line := _row(journey,10)
+	var chapter_icon := TextureRect.new()
+	chapter_icon.texture = load("res://assets/menu/story.svg")
+	chapter_icon.custom_minimum_size = Vector2(32,32)
+	chapter_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	chapter_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	chapter_icon.modulate = Color(record.color)
+	chapter_line.add_child(chapter_icon)
+	var words := VBoxContainer.new()
+	words.size_flags_horizontal = SIZE_EXPAND_FILL
+	chapter_line.add_child(words)
+	_text(words,record.eyebrow + (" · CONCLUÍDO" if app.campaign.cleared>=Campaign.MISSIONS.size() else " · EM ANDAMENTO"),10,Color(record.color))
+	_heading(words,record.name,23)
+	_text(journey,"Sua próxima missão\n"+Campaign.MISSIONS[next_mission].name if app.campaign.cleared<Campaign.MISSIONS.size() else "Jornada concluída. Revisite as missões e experimente novos trios.",14)
+	var progress_line := _row(journey,8)
+	for index in range(Campaign.MISSIONS.size()):
+		var segment := ColorRect.new()
+		segment.custom_minimum_size = Vector2(8,4)
+		segment.size_flags_horizontal = SIZE_EXPAND_FILL
+		segment.color = CYAN if index<app.campaign.cleared else Color("2b425a")
+		segment.mouse_filter = MOUSE_FILTER_IGNORE
+		progress_line.add_child(segment)
+	_text(journey,"%d de %d missões concluídas · 3 capítulos" % [app.campaign.cleared,Campaign.MISSIONS.size()],11,app.MUTED)
+	story_button = app._button("Começar história  →" if app.campaign.cleared==0 else "Continuar história  →" if app.campaign.cleared<Campaign.MISSIONS.size() else "Revisitar história  →",_continue_story)
+	story_button.custom_minimum_size.y = 48
+	story_button.add_theme_font_size_override("font_size",16)
+	story_button.add_theme_stylebox_override("normal",_surface(Color("4ed8ef"),Color("9cecff"),10))
+	story_button.add_theme_color_override("font_color",Color("062235"))
+	journey.add_child(story_button)
+	_text(left,"ESCOLHA O PRÓXIMO PASSO",10,app.MUTED)
+	var shortcuts := GridContainer.new()
+	shortcuts.columns = 2
+	shortcuts.size_flags_horizontal = SIZE_EXPAND_FILL
+	shortcuts.add_theme_constant_override("h_separation",10)
+	shortcuts.add_theme_constant_override("v_separation",10)
+	left.add_child(shortcuts)
+	_home_shortcut(shortcuts,"Heróis","Habilidades, classes e sinergias","heroes",open.bind("heroes"))
+	_home_shortcut(shortcuts,"Gemas","Equipar, remover e transferir","gems",open.bind("gems"))
+	play_button = _home_shortcut(shortcuts,"Treino rápido","Pratique contra a IA","battle",_quick_training)
+	_home_shortcut(shortcuts,"Aprender a jogar","Treinos guiados e regras","extras",app._show_lessons)
+	var right := _panel(row,Color("2b405b"))
+	right.get_parent().add_theme_stylebox_override("panel",_surface(Color("0b1826b8"),Color("2b405b"),20))
+	var team_header := _row(right,10)
+	var titles := VBoxContainer.new()
+	titles.size_flags_horizontal = SIZE_EXPAND_FILL
+	team_header.add_child(titles)
+	_text(titles,"SEU TRIO",11,CYAN)
+	_heading(titles,"Prontos para partir",24)
+	team_button = app._button("Editar equipe",app._open_roster)
+	team_header.add_child(team_button)
+	var team_art := HomeTeam.new()
+	team_art.configure(app.campaign.team,app.catalog)
+	team_art.motion_enabled = not app.reduced_motion
+	team_art.size_flags_horizontal = SIZE_EXPAND_FILL
+	team_art.size_flags_vertical = SIZE_EXPAND_FILL
+	right.add_child(team_art)
+	var roles := _row(right,9)
+	for index in [1,0,2]:
+		var id: String = app.campaign.team[index]
+		var hero: Dictionary = app.catalog.hero_by_id[id]
+		var detail := VBoxContainer.new()
+		detail.size_flags_horizontal = SIZE_EXPAND_FILL
+		roles.add_child(detail)
+		_text(detail,app.catalog.class_by_id[hero.classId].name.to_upper()+" · "+hero.role.to_upper(),10,app.catalog.affinity_color(hero.classId))
+		_text(detail,hero.get("specialty",hero.role),12)
+		var used: int = app.campaign.slots(id).filter(func(g): return g!="").size()
+		_text(detail,"%d/3 engastes ocupados" % used,11,app.MUTED)
+	_text(right,"%d heróis disponíveis · Você pode misturar classes e funções." % app.catalog.heroes.size(),12,app.MUTED)
+
+func _home_shortcut(parent: Node, title: String, detail: String, icon: String, callback: Callable) -> Button:
+	var button: Button = app._button("",callback)
+	button.custom_minimum_size = Vector2(0,76)
+	button.size_flags_horizontal = SIZE_EXPAND_FILL
+	button.tooltip_text = title+" · "+detail
+	button.add_theme_stylebox_override("normal",_surface(Color("0e1e30e8"),Color("2c435b"),12))
+	parent.add_child(button)
+	var margin := MarginContainer.new()
+	margin.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+	for side in ["left","right"]: margin.add_theme_constant_override("margin_"+side,14)
+	for side in ["top","bottom"]: margin.add_theme_constant_override("margin_"+side,10)
+	margin.mouse_filter = MOUSE_FILTER_IGNORE
+	button.add_child(margin)
+	var line := HBoxContainer.new()
+	line.mouse_filter = MOUSE_FILTER_IGNORE
+	line.add_theme_constant_override("separation",12)
+	margin.add_child(line)
+	var glyph := TextureRect.new()
+	glyph.texture = load("res://assets/menu/%s.svg" % icon)
+	glyph.modulate = CYAN
+	glyph.custom_minimum_size = Vector2(28,28)
+	glyph.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	glyph.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	glyph.mouse_filter = MOUSE_FILTER_IGNORE
+	line.add_child(glyph)
+	var words := VBoxContainer.new()
+	words.size_flags_horizontal = SIZE_EXPAND_FILL
+	words.mouse_filter = MOUSE_FILTER_IGNORE
+	line.add_child(words)
+	var name_label := _heading(words,title,16)
+	name_label.mouse_filter = MOUSE_FILTER_IGNORE
+	var description := _text(words,detail,11,app.MUTED)
+	description.mouse_filter = MOUSE_FILTER_IGNORE
+	return button
+
+func _quick_training() -> void:
+	app.mode = "training"
+	app.mode_picker.select(0)
+	app._save_preferences()
+	app._enter_free()
 
 func _continue_story() -> void:
 	selected_chapter = mini(2, int(mini(app.campaign.cleared,8)/3.0))
@@ -260,7 +347,7 @@ func _chapter_art(index: int) -> Texture2D:
 	return preload("res://assets/arena.png") if index == 2 else preload("res://assets/nexus-sanctum.png")
 
 func _play_menu() -> void:
-	_text(body, "JOGAR  /  ESCOLHA SEU MODO", 11, CYAN)
+	_text(body, "BATALHAS  /  ESCOLHA SEU MODO", 11, CYAN)
 	_heading(body, "Seu ritmo. Sua equipe.", 38)
 	var row := _row(body,18,true)
 	for item in [["Contra a IA", "Pratique combinações, escolha a dificuldade e ative o automático quando quiser.", "training"], ["Duelo local", "Duas pessoas no mesmo dispositivo, com os mesmos atributos e regras.", "local"]]:
@@ -285,7 +372,7 @@ func _extras() -> void:
 	grid.add_theme_constant_override("h_separation",16)
 	grid.add_theme_constant_override("v_separation",16)
 	body.add_child(grid)
-	for item in [["Aprender a jogar","Treinos guiados sobre afinidades, escudos e estados.",app._show_lessons], ["Galeria de golpes","Explore as habilidades dos quinze heróis.",app._open_showcase], ["Afinidades e regras","Consulte vantagens e funcionamento do combate.",app._show_classes], ["Laboratório","Simulações, resultados e registros de balanceamento.",app._show_lab], ["Arquivo 3D · Vesper","O estudo de modelo e animações permanece disponível.",app._open_vesper]]:
+	for item in [["Aprender a jogar","Treinos guiados sobre afinidades, escudos e estados.",app._show_lessons], ["Galeria de golpes","Explore as habilidades dos %d heróis." % app.catalog.heroes.size(),app._open_showcase], ["Afinidades e regras","Consulte vantagens e funcionamento do combate.",app._show_classes], ["Laboratório","Simulações, resultados e registros de balanceamento.",app._show_lab], ["Arquivo 3D · Vesper","O estudo de modelo e animações permanece disponível.",app._open_vesper]]:
 		var card := _panel(grid)
 		_heading(card,item[0],23)
 		_text(card,item[1],14,app.MUTED)

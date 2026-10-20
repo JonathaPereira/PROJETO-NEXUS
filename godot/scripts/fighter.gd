@@ -1,5 +1,6 @@
 extends Button
 signal targeted(unit_id: String)
+const StatusStrip = preload("res://scripts/status_strip.gd")
 const Meter = preload("res://scripts/meter.gd")
 const Glyph = preload("res://scripts/glyph.gd")
 const ATLAS = preload("res://assets/clean-atlas.png")
@@ -40,6 +41,7 @@ var shield: Control
 var shield_label: Label
 var stats: Label
 var status_label: Label
+var status_strip: Control
 var indicator: Label
 var spatial_presentation := false
 var spatial_foot := Vector2.ZERO
@@ -120,7 +122,7 @@ func setup(hero: Dictionary, id: String, color: Color) -> void:
 	add_child(relationship)
 	plate = Panel.new()
 	plate.position = Vector2(-5, 264)
-	plate.size = Vector2(196, 102)
+	plate.size = Vector2(232, 148)
 	plate.clip_contents = true
 	plate.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	plate.z_index = 50
@@ -136,48 +138,58 @@ func setup(hero: Dictionary, id: String, color: Color) -> void:
 	add_child(plate)
 	remove_child(indicator)
 	plate.add_child(indicator)
-	indicator.position = Vector2(154, 2)
+	indicator.position = Vector2(190, 2)
 	indicator.size = Vector2(14, 18)
 	title = _label(hero.name, 14, Color("f3f8ff"))
 	if ResourceLoader.exists("res://assets/space-grotesk.ttf"):
 		title.add_theme_font_override("font", load("res://assets/space-grotesk.ttf"))
 	title.position = Vector2(8, 1)
-	title.size = Vector2(146, 20)
+	title.size = Vector2(182, 20)
 	plate.add_child(title)
+	title.position.x = 42
+	title.size.x = 144
+	var thumbnail := TextureRect.new()
+	thumbnail.texture = portrait(int(hero.index))
+	thumbnail.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	thumbnail.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	thumbnail.position = Vector2(7,3)
+	thumbnail.size = Vector2(29,30)
+	thumbnail.mouse_filter = MOUSE_FILTER_IGNORE
+	plate.add_child(thumbnail)
 	var glyph = Glyph.new()
 	glyph.symbol = hero.classId
 	glyph.tint = color
-	glyph.position = Vector2(173, 3)
+	glyph.position = Vector2(209, 3)
 	glyph.size = Vector2(17, 17)
 	plate.add_child(glyph)
 	# Affinity/relationship share one fixed line, keeping all three meters legible.
 	remove_child(affinity_label)
 	plate.add_child(affinity_label)
-	affinity_label.position = Vector2(8, 21)
-	affinity_label.size = Vector2(180, 14)
+	affinity_label.position = Vector2(42, 21)
+	affinity_label.size = Vector2(182, 14)
 	affinity_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	affinity_label.add_theme_font_size_override("font_size", 11)
 	affinity_label.text += " · " + hero.role
 	remove_child(relationship)
 	plate.add_child(relationship)
-	relationship.position = Vector2(8, 21)
-	relationship.size = Vector2(180, 14)
+	relationship.position = Vector2(42, 21)
+	relationship.size = Vector2(182, 14)
 	relationship.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 	relationship.add_theme_font_size_override("font_size", 11)
 	health = Meter.new()
 	health.fill = Color("59d9aa")
 	health.position = Vector2(8, 38)
-	health.size = Vector2(180, 16)
+	health.size = Vector2(216, 16)
 	plate.add_child(health)
 	energy = Meter.new()
 	energy.fill = Color("9b8af0")
 	energy.position = Vector2(8, 57)
-	energy.size = Vector2(180, 13)
+	energy.size = Vector2(216, 13)
 	plate.add_child(energy)
 	shield = Meter.new()
 	shield.fill = Color("429fcc")
 	shield.position = Vector2(8, 73)
-	shield.size = Vector2(180, 13)
+	shield.size = Vector2(216, 13)
 	plate.add_child(shield)
 	stats = _label("", 11, Color("cedaee"))
 	stats.visible = false
@@ -187,9 +199,14 @@ func setup(hero: Dictionary, id: String, color: Color) -> void:
 	plate.add_child(shield_label)
 	status_label = _label("", 10, Color("ffc394"))
 	status_label.position = Vector2(8, 88)
-	status_label.size = Vector2(180, 14)
+	status_label.size = Vector2(216, 14)
 	status_label.max_lines_visible = 1
 	plate.add_child(status_label)
+	status_label.hide()
+	status_strip = StatusStrip.new()
+	status_strip.position = Vector2(8,92)
+	status_strip.size = Vector2(216,53)
+	plate.add_child(status_strip)
 	position_label = _label("", 11, Color("c5d8e9"))
 	position_label.position = Vector2(-5, 259)
 	position_label.size = Vector2(196, 18)
@@ -220,7 +237,7 @@ func set_relationship(multiplier: float, relevant: bool) -> void:
 	relationship.visible = relevant and not dead and multiplier != 1.0
 	affinity_label.visible = not relationship.visible
 	relationship.text = affinity_label.text.split(" · ")[0] + " · " + RulesText.relationship(multiplier).to_upper()
-	relationship.add_theme_color_override("font_color", Color("ffb998") if multiplier > 1 else Color("a6d9fa"))
+	relationship.add_theme_color_override("font_color", Color("ff9ba3") if multiplier > 1 else Color("91efbc"))
 
 func foot_position() -> Vector2:
 	if spatial_presentation: return spatial_foot
@@ -279,11 +296,12 @@ func _rest_pose() -> void:
 	artwork.position = Vector2(-artwork.size.x * 0.5, -artwork.size.y)
 
 func _has_point(point: Vector2) -> bool:
+	var plate_point := plate.get_transform().affine_inverse() * point
+	var in_plate := Rect2(Vector2.ZERO, plate.size).has_point(plate_point)
 	if spatial_presentation:
 		var height := maxf(60, spatial_foot.y - spatial_head.y)
-		var plate_point := plate.get_transform().affine_inverse() * point
-		return Rect2(spatial_head - position - Vector2(height * 0.3, 8), Vector2(height * 0.6, height + 8)).has_point(point) or Rect2(Vector2.ZERO, plate.size).has_point(plate_point)
-	return Rect2(Vector2(93 - 90 * depth, 257 - 200 * depth), Vector2(180 * depth, 200 * depth)).has_point(point) or plate.get_rect().has_point(point)
+		return Rect2(spatial_head - position - Vector2(height * 0.3, 8), Vector2(height * 0.6, height + 8)).has_point(point) or in_plate
+	return Rect2(Vector2(93 - 90 * depth, 257 - 200 * depth), Vector2(180 * depth, 200 * depth)).has_point(point) or in_plate
 
 func _process(delta: float) -> void:
 	if spatial_presentation: return
@@ -335,6 +353,7 @@ func refresh(data: Dictionary, is_active: bool, is_chosen: bool, can_target: boo
 		compact.append("%s %s" % [{"darkmark": "Drena", "sentinel": "Sentinela", "elementalWard": "Égide", "burn": "Queima", "bleed": "Sangra/Cura↓", "regen": "Regen", "weaken": "ATQ↓", "expose": "DEF↓", "empower": "ATQ↑", "fortify": "Fortif.", "cover": "Proteg.", "mirror": "Reflexo", "riposte": "Contra", "taunt": "Provoca", "emberguard": "Brasa", "focus": "Foco", "seed": "Semente"}.get(status.type, status.type), "%dT" % duration if duration > 0 else "•"])
 	if compact.size() > 2: compact = compact.slice(0, 1) + ["+%d estados" % (compact.size() - 1)]
 	status_label.text = "DERROTADO" if dead else " · ".join(compact)
+	status_strip.configure(data.statuses, data.guarding, hero_name, dead)
 	status_label.tooltip_text = "\n".join(states)
 	tooltip_text = base_tooltip + "\nEscudo único; dura %d ações do protegido. Não acumula.\nEscudo: %d / %d máximo" % [int(RulesText.rules.shield.durationActions), data.shield, int(shield.max_value)] + ("\n\nESTADOS\n" + "\n".join(states) if not states.is_empty() else "")
 	if data.has("gem"):

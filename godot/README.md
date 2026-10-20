@@ -1,6 +1,6 @@
-# NEXUS em Godot — Alpha 0.11 / classes e engastes
+# NEXUS em Godot — Alpha 0.12 / menu, estados e impacto 2D
 
-[Novidades da Alpha 0.11, retornos e oficina de gemas](CLASSES.md).
+[Novidades da Alpha 0.12 e capturas reais](POLISH-0.12.md). [Classes, retornos e oficina de gemas](CLASSES.md).
 
 Godot 4.6 Standard / GDScript, gratuito e sem addons pagos. Validado com Godot 4.6.3 em Linux.
 

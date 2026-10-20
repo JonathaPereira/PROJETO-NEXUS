@@ -59,12 +59,26 @@ static func build(app) -> void:
 	app.log_view.add_theme_font_size_override("normal_font_size", 15)
 	app.log_dialog.add_child(app.log_view)
 	header.add_child(app._button("Registro", func(): app.log_dialog.popup_centered()))
-	app.sound_button = app._button("Som: desligado", app._toggle_sound)
-	tools.add_child(app.sound_button)
+	app.sound_button = app._button("Som: ligado" if app.audio_enabled else "Som: desligado", app._toggle_sound)
+	header.add_child(app.sound_button)
 	app.screen_button = app._button("⛶ Tela", app._show_display)
 	tools.add_child(app.screen_button)
 	app.sound = Sound.new()
 	app.add_child(app.sound)
+	app.sound.enabled = app.audio_enabled
+	app.sound.set_mix_level(app.audio_level)
+	tools.add_child(app._label("Volume dos efeitos",12,app.MUTED))
+	var volume := HSlider.new()
+	volume.min_value = 0
+	volume.max_value = 100
+	volume.step = 5
+	volume.value = app.audio_level*100
+	volume.tooltip_text = "Volume dos efeitos sonoros"
+	volume.value_changed.connect(func(value):
+		app.audio_level = value/100
+		app.sound.set_mix_level(app.audio_level)
+		app._save_preferences())
+	tools.add_child(volume)
 	var brief := PanelContainer.new()
 	layout.add_child(brief)
 	var brief_row := HBoxContainer.new()
@@ -424,9 +438,11 @@ static func show_report(app, events: Array, title: String) -> void:
 		var recipients: Array = []
 		var remaining: Array = []
 		var statuses: Array = []
+		var presenting: Dictionary = app.combat.get_action(app.combat.current(app.state),app.selected_action)
 		for event in events:
 			if not event.has("amount"): continue
-			if not event.target in recipients: recipients.append(event.target)
+			var primary: bool = not event.get("reaction",false) and not event.get("intercepted",false) and not event.get("passive",false) and (presenting.kind != "aoe" or event.type == "damage")
+			if primary and not event.target in recipients: recipients.append(event.target)
 			if event.type == "damage":
 				health_loss += int(event.amount)
 				absorbed += int(event.absorbed)
@@ -527,4 +543,7 @@ static func _preview(app, action: Dictionary) -> void:
 		if not has_damage and not statuses.is_empty(): label += " · " + ", ".join(statuses.map(func(k): return Fighter.STATUS_NAMES.get(k, "Purificação")))
 		totals.append(label.trim_prefix(" · "))
 	app.feedback.text = "[center][color=#67e8f9]PRÉVIA · %s · custo %d EN[/color]\n%s[/center]" % [action.name, action.get("cost", 0), "  |  ".join(totals)]
-	app.feedback.tooltip_text = "\n".join(details) + "\n" + action.description + "\nCrítico: chance de %s. Valores excluem efeitos do próximo turno; incluem reações ao golpe." % RulesText.percent(app.combat.rules.critical.chance)
+	var actor: Dictionary = app.combat.current(app.state)
+	var hero: Dictionary = app.catalog.hero_by_id[actor.heroId]
+	var chance: float = minf(1.0,float(app.combat.rules.critical.chance)+(float(app.combat.rules.classPassives.igneoCriticalChance) if hero.classId=="igneo" else 0.0)+float(action.get("criticalChance",0)))
+	app.feedback.tooltip_text = "\n".join(details) + "\n" + action.description + ("\nCrítico: chance de %s." % RulesText.percent(chance) if has_damage else "") + " Valores excluem efeitos do próximo turno; incluem reações ao golpe."

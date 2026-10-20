@@ -1,3 +1,7 @@
+# Estado atual — Alpha 0.12
+
+Menu inicial com jornada e trio, estados com ícones próprios e inspeção acessível, impactos pintados e áudio em camadas. [O que mudou](POLISH-0.12.md). A próxima etapa de progressão tem [uma proposta para discussão](PROGRESSION.md), equilibrando campanha/domínio e equipamentos/gemas. As regras de combate continuam em 0.11.0.
+
 # Estado atual — Alpha 0.11
 
 A direção principal é **2D**, com nove missões, automático, vinte heróis, identidades de classe e oficina de engastes. [Implementação e capturas](CLASSES.md). PvP online e evolução futura para 3D continuam no roteiro.
