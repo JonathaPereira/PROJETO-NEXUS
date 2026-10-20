@@ -350,6 +350,10 @@ func _play_menu() -> void:
 	_text(body, "BATALHAS  /  ESCOLHA SEU MODO", 11, CYAN)
 	_heading(body, "Seu ritmo. Sua equipe.", 38)
 	var row := _row(body,18,true)
+	var online := _panel(body,Color("397a94"))
+	_heading(online,"Arena PvP online",28)
+	_text(online,"Enfrente outro jogador por código de sala. Prepare seu trio em uma tela exclusiva, com três engastes por herói e gemas ilimitadas para balanceamento.",15,app.MUTED)
+	online.add_child(app._button("Preparar equipe PvP  →",app._open_pvp))
 	for item in [["Contra a IA", "Pratique combinações, escolha a dificuldade e ative o automático quando quiser.", "training"], ["Duelo local", "Duas pessoas no mesmo dispositivo, com os mesmos atributos e regras.", "local"]]:
 		var card := _panel(row)
 		_heading(card,item[0],26)

@@ -5,6 +5,8 @@ const CombatUI = preload("res://scripts/combat_ui.gd")
 const Director = preload("res://scripts/animation_director.gd")
 const Showcase = preload("res://scripts/showcase.gd")
 const Campaign = preload("res://scripts/campaign.gd")
+const PvpClient = preload("res://scripts/pvp_client.gd")
+const PvpLobby = preload("res://scripts/pvp_lobby.gd")
 const Hub = preload("res://scripts/hub.gd")
 const UITheme = preload("res://scripts/ui_theme.gd")
 const RulesText = preload("res://scripts/rules_text.gd")
@@ -33,6 +35,10 @@ var reduced_motion := false
 var field: Control
 var effects: Control
 var fighters: Dictionary = {}
+var left_team_label: Label
+var right_team_label: Label
+var pvp_clock := 0.0
+var log_button: Button
 var phase_label: Label
 var round_label: Label
 var initiative: Label
@@ -50,6 +56,8 @@ var audio_enabled := true
 var audio_level := .8
 var sound_button: Button
 var sound
+var restart_button: Button
+var controls_note: Label
 var restart_dialog: ConfirmationDialog
 var result_dialog: AcceptDialog
 var roster_dialog: AcceptDialog
@@ -89,6 +97,13 @@ var lab
 var campaign
 var hub: Control
 var combat_view: Control
+var pvp_client
+var pvp_lobby
+var pvp_active := false
+var pvp_queue: Array = []
+var pvp_draining := false
+var pvp_drain_id := 0
+var pvp_seq := -1
 var campaign_mission := -1
 var roster_campaign := false
 var mission_label: Label
@@ -110,6 +125,16 @@ func _ready() -> void:
 	hub.app = self
 	add_child(hub)
 	hub.open()
+	pvp_client=PvpClient.new()
+	add_child(pvp_client)
+	pvp_client.received.connect(_pvp_packet)
+	pvp_client.connection_changed.connect(func():
+		if pvp_active and not busy: _refresh())
+	if OS.has_feature("web") and JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('pvp') === '1'",true):_open_pvp.call_deferred()
+	pvp_client.failed.connect(func(message):
+		if pvp_active:
+			phase_label.text=message
+			if not busy: _refresh())
 	if DisplayServer.get_name() != "headless": _apply_display.call_deferred()
 
 func _style(color: Color, border: Color = Color("37353f")) -> StyleBoxFlat:
@@ -141,6 +166,7 @@ func _build_interface() -> void:
 	CombatUI.build(self)
 
 func _open_vesper() -> void:
+	if pvp_active:return
 	if is_instance_valid(vesper_atelier): return
 	hub.hide()
 	combat_view.hide()
@@ -152,6 +178,7 @@ func _open_vesper() -> void:
 		hub.open("menu"))
 
 func _enter_free() -> void:
+	if pvp_active:return
 	campaign_mission = -1
 	hub.hide()
 	combat_view.show()
@@ -165,6 +192,22 @@ func _begin_mission(index: int) -> void:
 	_new_battle()
 
 func _open_menu() -> void:
+	if pvp_active:
+		if not is_instance_valid(menu_dialog):
+			menu_dialog=ConfirmationDialog.new()
+			add_child(menu_dialog)
+			menu_dialog.confirmed.connect(func():
+				if pvp_active:
+					pvp_client.leave()
+					_end_pvp()
+					_open_pvp()
+				else: _leave_battle())
+		menu_dialog.title="Sair da partida PvP?"
+		menu_dialog.dialog_text="Sair durante o combate conta como desistência. Sua campanha e a formação PvP serão preservadas."
+		menu_dialog.ok_button_text="Sair do PvP"
+		menu_dialog.cancel_button_text="Continuar partida"
+		menu_dialog.popup_centered()
+		return
 	if started and state.phase == "playing":
 		if not is_instance_valid(menu_dialog):
 			menu_dialog = ConfirmationDialog.new()
@@ -172,12 +215,24 @@ func _open_menu() -> void:
 			menu_dialog.dialog_text = "A batalha em andamento será encerrada.\nMissões concluídas, equipe e gemas salvas serão preservadas."
 			menu_dialog.ok_button_text = "Voltar ao menu"
 			menu_dialog.cancel_button_text = "Continuar batalha"
-			menu_dialog.confirmed.connect(_leave_battle.bind("menu"))
+			menu_dialog.confirmed.connect(func():
+				if pvp_active:
+					pvp_client.leave()
+					_end_pvp()
+					_open_pvp()
+				else: _leave_battle("menu"))
 			add_child(menu_dialog)
+		menu_dialog.title="Voltar ao menu?"
+		menu_dialog.dialog_text="A batalha em andamento será encerrada.\nMissões concluídas, equipe e gemas salvas serão preservadas."
+		menu_dialog.ok_button_text="Voltar ao menu"
+		menu_dialog.cancel_button_text="Continuar batalha"
 		menu_dialog.popup_centered()
 	else: _leave_battle("menu")
 
 func _leave_battle(page: String = "menu") -> void:
+	if pvp_active:
+		pvp_client.leave()
+		_end_pvp()
 	battle_version += 1
 	ai_request += 1
 	director.cancel()
@@ -192,12 +247,18 @@ func _leave_battle(page: String = "menu") -> void:
 	hub.open(page)
 
 func _result_confirmed() -> void:
+	if pvp_active:
+		pvp_client.send({"type":"rematch"})
+		_end_pvp()
+		_open_pvp()
+		return
 	if campaign_mission >= 0 and state.winner == 0:
 		hub.selected_chapter = mini(2,int(mini(campaign.cleared,8)/3.0))
 		_leave_battle("story")
 	else: _new_battle()
 
 func _new_battle() -> void:
+	if pvp_active:return
 	battle_version += 1
 	ai_request += 1
 	director.cancel()
@@ -212,6 +273,9 @@ func _new_battle() -> void:
 	target_id = ""
 	if is_instance_valid(feedback): feedback.text = "[center][color=#67e8f9]LEITURA DO COMBATE[/color]  ·  Dano à vida e ao escudo aparecem separados.[/center]"
 	state = campaign.battle(combat, campaign_mission) if campaign_mission >= 0 else combat.new_battle(teams[0], teams[1], difficulty if mode == "training" else "normal")
+	_rebuild_fighters()
+
+func _rebuild_fighters() -> void:
 	backdrop.encounter_kind = maxi(0, campaign_mission)
 	if tutorial_index >= 0:
 		tutorial_progress = {}
@@ -259,10 +323,17 @@ func _position_fighters() -> void:
 			fighter.plate.position = panel_at - fighter.position
 
 func _process(_delta: float) -> void:
+	if pvp_active and state.get("phase")=="playing":
+		pvp_clock+=_delta
+		if pvp_clock>=.2:
+			pvp_clock=0
+			var remaining := maxi(0,int(ceil((pvp_client.turn_until-Time.get_ticks_msec())/1000.0)))
+			mission_label.text="PvP · SALA %s\nVOCÊ: EQUIPE %d · %ds" % [pvp_client.room.get("code",""),int(pvp_client.own_player().get("side",0))+1,remaining]
 	if spatial_combat and is_instance_valid(combat_view) and combat_view.visible and not fighters.is_empty():
 		_position_fighters()
 
 func _human_turn() -> bool:
+	if pvp_active: return pvp_client.available() and not pvp_client.pending_action and int(combat.current(state).get("side",-1))==int(pvp_client.own_player().get("side",-2))
 	if auto_play and combat.current(state).get("side", 1) == 0: return false
 	return (campaign_mission < 0 and mode == "local") or combat.current(state).get("side", 1) == 0
 
@@ -305,14 +376,14 @@ func _refresh() -> void:
 	_update_log()
 	if state.phase == "finished" and not result_shown:
 		result_shown = true
-		if tutorial_index < 0 and campaign_mission < 0: Lab.record(state, mode, difficulty)
+		if tutorial_index < 0 and campaign_mission < 0 and not pvp_active: Lab.record(state, mode, difficulty)
 		var damage := 0
 		var healing := 0
 		for data in state.units:
 			if data.side == state.winner:
 				damage += int(data.stats.damage)
 				healing += int(data.stats.healing)
-		result_dialog.dialog_text = "Equipe %d venceu!\n\n%d rodadas · %d ações\nDano da equipe vencedora: %d\nCura: %d\n\nJogue novamente ou feche para consultar o resultado." % [int(state.winner) + 1, state.round, state.turns, damage, healing]
+		result_dialog.dialog_text = "Equipe %d venceu!\n\n%d rodadas · %d ações\nDano da equipe vencedora: %d\nCura: %d\n\nJogue novamente ou feche para consultar o resultado." % [int(state.winner if state.winner!=null else -1) + 1, state.round, state.turns, damage, healing]
 		if tutorial_index >= 0:
 			result_dialog.dialog_text += "\n\n" + Lessons.hint(tutorial_index, tutorial_progress)
 		result_dialog.ok_button_text = "Jogar novamente"
@@ -327,6 +398,13 @@ func _refresh() -> void:
 			else:
 				result_dialog.dialog_text += "Seu progresso e suas gemas foram preservados. Ajuste o trio ou os engastes no menu e tente de novo.\n\n" + mission.tip
 			result_dialog.dialog_text += "\n\n%d rodadas · %d ações" % [state.round, state.turns]
+		if pvp_active:
+			var own_side: int=int(pvp_client.own_player().get("side",-1))
+			var outcome := "VITÓRIA" if state.winner==own_side else "EMPATE" if state.winner==null else "DERROTA"
+			var reason: String=str(pvp_client.room.get("reason","combat"))
+			var reason_label: String={"combat":"Combate concluído","surrender":"Desistência","disconnect":"Desconexão","timeout":"Tempo esgotado"}.get(reason,reason)
+			result_dialog.dialog_text="%s · PvP\n%s\n\n%d rodadas · %d ações\nRegistro PvP: %s\n\nOs registros do PvP ficam separados da campanha e das simulações." % [outcome,reason_label,state.round,state.turns,str(pvp_client.room.get("matchId",""))]
+			result_dialog.ok_button_text="Voltar à preparação PvP"
 		result_dialog.popup_centered()
 
 func _start() -> void:
@@ -353,17 +431,25 @@ func _execute() -> void:
 	if _can_act(): _play_turn(selected_action, target_id)
 
 func _play_turn(action_id: String, target: String) -> void:
+	if pvp_active:
+		if _can_act():
+			pvp_client.act(action_id,target)
+			_refresh()
+		return
 	if busy or not started or state.phase != "playing": return
-	var version := battle_version
-	var actor := combat.current(state)
-	var hero: Dictionary = catalog.hero_by_id[actor.heroId]
-	var action := combat.get_action(actor, action_id)
 	# Compute separately: the displayed actor stays stable until the strike lands.
 	var pending := state.duplicate(true)
 	var result := combat.act(pending, action_id, target)
 	if result.has("error"):
 		description.text = result.error
 		return
+	await _present_turn(action_id,target,pending,result)
+
+func _present_turn(action_id: String, target: String, pending: Dictionary, result: Dictionary) -> void:
+	var version := battle_version
+	var actor := combat.current(state)
+	var hero: Dictionary = catalog.hero_by_id[actor.heroId]
+	var action := combat.get_action(actor,action_id)
 	busy = true
 	selected_action = action_id
 	target_id = target
@@ -439,11 +525,12 @@ func _schedule_ai() -> void:
 	if not choice.is_empty(): _play_turn(choice.actionId, choice.targetId)
 
 func _wants_ai() -> bool:
+	if pvp_active:return false
 	var side: int = int(combat.current(state).get("side", -1))
 	return auto_play if side == 0 else side == 1 and (mode == "training" or campaign_mission >= 0)
 
 func _set_auto_play(enabled: bool) -> void:
-	auto_play = enabled and tutorial_index < 0
+	auto_play = enabled and tutorial_index < 0 and not pvp_active
 	ai_request += 1
 	ai_pending = false
 	if not busy: _refresh()
@@ -470,6 +557,10 @@ func _unit_name(id: String) -> String:
 	return catalog.hero_by_id[data.heroId].name if not data.is_empty() else ""
 
 func _ask_restart() -> void:
+	if pvp_active:
+		if state.phase=="finished":_result_confirmed()
+		else:_open_menu()
+		return
 	if started and state.phase == "playing": restart_dialog.popup_centered()
 	else: _new_battle()
 
@@ -563,7 +654,7 @@ func _build_roster() -> void:
 	formation_row.add_child(_label("Posição visual; qualquer inimigo pode ser alvo.", 13, MUTED))
 
 func _open_roster() -> void:
-	if tutorial_index >= 0 or (started and state.phase == "playing"): return
+	if pvp_active or tutorial_index >= 0 or (started and state.phase == "playing"): return
 	roster_campaign = is_instance_valid(hub) and hub.visible and hub.page in ["story", "gems"]
 	if campaign_mission >= 0: return
 	roster_work = [campaign.team.duplicate(), catalog.default_teams[1].duplicate()] if roster_campaign else teams.duplicate(true)
@@ -678,6 +769,11 @@ func _input(event: InputEvent) -> void:
 		_toggle_fullscreen()
 		get_viewport().set_input_as_handled()
 		return
+	if is_instance_valid(pvp_lobby) and pvp_lobby.visible:
+		if event.keycode==KEY_ESCAPE:
+			pvp_lobby._back()
+			get_viewport().set_input_as_handled()
+		return
 	if is_instance_valid(hub) and hub.visible:
 		if event.keycode == KEY_ESCAPE and hub.page != "menu":
 			hub.open("menu")
@@ -735,6 +831,7 @@ func _show_lessons() -> void:
 	dialog.popup_centered()
 
 func _begin_lesson(index: int) -> void:
+	if pvp_active:return
 	if is_instance_valid(hub) and hub.visible: _enter_free()
 	if free_settings.is_empty(): free_settings = {"teams": teams.duplicate(true), "mode": mode, "difficulty": difficulty}
 	tutorial_index = index
@@ -765,7 +862,7 @@ func _move_to_front() -> void:
 	_refresh_roster()
 
 func _apply_display() -> void:
-	if DisplayServer.get_name() == "headless": return
+	if DisplayServer.get_name() == "headless" or OS.has_feature("web"): return
 	if display_mode == "fullscreen":
 		get_window().mode = Window.MODE_EXCLUSIVE_FULLSCREEN
 		get_window().size = Vector2i(1920, 1080)
@@ -776,6 +873,9 @@ func _apply_display() -> void:
 		get_window().position = screen.position + (screen.size - display_resolution) / 2
 
 func _toggle_fullscreen() -> void:
+	if OS.has_feature("web"):
+		JavaScriptBridge.eval("document.fullscreenElement ? document.exitFullscreen() : document.querySelector('canvas').requestFullscreen()",true)
+		return
 	if display_mode == "fullscreen":
 		display_mode = "windowed"
 		display_resolution = windowed_resolution
@@ -787,6 +887,9 @@ func _toggle_fullscreen() -> void:
 	_save_preferences()
 
 func _show_display() -> void:
+	if OS.has_feature("web"):
+		_toggle_fullscreen()
+		return
 	var dialog := AcceptDialog.new()
 	dialog.title = "Tela · Full HD"
 	dialog.ok_button_text = "Aplicar"
@@ -808,3 +911,95 @@ func _show_display() -> void:
 	dialog.visibility_changed.connect(func():
 		if not dialog.visible: dialog.queue_free())
 	dialog.popup_centered()
+
+# Online presentation uses the authoritative server result, never a local act().
+func _open_pvp() -> void:
+	if tutorial_index>=0:_end_lesson()
+	campaign_mission=-1
+	started=false
+	hub.hide()
+	combat_view.hide()
+	if not is_instance_valid(pvp_lobby):
+		pvp_lobby=PvpLobby.new()
+		pvp_lobby.app=self
+		add_child(pvp_lobby)
+	pvp_lobby.show()
+	pvp_lobby.refresh()
+
+func _end_pvp() -> void:
+	pvp_drain_id+=1
+	pvp_draining=false
+	pvp_active=false
+	pvp_queue.clear()
+	pvp_seq=-1
+	battle_version+=1
+	director.cancel()
+	backdrop.cancel()
+	sound.stop_all()
+	busy=false
+	started=false
+	result_shown=false
+	result_dialog.hide()
+
+func _pvp_packet(packet: Dictionary) -> void:
+	if packet.type=="left":
+		if pvp_active:
+			_end_pvp()
+			_open_pvp()
+		return
+	if packet.type=="error":
+		if pvp_active and not busy:_refresh()
+		return
+	if not packet.type in ["room","turn"]:return
+	if packet.get("phase")=="preparing":
+		if pvp_active:
+			_end_pvp()
+			_open_pvp()
+		return
+	if not packet.get("state") is Dictionary:return
+	if packet.type=="turn":
+		pvp_queue.append(packet.duplicate(true))
+		_drain_pvp()
+		return
+	if not pvp_active or packet.get("seq",0)!=pvp_seq or (packet.get("phase")=="finished" and state.phase!="finished"):
+		# A full snapshot after reconnection supersedes interrupted animation.
+		pvp_drain_id+=1
+		pvp_draining=false
+		pvp_queue.clear()
+		battle_version+=1
+		director.cancel()
+		backdrop.cancel()
+		sound.stop_all()
+		pvp_active=true
+		auto_play=false
+		ai_request+=1
+		ai_pending=false
+		busy=false
+		started=true
+		campaign_mission=-1
+		result_shown=false
+		selected_action="basic"
+		pvp_seq=int(packet.seq)
+		state=packet.state.duplicate(true)
+		if is_instance_valid(pvp_lobby):pvp_lobby.hide()
+		hub.hide()
+		combat_view.show()
+		_rebuild_fighters()
+	else:
+		if not busy:_refresh()
+
+func _drain_pvp() -> void:
+	if pvp_draining:return
+	pvp_draining=true
+	var drain_id := pvp_drain_id
+	while not pvp_queue.is_empty() and pvp_active:
+		var packet: Dictionary=pvp_queue.pop_front()
+		if int(packet.seq)<=pvp_seq:continue
+		if int(packet.seq)!=pvp_seq+1:
+			_pvp_packet(packet.merged({"type":"room"},true))
+			continue
+		var version := battle_version
+		await _present_turn(str(packet.actionId),str(packet.targetId),packet.state.duplicate(true),packet.result)
+		if version!=battle_version or drain_id!=pvp_drain_id:break
+		pvp_seq=int(packet.seq)
+	if drain_id==pvp_drain_id:pvp_draining=false

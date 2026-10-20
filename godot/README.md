@@ -1,3 +1,5 @@
+> **Alpha 0.13:** [Como jogar PvP, publicar e integrar](PVP.md).
+
 # NEXUS em Godot — Alpha 0.12 / menu, estados e impacto 2D
 
 [Novidades da Alpha 0.12 e capturas reais](POLISH-0.12.md). [Classes, retornos e oficina de gemas](CLASSES.md).

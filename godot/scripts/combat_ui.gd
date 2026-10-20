@@ -58,7 +58,8 @@ static func build(app) -> void:
 	app.log_view.scroll_following = true
 	app.log_view.add_theme_font_size_override("normal_font_size", 15)
 	app.log_dialog.add_child(app.log_view)
-	header.add_child(app._button("Registro", func(): app.log_dialog.popup_centered()))
+	app.log_button = app._button("Registro", func(): app.log_dialog.popup_centered())
+	header.add_child(app.log_button)
 	app.sound_button = app._button("Som: ligado" if app.audio_enabled else "Som: desligado", app._toggle_sound)
 	header.add_child(app.sound_button)
 	app.screen_button = app._button("⛶ Tela", app._show_display)
@@ -130,12 +131,14 @@ static func build(app) -> void:
 	var left = app._label("SUA EQUIPE", 11, Color("93c7e9"))
 	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	arena_header.add_child(left)
+	app.left_team_label=left
 	app.round_label = app._label("", 11, app.GOLD)
 	arena_header.add_child(app.round_label)
 	var right = app._label("EQUIPE RIVAL", 11, Color("dfa1b0"))
 	right.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	right.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	arena_header.add_child(right)
+	app.right_team_label=right
 	app.field = Control.new()
 	app.field.clip_contents = true
 	app.field.custom_minimum_size = Vector2(0, 410)
@@ -251,12 +254,14 @@ static func build(app) -> void:
 	var note = app._label("1–4  Habilidades    ← →  Alvo    Enter  Confirmar    A  Automático    Esc  Menu", 12, app.MUTED)
 	note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	footer.add_child(note)
+	app.controls_note=note
 	var reduce := CheckButton.new()
 	reduce.text = "Reduzir animações"
 	reduce.button_pressed = app.reduced_motion
 	reduce.toggled.connect(app._set_reduced)
 	footer.add_child(reduce)
-	footer.add_child(app._button("Reiniciar", app._ask_restart))
+	app.restart_button=app._button("Reiniciar", app._ask_restart)
+	footer.add_child(app.restart_button)
 	app.start_button = app._button("INICIAR COMBATE", app._start)
 	app.start_button.custom_minimum_size.x = 186
 	app.start_button.add_theme_stylebox_override("normal", app._style(Color("5bdbed"), Color("b9f7ff")))
@@ -279,6 +284,11 @@ static func build(app) -> void:
 	app._build_roster()
 
 static func refresh(app) -> void:
+	app.log_button.text="Registro PvP" if app.pvp_active else "Registro"
+	app.log_dialog.title="Registro desta partida PvP" if app.pvp_active else "Registro da batalha"
+	var own_side: int=int(app.pvp_client.own_player().get("side",-1)) if app.pvp_active else 0
+	app.left_team_label.text=("EQUIPE 1 · SUA EQUIPE" if own_side==0 else "EQUIPE 1 · ADVERSÁRIO") if app.pvp_active else "SUA EQUIPE"
+	app.right_team_label.text=("EQUIPE 2 · SUA EQUIPE" if own_side==1 else "EQUIPE 2 · ADVERSÁRIO") if app.pvp_active else "EQUIPE RIVAL"
 	var actor: Dictionary = app.combat.current(app.state)
 	if actor.is_empty(): return
 	var hero: Dictionary = app.catalog.hero_by_id[actor.heroId]
@@ -286,11 +296,11 @@ static func refresh(app) -> void:
 	var targets: Array = app.combat.legal_targets(app.state, actor, action)
 	var ids: Array = targets.map(func(u): return u.id)
 	if not app.target_id in ids: app.target_id = ids[0] if not ids.is_empty() else ""
-	app.roster_button.disabled = app.campaign_mission >= 0 or app.tutorial_index >= 0 or (app.started and app.state.phase == "playing")
+	app.roster_button.disabled = app.pvp_active or app.campaign_mission >= 0 or app.tutorial_index >= 0 or (app.started and app.state.phase == "playing")
 	app.roster_button.tooltip_text = "Altere seu trio no menu História, entre missões." if app.campaign_mission >= 0 else "Reinicie para alterar as equipes." if app.roster_button.disabled else "Escolha três personagens por equipe."
-	app.mode_picker.visible = app.campaign_mission < 0
-	app.difficulty_picker.visible = app.campaign_mission < 0
-	app.mission_label.visible = app.campaign_mission >= 0
+	app.mode_picker.visible = app.campaign_mission < 0 and not app.pvp_active
+	app.difficulty_picker.visible = app.campaign_mission < 0 and not app.pvp_active
+	app.mission_label.visible = app.campaign_mission >= 0 or app.pvp_active
 	if app.campaign_mission >= 0:
 		app.mission_label.text = "HISTÓRIA\n" + app.Campaign.MISSIONS[app.campaign_mission].name
 		app.mission_label.tooltip_text = app.Campaign.MISSIONS[app.campaign_mission].tip
@@ -300,7 +310,10 @@ static func refresh(app) -> void:
 	app.start_button.visible = not app.started
 	app.phase_label.text = "Prepare sua equipe" if not app.started else ("Batalha encerrada" if app.state.phase == "finished" else "%s · %s" % [hero.name, "sua vez" if app._human_turn() else "vez do rival"])
 	app.auto_button.set_pressed_no_signal(app.auto_play)
-	app.auto_button.disabled = app.tutorial_index >= 0
+	app.auto_button.disabled = app.tutorial_index >= 0 or app.pvp_active
+	app.auto_button.visible=not app.pvp_active
+	app.restart_button.text=("Desistir" if app.state.phase=="playing" else "Preparação PvP") if app.pvp_active else "Reiniciar"
+	app.controls_note.text="1–4  Habilidades    ← →  Alvo    Enter  Confirmar    Esc  Sair" if app.pvp_active else "1–4  Habilidades    ← →  Alvo    Enter  Confirmar    A  Automático    Esc  Menu"
 	if app.started and app.auto_play and actor.side == 0 and app.state.phase == "playing": app.phase_label.text = "%s · automático" % hero.name
 	var fracture: Dictionary = app.combat.rules.fracture
 	app.round_label.text = "RODADA %02d  ·  FRATURA EM %d RODADAS" % [app.state.round, int(fracture.startRound) - app.state.round]
@@ -370,6 +383,11 @@ static func refresh(app) -> void:
 		var pending: Array = goals.filter(func(g): return not app.tutorial_progress.get(g, false))
 		app.step_label.text = "Treino %d · %d/%d objetivos\n%s" % [app.tutorial_index + 1, goals.size() - pending.size(), goals.size(), "Próximo: " + Lessons.LABELS[pending[0]] if not pending.is_empty() else "Concluído! Veja Aprender."]
 		app.step_label.tooltip_text = Lessons.hint(app.tutorial_index, app.tutorial_progress)
+	if app.pvp_active:
+		app.mission_label.text="PvP · SALA "+str(app.pvp_client.room.get("code",""))+" · VOCÊ: EQUIPE "+str(own_side+1)
+		app.mission_label.tooltip_text="Você controla apenas sua equipe. O servidor valida os resultados."
+		if app.pvp_client.pending_action:app.phase_label.text="Enviando ação ao servidor…"
+		elif not app.pvp_client.available() and app.state.phase=="playing":app.phase_label.text="Conexão interrompida · aguardando reconexão"
 	_timeline(app)
 
 static func update_actor_stats(app, actor: Dictionary) -> void:

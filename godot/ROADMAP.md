@@ -1,3 +1,7 @@
+## Alpha 0.13 · PvP experimental
+
+Salas online por convite, preparação com gemas livres e três engastes por herói, servidor autoritativo, registros próprios, painel administrativo e exportação Web. [Publicação e integração](PVP.md). Ranking, contas e login do A Lei do Trono continuam como próximos passos.
+
 # Estado atual — Alpha 0.12
 
 Menu inicial com jornada e trio, estados com ícones próprios e inspeção acessível, impactos pintados e áudio em camadas. [O que mudou](POLISH-0.12.md). A próxima etapa de progressão tem [uma proposta para discussão](PROGRESSION.md), equilibrando campanha/domínio e equipamentos/gemas. As regras de combate continuam em 0.11.0.

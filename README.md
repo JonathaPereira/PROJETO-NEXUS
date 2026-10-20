@@ -1,3 +1,5 @@
+> **Alpha 0.13:** [PvP online, publicação e integração ao A Lei do Trono](godot/PVP.md).
+
 # NEXUS — Ecos do Crepúsculo
 
 Protótipo jogável de RPG tático original: equipes de três, cinco afinidades permanentes, turnos por iniciativa e 20 personagens ativos. A referência é a legibilidade do combate de jogos como Marvel Avengers Alliance; universo, personagens, ilustrações, habilidades e identidade visual são próprios.
