@@ -1,3 +1,5 @@
+> **Alpha 0.13:** [PvP online, publicação e integração ao A Lei do Trono](godot/PVP.md).
+
 # NEXUS — Ecos do Crepúsculo
 
 Protótipo jogável de RPG tático original: equipes de três, cinco afinidades permanentes, turnos por iniciativa e 20 personagens ativos. A referência é a legibilidade do combate de jogos como Marvel Avengers Alliance; universo, personagens, ilustrações, habilidades e identidade visual são próprios.
@@ -5,6 +7,8 @@ Protótipo jogável de RPG tático original: equipes de três, cinco afinidades 
 ## Jogar
 
 ### Nova base em Godot
+
+**Alpha 0.12 — menu e impacto 2D:** nova tela inicial com jornada e trio, ícones verdes/vermelhos de estados, impactos pintados, propagação em área e áudio estéreo em camadas. [Guia e capturas reais](godot/POLISH-0.12.md). [Proposta de progressão](godot/PROGRESSION.md).
 
 **Alpha 0.11 — classes e oficina de gemas:** identidades e combos entre classes, habilidades revistas, cinco heróis de volta e inventário com personagem, engastes e transferências. [Guia e capturas desta revisão](godot/CLASSES.md).
 

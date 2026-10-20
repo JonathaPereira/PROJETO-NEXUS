@@ -1,6 +1,7 @@
 extends Control
 ## Presentation only: every amount and applied effect comes from combat receipts.
 ## Use configure_events for complete attack detail; configure keeps the 2D director compatible.
+const StatusStrip = preload("res://scripts/status_strip.gd")
 const RulesText = preload("res://scripts/rules_text.gd")
 const Combat = preload("res://scripts/combat.gd")
 const WIDTH := 236.0
@@ -23,6 +24,7 @@ var critical := false
 var protected := false
 var content_height := 0.0
 var event_details := false
+var compact_area := false
 
 static func _detail(text: String, color := MUTED_COLOR) -> Dictionary:
 	return {"kind": "detail", "text": text, "color": color, "height": 17.0}
@@ -215,15 +217,18 @@ static func describe_events(events: Array) -> Dictionary:
 			result.rows.append(_effect_row(effect, turns))
 	return result
 
-func configure_events(events: Array, name_value: String, capacity := 0, remaining := -1, ability := "") -> void:
+func configure_events(events: Array, name_value: String, capacity := 0, remaining := -1, ability := "", compact := false) -> void:
 	var description := describe_events(events)
 	target_name = name_value
-	action_name = ability
+	compact_area = compact
+	action_name = "" if compact else ability
 	shield_capacity = capacity
 	shield_remaining = int(description.shieldAfter) if int(description.shieldAfter) >= 0 else remaining
 	critical = bool(description.critical)
 	protected = bool(description.protected)
-	rows = description.rows
+	rows = _compact_rows(description.rows) if compact else description.rows
+	if compact:
+		for row in rows: row.height = 26.0 if row.kind == "metric" else 23.0 if row.kind == "status" else 14.0
 	lines = event_lines(events)
 	event_details = true
 	accent = Color("ffd27d") if critical else SHIELD_COLOR if protected else Color("ffb49d")
@@ -260,7 +265,7 @@ func _measure() -> void:
 		content_height = 31.0 + (20.0 if not action_name.is_empty() else 0.0)
 		for row in rows: content_height += float(row.height)
 		if shield_remaining >= 0: content_height += 23.0
-	size = Vector2(WIDTH, maxf(70.0, content_height + 8.0))
+	size = Vector2(206 if compact_area else WIDTH, maxf(70.0, content_height + 8.0))
 	custom_minimum_size = size
 	lifetime = clampf(2.65 + maxf(0.0, float(rows.size() - 3)) * 0.18, 2.65, 4.1)
 	pivot_offset = size * Vector2(0.5, 0.35)
@@ -292,6 +297,9 @@ func _label(text: String, at: Vector2, color: Color, point_size := 12, width := 
 
 func _draw() -> void:
 	if not font: return
+	if compact_area:
+		_draw_compact_area()
+		return
 	var panel := StyleBoxFlat.new()
 	panel.bg_color = Color("071321f5")
 	panel.border_color = Color(accent, 0.60)
@@ -344,3 +352,26 @@ func _track(color: Color) -> StyleBoxFlat:
 	style.bg_color = color
 	style.set_corner_radius_all(3)
 	return style
+
+func _draw_compact_area() -> void:
+	var panel := StyleBoxFlat.new()
+	panel.bg_color = Color("071321f5")
+	panel.border_color = Color(accent,.8)
+	panel.set_border_width_all(1)
+	panel.set_corner_radius_all(7)
+	draw_style_box(panel,Rect2(Vector2.ZERO,size))
+	_label(target_name.to_upper(),Vector2(10,19),accent,11,115 if critical else size.x-20)
+	if critical: _label("CRÍTICO",Vector2(size.x-64,19),Color("ffe29c"),10,60)
+	var y := 31.0
+	for row in rows:
+		var color: Color = row.color
+		if row.kind == "metric":
+			_label(row.value,Vector2(10,y+19),color,23,80)
+			_label(row.text,Vector2(92,y+15),color,9,size.x-100)
+		elif row.kind == "status":
+			draw_texture_rect(StatusStrip.icon(row.effect),Rect2(10,y+1,16,16),false,color)
+			_label(row.text,Vector2(30,y+14),color,10,size.x-70)
+			_label("%dT" % row.turns,Vector2(size.x-30,y+14),color,10,25)
+		else: _label(row.text,Vector2(10,y+11),color,10,size.x-20)
+		y += float(row.height)
+	if shield_remaining >= 0: _label("Escudo restante: %d" % shield_remaining,Vector2(10,size.y-12),SHIELD_COLOR,10,size.x-20)

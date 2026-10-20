@@ -5,6 +5,8 @@ const Ultimate = preload("res://scripts/ultimate_2d.gd")
 const AbilityArt = preload("res://scripts/ability_art.gd")
 const Receipt = preload("res://scripts/damage_receipt.gd")
 const ReceiptLink = preload("res://scripts/receipt_link.gd")
+const Bloom = preload("res://scripts/impact_bloom.gd")
+const AreaWave = preload("res://scripts/area_wave.gd")
 const Echo = preload("res://scripts/attack_echo.gd")
 const PROFILES = {"igneo": "flame_dash", "natural": "verdant_bloom", "tecnico": "ion_cannon", "arcano": "astral_rift", "sombrio": "shadow_step", "lumi": "dawn_lance"}
 var generation := 0
@@ -142,6 +144,20 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 	var direction := -1.0 if actor.artwork.flip_h else 1.0
 	var targets: Array = result.events.filter(func(e): return e.type in ["damage", "heal", "shield", "guard", "support"] and fighters.has(e.target) and not e.get("passive", false) and not e.get("reaction", false) and not e.get("intercepted", false))
 	var primary = fighters[targets[0].target] if not targets.is_empty() else actor
+	var area_wave: Control
+	if action.kind == "aoe" and not support:
+		area_wave = AreaWave.new()
+		area_wave.affinity = hero.classId
+		area_wave.signature = signature
+		area_wave.tint = actor.tint
+		area_wave.z_index = -55
+		for event in targets:
+			var foot: Vector2 = fighters[event.target].foot_position()
+			if not foot in area_wave.destinations: area_wave.destinations.append(foot)
+		effects.add_child(area_wave)
+		transients.append(area_wave)
+	var audio = owner.get("sound") if owner.get("sound") != null else owner.get("audio")
+	if is_instance_valid(audio): audio.begin_action(hero,action,tier)
 	var origin: Vector2 = actor.hit_position()
 	var ultimate_scene: Control
 	if ultimate:
@@ -213,6 +229,7 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 	impact_count += 1
 	if owner.has_method("_screen_impact"): owner._screen_impact(primary.hit_position(),actor.tint,ultimate)
 	if is_instance_valid(ultimate_scene): ultimate_scene.impact()
+	if is_instance_valid(area_wave): area_wave.impact()
 	actor.visual_root.modulate.a = 1.0
 	for fighter in fighters.values():
 		spatial_body_bounds.append(Rect2(fighter.foot_position()-Vector2(fighter.artwork.size.x*fighter.depth*.5,fighter.artwork.size.y*fighter.depth),fighter.artwork.size*fighter.depth))
@@ -231,13 +248,23 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 		if event.get("absorbed", 0) > 0: impact_kind = "shieldBreak" if event.shieldAfter == 0 else "shieldHit"
 		_effect(effects, actor.hit_position(), target.hit_position(), art_hero, impact_kind, "impact", ultimate, 0.94 if ultimate else 0.74, tier)
 		target.material_fx.set_shader_parameter("flash_color", Color("a5efc2") if event.type == "heal" else Color("a2dcff") if event.get("absorbed", 0) > 0 else Color.WHITE)
-		target.material_fx.set_shader_parameter("flash", 0.72)
+		target.material_fx.set_shader_parameter("flash", 0.88 if event.type == "damage" else 0.55)
+		if (event.type == "damage" or (event.type == "heal" and signature == "runes" and not event.get("passive",false))) and not event.get("reaction",false) and not event.get("intercepted",false):
+			var bloom := Bloom.new()
+			bloom.element = Bloom.element_for(hero)
+			bloom.extent = 275 if ultimate else 220 if tier == "skill" else 140
+			bloom.critical = event.get("critical",false)
+			bloom.position = target.hit_position()
+			bloom.z_index = -12
+			effects.add_child(bloom)
+			transients.append(bloom)
 		if event.type == "damage" and target != actor:
 			reactions[event.target] = target
 			target.reaction_until = Time.get_ticks_msec() + int((timing.hold + 0.60) * 1000)
+			_recoil(owner,target,direction,timing.hold,1.35 if ultimate or event.get("critical",false) else 1.0)
 	for id in receivers:
 		var target = fighters[id]
-		_number(owner, effects, target.hit_position() + Vector2(-94, -57), {"events": receivers[id], "actionName": action.name}, target, fighters)
+		_number(owner, effects, target.hit_position() + Vector2(-94, -57), {"events": receivers[id], "actionName": action.name, "compactArea": action.kind in ["aoe","healAll","shieldAll","supportAll"]}, target, fighters)
 	await owner.get_tree().create_timer(timing.hold).timeout
 	if not _valid(version, actor): return false
 	for id in receivers:
@@ -245,7 +272,6 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 		var flash := _tween(owner)
 		flash.tween_method(func(v):
 			if is_instance_valid(target): target.material_fx.set_shader_parameter("flash", v), 0.72, 0.0, 0.28)
-	for target in reactions.values(): _recoil(owner, target, direction)
 	actor.set_pose(3)
 	var recover := _tween(owner).set_parallel(true)
 	var return_time: float = timing.recover * (0.58 if ultimate else 0.66)
@@ -262,21 +288,22 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 func _valid(version: int, actor) -> bool:
 	return version == generation and is_instance_valid(actor) and not actor.is_queued_for_deletion()
 
-func _recoil(owner: Node, target, direction: float) -> void:
+func _recoil(owner: Node, target, direction: float, hold := .12, strength := 1.0) -> void:
 	var recoil := _tween(owner).set_parallel(true)
 	var target_home := Vector2(93, 257)
 	if target.dead:
-		recoil.tween_property(target.visual_root, "rotation", 0.23 * direction, 0.40)
-		recoil.tween_property(target.visual_root, "position", target_home + Vector2(12 * direction, 12), 0.40)
-		recoil.tween_property(target.visual_root, "modulate:a", 0.36, 0.50)
+		recoil.tween_property(target.visual_root, "rotation", .28*direction,.25)
+		recoil.tween_property(target.visual_root, "position", target_home+Vector2(20*direction,14),.25)
+		recoil.tween_property(target.visual_root, "modulate:a", .25,.5)
 	else:
-		recoil.tween_property(target.visual_root, "rotation", -0.095 * direction, 0.095)
-		recoil.tween_property(target.visual_root, "position", target_home + Vector2(12 * direction, -3), 0.095)
-		recoil.tween_property(target.visual_root, "scale", Vector2(0.95, 1.035) * target.depth, 0.095)
+		recoil.tween_property(target.visual_root,"rotation",-.13*direction*strength,.055)
+		recoil.tween_property(target.visual_root,"position",target_home+Vector2(20*direction,-4)*strength,.055)
+		recoil.tween_property(target.visual_root,"scale",Vector2(.92,1.06)*target.depth,.055)
+		recoil.chain().tween_interval(maxf(.03,hold-.055))
 		recoil.chain().set_parallel(true)
-		recoil.tween_property(target.visual_root, "rotation", 0.0, 0.32).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
-		recoil.tween_property(target.visual_root, "position", target_home, 0.32).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
-		recoil.tween_property(target.visual_root, "scale", Vector2.ONE * target.depth, 0.32)
+		recoil.tween_property(target.visual_root,"rotation",0.0,.28).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
+		recoil.tween_property(target.visual_root,"position",target_home,.28).set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
+		recoil.tween_property(target.visual_root,"scale",Vector2.ONE*target.depth,.28)
 
 func play_ticks(owner: Node, effects: Control, fighters: Dictionary, events: Array, reduced: bool, on_tick: Callable) -> bool:
 	var version := generation
@@ -351,7 +378,7 @@ func _number(_owner: Node, effects: Control, at: Vector2, event: Dictionary, tar
 		if lines.any(func(line): return str(line[0]).contains("ESCUDO") or str(line[0]).contains("Escudo")):
 			remaining = int(target.display_data.get("shield", 0))
 	if event.has("events"):
-		receipt.configure_events(event.events, name_value, capacity, remaining, event.get("actionName", ""))
+		receipt.configure_events(event.events, name_value, capacity, remaining, event.get("actionName", ""), event.get("compactArea", false))
 	elif event.has("type"):
 		receipt.configure_events([event], name_value, capacity, remaining)
 	else:
@@ -383,15 +410,15 @@ func _receipt_position(effects: Control, preferred: Vector2, dimensions: Vector2
 	var top := 62.0 if flat_receipts else 8.0
 	var best := Vector2(clampf(preferred.x, 6, maxf(6, effects.size.x - dimensions.x - 6)), clampf(preferred.y, top, maxf(top, effects.size.y - dimensions.y - 6)))
 	var best_score := INF
-	for y in [preferred.y, preferred.y - dimensions.y - 12, preferred.y + dimensions.y + 12, top, effects.size.y - dimensions.y - 6]:
-		for x in [preferred.x, preferred.x - dimensions.x - 12, preferred.x + dimensions.x + 12, effects.size.x * 0.5 - dimensions.x * 0.5, 202.0, effects.size.x - 202.0 - dimensions.x]:
+	for y in [preferred.y, preferred.y - dimensions.y - 12, preferred.y + dimensions.y + 12, top, top+(effects.size.y-dimensions.y-top)*.33, top+(effects.size.y-dimensions.y-top)*.66, effects.size.y - dimensions.y - 6]:
+		for x in [preferred.x, preferred.x - dimensions.x - 12, preferred.x + dimensions.x + 12, effects.size.x * 0.5 - dimensions.x * 0.5, 224.0, effects.size.x - 224.0 - dimensions.x, effects.size.x*.35, effects.size.x*.65-dimensions.x]:
 			var candidate := Vector2(clampf(x, 6, maxf(6, effects.size.x - dimensions.x - 6)), clampf(y, top, maxf(top, effects.size.y - dimensions.y - 6)))
 			var bounds := Rect2(candidate, dimensions)
 			var score := candidate.distance_to(preferred)
 			for plate in plate_bounds:
 				if bounds.intersects(plate.grow(4)): score += bounds.intersection(plate.grow(4)).get_area() * 1000
 			for previous in receipt_bounds:
-				if bounds.intersects(previous.grow(5)): score += bounds.intersection(previous.grow(5)).get_area() * 40
+				if bounds.intersects(previous.grow(5)): score += bounds.intersection(previous.grow(5)).get_area() * 400
 			for body in spatial_body_bounds:
 				if bounds.intersects(body.grow(8)): score += bounds.intersection(body.grow(8)).get_area() * 60
 			if score < best_score:

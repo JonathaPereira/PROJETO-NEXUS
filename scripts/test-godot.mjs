@@ -70,8 +70,8 @@ const env = { ...process.env,
   XDG_CACHE_HOME: resolve(scratch, "cache"),
 };
 const executable = process.env.GODOT_EXECUTABLE || "godot";
-function run(args, timeout = 240000) {
-  const result = spawnSync(executable, args, { cwd: root, env, encoding: "utf8", timeout, maxBuffer: 4 * 1024 * 1024 });
+function run(args, timeout = 240000, commandEnv = env) {
+  const result = spawnSync(executable, args, { cwd: root, env: commandEnv, encoding: "utf8", timeout, maxBuffer: 4 * 1024 * 1024 });
   const log = (result.stdout || "") + (result.stderr || "");
   if (result.error || result.status !== 0 || /SCRIPT ERROR|Parse Error|ERROR:/i.test(log))
     throw Error(`Godot validation failed: ${result.error?.message || result.status}\n${log}`);
@@ -79,8 +79,9 @@ function run(args, timeout = 240000) {
 }
 console.log("Importando o projeto com Godot…");
 run(["--headless", "--path", "godot", "--editor", "--import", "--quit"]);
-for (const suite of ["damage_receipt", "progression", "two_d", "stage_3d", "vesper"]) {
-  console.log(run(["--headless", "--audio-driver", "Dummy", "--path", "godot", "--script", `res://tests/${suite}.gd`]).trim());
+for (const suite of ["damage_receipt", "progression", "polish_012", "two_d", "stage_3d", "vesper"]) {
+  const suiteEnv={...env,XDG_DATA_HOME:resolve(scratch,suite,"data"),XDG_CONFIG_HOME:resolve(scratch,suite,"config"),XDG_CACHE_HOME:resolve(scratch,suite,"cache")};
+  console.log(run(["--headless", "--audio-driver", "Dummy", "--path", "godot", "--script", `res://tests/${suite}.gd`],240000,suiteEnv).trim());
 }
 console.log("Executando paridade do motor e teste de interface…");
 const log = run(["--headless", "--audio-driver", "Dummy", "--path", "godot", "--script", "res://tests/run.gd", "--", fixturePath, outputPath]);

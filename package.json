@@ -14,12 +14,22 @@
     "test:site": "npm run build && node --test tests/site.mjs",
     "sync:godot": "node scripts/sync-godot.mjs",
     "test:godot": "node scripts/test-godot.mjs",
-    "check": "node --check src/app.js && node --check src/engine.js && node --check src/art.js"
+    "check": "node --check src/app.js && node --check src/engine.js && node --check src/art.js",
+    "pvp:server": "node server/pvp.mjs",
+    "test:pvp": "node --test tests/pvp.test.js",
+    "build:game": "node scripts/export-game.mjs",
+    "test:pvp:godot": "node scripts/test-pvp-godot.mjs",
+    "serve:game": "node scripts/serve-game.mjs",
+    "test:pvp:web": "node scripts/test-pvp-web.mjs"
   },
   "engines": {
     "node": ">=24"
   },
   "devDependencies": {
-    "@playwright/test": "1.64.0"
+    "@playwright/test": "1.64.0",
+    "fflate": "^0.8.3"
+  },
+  "dependencies": {
+    "ws": "^8.22.0"
   }
 }
