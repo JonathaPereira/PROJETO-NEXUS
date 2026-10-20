@@ -403,7 +403,7 @@ func _play_turn(action_id: String, target: String) -> void:
 			tick_stats.shield = event.shieldAfter
 			CombatUI.update_actor_stats(self, tick_stats)
 			step_label.text = "Resolvendo efeitos antes da próxima ação."
-			sound.play_cue(9 if event.type in ["burn", "bleed", "fracture"] else 5)
+			sound.play_cue(9 if event.type in ["burn", "bleed", "darkmark", "fracture"] else 5)
 			CombatUI.show_report(self, [event], "INÍCIO DO TURNO"))
 		if version != battle_version or not ticks_done: return
 	if tutorial_index >= 0: Lessons.observe(tutorial_progress, result, actor.side)
@@ -461,7 +461,7 @@ func _update_log() -> void:
 		var message := ""
 		match entry.type:
 			"action": message = "%s usou %s." % [actor, entry.name]
-			"damage", "heal", "shield", "guard", "burn", "bleed", "fracture", "energy", "status", "support", "converted", "shieldExpired": message = "%s: %s" % [target, CombatUI._plain(CombatUI.event_detail(entry))]
+			"damage", "heal", "shield", "guard", "burn", "bleed", "darkmark", "fracture", "energy", "status", "support", "converted", "shieldExpired": message = "%s: %s" % [target, CombatUI._plain(CombatUI.event_detail(entry))]
 			"defeated": message = "%s foi derrotado." % target
 		if not message.is_empty(): lines.append("[R%d] %s" % [entry.round, message])
 	log_view.text = "\n\n".join(lines) if not lines.is_empty() else "Escolha três personagens para cada equipe.\n\nVocê pode enfrentar a IA ou jogar com outra pessoa neste dispositivo."

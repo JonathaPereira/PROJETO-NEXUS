@@ -5,7 +5,7 @@ const Backdrop = preload("res://scripts/arena_backdrop.gd")
 const Art = preload("res://scripts/ability_art.gd")
 const Combat = preload("res://scripts/combat.gd")
 const CombatUI = preload("res://scripts/combat_ui.gd")
-const HEROES = ["veyra", "rhazen", "cindra", "sylva", "oren", "nima", "axion", "kira", "vektor", "astra", "elun", "saira", "vesper", "maura", "riven"]
+const HEROES = ["veyra", "rhazen", "cindra", "sylva", "oren", "nima", "axion", "kira", "vektor", "astra", "elun", "saira", "vesper", "maura", "riven", "torv", "brin", "bast", "ivo", "noct"]
 const REPRESENTATIVES = ["veyra", "sylva", "axion", "astra", "vesper"]
 var hero_picker: OptionButton
 var catalog
@@ -28,7 +28,7 @@ var preview_state: Dictionary = {}
 var omitted_receipts := 0
 
 func _ready() -> void:
-	title = "Galeria de golpes · todos os 15 personagens"
+	title = "Galeria de golpes · todos os 20 personagens"
 	ok_button_text = "Voltar ao combate"
 	visibility_changed.connect(func():
 		if not visible:

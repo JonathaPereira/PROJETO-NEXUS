@@ -1,4 +1,4 @@
-// BALANCEAMENTO DOS 15 HERÓIS — edite os objetos abaixo.
+// BALANCEAMENTO DOS 20 HERÓIS — edite os objetos abaixo.
 // stats: hp = vida, attack = ataque, defense = defesa, speed = iniciativa.
 // basic / skill / ultimate: nome, tipo, poder, descrição e efeitos de cada golpe.
 // power em dano: 1.55 = 155% do ataque; em cura/escudo: 0.20 = 20% da vida.
@@ -11,7 +11,7 @@ export const KITS = {
   "veyra": {
     "role": "Dano",
     "identity": "Duelista que detona brasas",
-    "synergy": "Cindra ou Rhazen preparam queimadura; Veyra a consome para antecipar dano.",
+    "synergy": "Cindra e Rhazen preparam queimadura; Nima oferece sangramento. Veyra consome uma dessas aberturas para antecipar dano.",
     "stats": {
       "hp": 1080,
       "attack": 251,
@@ -28,9 +28,12 @@ export const KITS = {
       "name": "Dança das brasas",
       "kind": "damage",
       "power": 1.55,
-      "description": "155% do ataque. Contra queimadura: +40% de dano e consome a queimadura.",
+      "description": "155% do ataque. Contra queimadura ou sangramento: +40% e consome apenas uma dessas aflições.",
       "combo": {
-        "status": "burn",
+        "statuses": [
+          "burn",
+          "bleed"
+        ],
         "multiplier": 1.4,
         "consume": true
       }
@@ -45,12 +48,13 @@ export const KITS = {
         "multiplier": 1.3,
         "consume": true
       }
-    }
+    },
+    "specialty": "Detonadora"
   },
   "rhazen": {
     "role": "Tanque",
-    "identity": "Fornalha que atrai e pune ataques",
-    "synergy": "Provoca para proteger a equipe e devolve queimadura, preparando detonadores.",
+    "identity": "Fornalha que pune quem atravessa sua defesa",
+    "synergy": "Reflete parte do dano à vida e devolve queimadura; Veyra e Torv aproveitam as brasas.",
     "stats": {
       "hp": 1390,
       "attack": 180,
@@ -72,9 +76,9 @@ export const KITS = {
       "name": "Coração de ferro",
       "kind": "shield",
       "power": 0.16,
-      "description": "Escudo de 16% em si. Provoca ataques individuais e queima quem o atingir por 2 turnos.",
+      "description": "Escudo próprio de 16%, Espelho e Brasa reativa por 2 turnos. Reflete 30% do dano à vida (10% ígneo +20% do Espelho) e queima quem o atingir.",
       "self": true,
-      "effect": "taunt",
+      "effect": "mirror",
       "extraEffect": "emberguard"
     },
     "ultimate": {
@@ -88,7 +92,8 @@ export const KITS = {
         "target": "actor",
         "power": 0.08
       }
-    }
+    },
+    "specialty": "Retaliação ígnea"
   },
   "cindra": {
     "role": "Suporte",
@@ -125,7 +130,8 @@ export const KITS = {
         "target": "allies",
         "amount": 20
       }
-    }
+    },
+    "specialty": "Artilharia de apoio"
   },
   "oren": {
     "role": "Tanque",
@@ -157,7 +163,8 @@ export const KITS = {
       "power": 0.1,
       "description": "Escudo de 10% e regeneração para todos os aliados por 2 turnos.",
       "effect": "regen"
-    }
+    },
+    "specialty": "Guardião de raízes"
   },
   "sylva": {
     "role": "Suporte",
@@ -189,7 +196,8 @@ export const KITS = {
       "power": 0.22,
       "description": "Cura 22% da vida máxima da equipe; depois remove todos os efeitos negativos.",
       "effect": "cleanse"
-    }
+    },
+    "specialty": "Cura por agressão"
   },
   "nima": {
     "role": "Dano",
@@ -226,7 +234,8 @@ export const KITS = {
       "power": 1.65,
       "description": "165% do ataque em área e sangramento por 2 turnos.",
       "effect": "bleed"
-    }
+    },
+    "specialty": "Caçadora de feridas"
   },
   "axion": {
     "role": "Tanque",
@@ -249,21 +258,24 @@ export const KITS = {
       "name": "Campo de contenção",
       "kind": "shieldAll",
       "power": 0.08,
-      "description": "Escudo de 8% para a equipe e Fortificação: recebe 15% menos dano por 2 turnos.",
-      "effect": "fortify"
+      "description": "Escudo de 8%, Fortificação (−15% dano) e Sentinela para a equipe por 2 turnos. Um agressor direto recebe ataque −20% após o golpe.",
+      "effect": "fortify",
+      "extraEffect": "sentinel"
     },
     "ultimate": {
       "name": "Protocolo zero",
       "kind": "shieldAll",
       "power": 0.16,
-      "description": "Escudo de 16%, Fortificação por 2 turnos e +10 de energia para cada aliado.",
+      "description": "Escudo de 16%, Fortificação e Sentinela por 2 turnos; +10 de energia para cada aliado. Sentinela enfraquece o agressor após o golpe.",
       "effect": "fortify",
       "secondary": {
         "kind": "energy",
         "target": "allies",
         "amount": 10
-      }
-    }
+      },
+      "extraEffect": "sentinel"
+    },
+    "specialty": "Supressão defensiva"
   },
   "vektor": {
     "role": "Suporte",
@@ -286,26 +298,28 @@ export const KITS = {
       "name": "Drone de manutenção",
       "kind": "support",
       "power": 0,
-      "description": "Remove efeitos negativos de um aliado e entrega até 30 de energia.",
+      "description": "Purifica um aliado, concede ataque +20% por 2 turnos e entrega até 30 de energia.",
       "effect": "cleanse",
       "secondary": {
         "kind": "energy",
         "target": "target",
         "amount": 30
-      }
+      },
+      "extraEffect": "empower"
     },
     "ultimate": {
       "name": "Rede de cobalto",
-      "kind": "supportAll",
-      "power": 0,
-      "description": "Regeneração por 2 turnos e até +20 de energia para toda a equipe.",
-      "effect": "regen",
+      "kind": "shieldAll",
+      "power": 0.1,
+      "effect": "empower",
+      "description": "Escudo de 10% e ataque +20% para a equipe por 2 turnos. Entrega até 20 de energia por aliado.",
       "secondary": {
         "kind": "energy",
         "target": "allies",
         "amount": 20
       }
-    }
+    },
+    "specialty": "Engenheiro de energia"
   },
   "kira": {
     "role": "Dano",
@@ -341,12 +355,13 @@ export const KITS = {
       "power": 2.8,
       "description": "280% do ataque em um alvo; metade do dano atravessa escudos.",
       "pierce": 0.5
-    }
+    },
+    "specialty": "Atiradora perfurante"
   },
   "elun": {
     "role": "Tanque",
     "identity": "Espelho que transforma defesa em ataque",
-    "synergy": "Recebe escudos da equipe para fortalecer o supremo; o Espelho pune dano à vida.",
+    "synergy": "Protege um aliado com escudo, Espelho e Égide. Escudos recebidos de outros aliados abastecem seu supremo.",
     "stats": {
       "hp": 1340,
       "attack": 183,
@@ -364,18 +379,24 @@ export const KITS = {
       "name": "Trama impossível",
       "kind": "shield",
       "power": 0.18,
-      "description": "Escudo próprio de 18% e Espelho por 2 turnos: devolve 20% do dano sofrido à vida.",
-      "self": true,
-      "effect": "mirror"
+      "description": "Escudo de 18% em um aliado, Espelho (reflete 20% do dano à vida) e Égide elemental por 2 turnos: −20% do dano direto que tenha vantagem de afinidade.",
+      "effect": "mirror",
+      "extraEffect": "elementalWard"
     },
     "ultimate": {
       "name": "Paradoxo",
       "kind": "aoe",
       "power": 1,
-      "description": "100% do ataque em área, mais 45% do escudo armazenado. Consome o escudo e expõe a defesa por 2 turnos.",
+      "description": "100% do ataque em área, mais 45% do escudo armazenado. Consome o escudo e expõe a defesa por 2 turnos. Concede escudo de 8% à equipe após a conversão.",
       "shieldScale": 0.45,
-      "effect": "expose"
-    }
+      "effect": "expose",
+      "secondary": {
+        "kind": "shield",
+        "target": "allies",
+        "power": 0.08
+      }
+    },
+    "specialty": "Espelho elemental"
   },
   "saira": {
     "role": "Suporte",
@@ -405,9 +426,10 @@ export const KITS = {
       "name": "Coro das constelações",
       "kind": "healAll",
       "power": 0.22,
-      "description": "Cura 22% da vida máxima e concede ataque +20% por 2 turnos para a equipe.",
-      "effect": "empower"
-    }
+      "description": "Cura 22% da vida da equipe e concede Égide elemental por 2 turnos: −20% do dano direto com vantagem de afinidade.",
+      "effect": "elementalWard"
+    },
+    "specialty": "Amparo elemental"
   },
   "astra": {
     "role": "Dano",
@@ -442,7 +464,8 @@ export const KITS = {
         "multiplier": 1.3,
         "consume": false
       }
-    }
+    },
+    "specialty": "Explosão em área"
   },
   "vesper": {
     "role": "Tanque",
@@ -465,10 +488,11 @@ export const KITS = {
       "name": "Guarda do eclipse",
       "kind": "shield",
       "power": 0.14,
-      "description": "Escudo próprio de 14%, Provocação e Riposta por 2 turnos. Ao ser atingido, contra-ataca com 40% do ataque.",
+      "description": "Escudo próprio de 14%. Provocação e Riposta até o fim da próxima ação de Vesper (1 turno pessoal): atrai golpes individuais e responde com 30% do ataque. Área continua atingindo todos.",
       "self": true,
       "effect": "taunt",
-      "extraEffect": "riposte"
+      "extraEffect": "riposte",
+      "duration": 1
     },
     "ultimate": {
       "name": "Eclipse absoluto",
@@ -481,12 +505,13 @@ export const KITS = {
         "target": "actor",
         "power": 0.08
       }
-    }
+    },
+    "specialty": "Provocador de duelo"
   },
   "maura": {
     "role": "Suporte",
     "identity": "Tecelã que transforma feridas em sustento",
-    "synergy": "Riven ou Nima aplicam sangramento; Maura aproveita a ferida para curar mais o aliado mais ferido.",
+    "synergy": "Nima abre sangramento e Noct aplica marcas; qualquer uma dessas aflições aumenta a cura do Pacto.",
     "stats": {
       "hp": 1190,
       "attack": 188,
@@ -497,21 +522,24 @@ export const KITS = {
       "name": "",
       "kind": "damage",
       "power": 0.7,
-      "description": "70% do ataque e ataque inimigo −20% por 2 turnos. Recupera 24 de energia.",
-      "effect": "weaken"
+      "description": "70% do ataque e Marca obscura por 2 turnos: 3,5% da vida por ativação; o autor recupera 60% do dano periódico real. Recupera 24 de energia.",
+      "effect": "darkmark"
     },
     "skill": {
       "name": "Pacto silencioso",
       "kind": "damage",
       "power": 0.9,
-      "description": "90% do ataque e enfraquecimento por 2 turnos. Cura o aliado mais ferido em 14%; contra sangramento, cura 21%.",
+      "description": "90% do ataque e enfraquecimento por 2 turnos. Cura o aliado mais ferido em 14%; contra sangramento ou marca obscura, cura 21%.",
       "effect": "weaken",
       "secondary": {
         "kind": "heal",
         "target": "lowestAlly",
         "power": 0.14,
-        "whenStatus": "bleed",
-        "multiplier": 1.5
+        "multiplier": 1.5,
+        "whenStatuses": [
+          "bleed",
+          "darkmark"
+        ]
       }
     },
     "ultimate": {
@@ -525,7 +553,8 @@ export const KITS = {
         "target": "allies",
         "amount": 20
       }
-    }
+    },
+    "specialty": "Drenagem vital"
   },
   "riven": {
     "role": "Dano",
@@ -567,14 +596,209 @@ export const KITS = {
         "multiplier": 1.25,
         "consume": true
       }
-    }
+    },
+    "specialty": "Duelista de feridas"
+  },
+  "torv": {
+    "role": "Dano",
+    "identity": "Demolidor que procura golpes críticos",
+    "synergy": "Queimadura de Cindra ou Rhazen abre sua janela de crítico; Exposição de aliados facilita a ruptura.",
+    "stats": {
+      "hp": 1130,
+      "attack": 235,
+      "defense": 86,
+      "speed": 88
+    },
+    "basic": {
+      "name": "Punho de magma",
+      "kind": "damage",
+      "power": 0.9,
+      "description": "90% do ataque e queimadura por 2 turnos. Recupera 24 de energia.",
+      "effect": "burn"
+    },
+    "skill": {
+      "name": "Ponto de fusão",
+      "kind": "damage",
+      "power": 1.4,
+      "description": "140% do ataque, +35 pontos de chance crítica. Contra queimadura: +15% de dano, sem consumir.",
+      "criticalChance": 0.35,
+      "combo": {
+        "status": "burn",
+        "multiplier": 1.15,
+        "consume": false
+      }
+    },
+    "ultimate": {
+      "name": "Ruptura vulcânica",
+      "kind": "damage",
+      "power": 2.35,
+      "description": "235% do ataque em um alvo, +25 pontos de chance crítica e defesa exposta por 2 turnos.",
+      "criticalChance": 0.25,
+      "effect": "expose"
+    },
+    "specialty": "Demolidor crítico"
+  },
+  "brin": {
+    "role": "Suporte",
+    "identity": "Oráculo que limpa feridas persistentes",
+    "synergy": "Purifica sangramento e marcas; a Semente deixa a cura chegar também aos atacantes de outras classes.",
+    "stats": {
+      "hp": 1140,
+      "attack": 177,
+      "defense": 98,
+      "speed": 99
+    },
+    "basic": {
+      "name": "Orbe de seiva",
+      "kind": "damage",
+      "power": 0.65,
+      "description": "65% do ataque e Semente por 2 turnos. O próximo atacante se cura em 10% da própria vida máxima. Recupera 24 de energia.",
+      "effect": "seed"
+    },
+    "skill": {
+      "name": "Sopro verdejante",
+      "kind": "heal",
+      "power": 0.18,
+      "effect": "cleanse",
+      "cooldown": 1,
+      "description": "Cura 18% da vida de um aliado e depois purifica efeitos negativos. Recarga de 1 ação."
+    },
+    "ultimate": {
+      "name": "Canção do mundo",
+      "kind": "healAll",
+      "power": 0.2,
+      "effect": "regen",
+      "description": "Cura 20% da vida da equipe e concede regeneração por 2 turnos."
+    },
+    "specialty": "Purificador"
+  },
+  "bast": {
+    "role": "Tanque",
+    "identity": "Muralha que intercepta por um aliado",
+    "synergy": "Divide o golpe individual recebido pelo aliado protegido; barreiras de outros técnicos ajudam Bast a suportar essa carga.",
+    "stats": {
+      "hp": 1450,
+      "attack": 170,
+      "defense": 126,
+      "speed": 63
+    },
+    "basic": {
+      "name": "Impacto hidráulico",
+      "kind": "damage",
+      "power": 0.75,
+      "description": "75% do ataque e ataque inimigo −20% por 2 turnos. Recupera 24 de energia.",
+      "effect": "weaken"
+    },
+    "skill": {
+      "name": "Linha de interceptação",
+      "kind": "shield",
+      "power": 0.18,
+      "effect": "cover",
+      "description": "Escudo de 18% em um aliado. Bast recebe 25% de seus golpes individuais por 2 turnos; golpes em área atingem normalmente. O aliado recebe 15% menos dano por 2 turnos.",
+      "extraEffect": "fortify"
+    },
+    "ultimate": {
+      "name": "Bastião magnético",
+      "kind": "shieldAll",
+      "power": 0.14,
+      "effect": "fortify",
+      "description": "Escudo de 14% e redução de dano de 15% para a equipe por 2 turnos."
+    },
+    "specialty": "Interceptador"
+  },
+  "ivo": {
+    "role": "Dano",
+    "identity": "Peregrino que espalha aflições existentes",
+    "synergy": "Transmite uma queimadura, sangramento ou marca obscura já aplicada, mantendo a duração restante e a origem da marca.",
+    "stats": {
+      "hp": 1070,
+      "attack": 241,
+      "defense": 78,
+      "speed": 110
+    },
+    "basic": {
+      "name": "Dardo de fenda",
+      "kind": "damage",
+      "power": 0.8,
+      "description": "80% do ataque e defesa exposta por 2 turnos. Recupera 24 de energia.",
+      "effect": "expose"
+    },
+    "skill": {
+      "name": "Eco entre mundos",
+      "kind": "damage",
+      "power": 1.15,
+      "description": "115% do ataque. Copia uma queimadura, sangramento ou marca do alvo para outro inimigo vivo, com a duração restante. Não cria nem acumula aflições.",
+      "spread": true
+    },
+    "ultimate": {
+      "name": "Horizonte quebrado",
+      "kind": "aoe",
+      "power": 1.5,
+      "effect": "weaken",
+      "description": "150% do ataque em área e ataque inimigo −20% por 2 turnos. Concede escudo de 6% à equipe.",
+      "secondary": {
+        "kind": "shield",
+        "target": "allies",
+        "power": 0.06
+      }
+    },
+    "specialty": "Manipulador de aflições"
+  },
+  "noct": {
+    "role": "Dano",
+    "identity": "Vigia que executa uma presa marcada",
+    "synergy": "Maura prepara marcas, Nima fornece sangramento e Ivo espalha a aflição. Noct converte uma dessas aberturas em dano concentrado.",
+    "stats": {
+      "hp": 1140,
+      "attack": 240,
+      "defense": 88,
+      "speed": 82
+    },
+    "basic": {
+      "name": "Garra noturna",
+      "kind": "damage",
+      "power": 0.8,
+      "description": "80% do ataque e Marca obscura por 2 turnos: drena 3,5% da vida por ativação; o autor recupera 60% do dano periódico real. Recupera 24 de energia.",
+      "effect": "darkmark"
+    },
+    "skill": {
+      "name": "Cobrança do vazio",
+      "kind": "damage",
+      "power": 1.45,
+      "description": "145% do ataque. Contra marca obscura ou sangramento: +25%, consumindo apenas uma dessas aflições.",
+      "combo": {
+        "statuses": [
+          "darkmark",
+          "bleed"
+        ],
+        "multiplier": 1.25,
+        "consume": true
+      }
+    },
+    "ultimate": {
+      "name": "Noite sem fim",
+      "kind": "damage",
+      "power": 2.4,
+      "description": "240% do ataque em uma presa. Contra marca ou sangramento: +20%. Abaixo de 35% da vida: mais +20%.",
+      "combo": {
+        "statuses": [
+          "darkmark",
+          "bleed"
+        ],
+        "multiplier": 1.2,
+        "consume": false
+      },
+      "executeThreshold": 0.35,
+      "executeMultiplier": 1.2
+    },
+    "specialty": "Executor de marcas"
   }
 };
 
 export function applyKit(hero) {
   const kit = KITS[hero.id];
   const {hp,attack,defense,speed} = kit.stats;
-  const result = { ...hero, role:kit.role, identity:kit.identity, synergy:kit.synergy, hp,attack,defense,speed };
+  const result = { ...hero, role:kit.role, identity:kit.identity, synergy:kit.synergy, specialty:kit.specialty, hp,attack,defense,speed };
   for (const id of ['basic','skill','ultimate']) result[id] = {...hero[id], effect:undefined, ...kit[id], name:kit[id].name || hero[id].name};
   for (const id of ['basic','skill','ultimate']) {
     const a = result[id];

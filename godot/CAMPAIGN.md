@@ -1,6 +1,6 @@
 # A jornada do Farol — três capítulos
 
-A Alpha 0.10 oferece **nove batalhas em três capítulos**, com introdução, tática, desfecho e recompensa por primeira vitória. O Farol perdeu suas cinco ressonâncias; o trio precisa libertar o guardião, recuperar as memórias levadas pela maré e interromper a extração da Última Fornalha.
+A Alpha 0.11 mantém **nove batalhas em três capítulos**, com introdução, tática, desfecho e recompensa por primeira vitória. O Farol perdeu suas cinco ressonâncias; o trio precisa libertar o guardião, recuperar as memórias levadas pela maré e interromper a extração da Última Fornalha.
 
 ## Como jogar
 
@@ -56,3 +56,7 @@ Combate livre, duelo local, treinos e laboratório usam atributos base e não re
 ## Próximas decisões
 
 Medir dificuldade, variedade de estratégias e impacto dos três engastes antes de expandir o sistema. Os parâmetros ficam em `scripts/campaign.gd`; o [guia de balanceamento](BALANCING.md) explica a separação entre progressão e combate base. O [relatório de simulações](SIMULATIONS.md) usa heróis sem gemas, não mede a dificuldade da campanha. Treinamento de skills, gemas com efeitos especiais, expansões futuras e integração com A Lei do Trono continuam para as próximas etapas.
+
+## Oficina da Alpha 0.11
+
+O painel de **Coleção → Engastes e gemas** mostra personagem, atributos e inventário lado a lado. Escolha um espaço, equipe uma cópia livre, remova por **×**, use **Desengastar tudo** ou transfira uma cópia do dono escolhido com **Trazer**. **Preencher vazios por função** prioriza ataque para dano, vida para tanques e energia para suportes, preservando cópias equipadas e usando alternativas livres quando necessário. As edições são gratuitas e atômicas, com restauração do inventário caso o salvamento falhe. [Guia visual](CLASSES.md).

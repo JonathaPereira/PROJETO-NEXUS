@@ -151,7 +151,7 @@ function render() {
   const canAct = started && !busy && battle.phase === "playing" && human();
   root.innerHTML = `
  <header class="topbar"><a class="brand" href="./" aria-label="Nexus, início">${crest()}<span>NEXUS<small>ECOS DO CREPÚSCULO</small></span></a>
-  <nav aria-label="Navegação principal"><button class="nav-link active" data-act="battle">${icon("swords")}<span>Batalha</span></button><button class="nav-link" data-act="roster">${icon("people")}<span>Personagens</span><b>15</b></button><button class="nav-link" data-act="classes">${icon("diamond")}<span>Afinidades</span></button></nav>
+  <nav aria-label="Navegação principal"><button class="nav-link active" data-act="battle">${icon("swords")}<span>Batalha</span></button><button class="nav-link" data-act="roster">${icon("people")}<span>Personagens</span><b>${HEROES.length}</b></button><button class="nav-link" data-act="classes">${icon("diamond")}<span>Afinidades</span></button></nav>
   <div class="top-tools"><span class="prototype"><i></i> VERSÃO ALPHA <b>0.1</b></span><button class="icon-button" data-act="sound" aria-label="${sound ? "Desativar" : "Ativar"} som" title="${sound ? "Desativar" : "Ativar"} som">${icon(sound ? "volume" : "muted")}</button><button class="icon-button" data-act="help" aria-label="Como jogar" title="Como jogar">${icon("help")}</button></div>
  </header>
  <main class="main-shell">
@@ -205,7 +205,7 @@ function render() {
     <section class="tip-card"><span class="eyebrow">UM PASSO À FRENTE</span>${icon("spark")}<h3>Conheça seu rival.</h3><p>Uma afinidade favorável pode virar uma batalha. Planeje além do próximo golpe.</p><button class="text-button" data-act="help">Guia de combate ${icon("arrow")}</button></section>
    </aside>
   </div>
-  <footer class="page-footer"><span>${crest()} UM UNIVERSO ORIGINAL. SUA PRÓXIMA HISTÓRIA.</span><span>15 heróis disponíveis <i>·</i> Sem progressão ou obtenção definidas</span><button class="text-button" data-act="restart">${icon("reset")} ${started ? "Reiniciar combate" : "Nova preparação"}</button></footer>
+  <footer class="page-footer"><span>${crest()} UM UNIVERSO ORIGINAL. SUA PRÓXIMA HISTÓRIA.</span><span>20 heróis disponíveis <i>·</i> Sem progressão ou obtenção definidas</span><button class="text-button" data-act="restart">${icon("reset")} ${started ? "Reiniciar combate" : "Nova preparação"}</button></footer>
  </main>`;
   const log = $("#combat-log");
   if (log) log.scrollTop = log.scrollHeight;
@@ -230,7 +230,7 @@ function fighter(u, actor, canAct) {
 function abilityButton(actor, id, i, canAct) {
   const a = getAction(actor, id),
     h = HERO_BY_ID[actor.heroId],
-    available = canUse(actor, id);
+    available = canUse(actor, id) && legalTargets(battle,actor,a).length > 0;
   let reason =
     actor.cooldowns[id] > 0
       ? `${actor.cooldowns[id]} turno(s) de recarga`
@@ -276,7 +276,7 @@ function logEntry(e) {
             ? `<strong>${target}</strong> recebeu uma barreira.`
             : e.type === "defeated"
               ? `<strong>${target}</strong> deixou o combate.`
-              : e.type === "burn" || e.type === "bleed"
+              : ["burn","bleed","darkmark"].includes(e.type)
                 ? `${STATUS_LABELS[e.type]} causou <b>${e.amount}</b> de dano a <strong>${target}</strong>.`
                 : "";
   return `<div class="log-message ${e.type}"><span class="log-mark">${icon(e.type === "action" ? "swords" : e.type === "heal" ? "leaf" : e.type === "defeated" ? "skull" : e.type === "burn" ? "flame" : e.type === "shield" || e.type === "guard" ? "shield" : "bolt")}</span><p>${message}<time>RODADA ${String(e.round).padStart(2, "0")}</time></p></div>`;
@@ -457,7 +457,7 @@ function renderDialog() {
         "Toda lenda começa aqui.",
         "Combate por turnos, escolhas com consequências e uma equipe inteiramente sua.",
       ) +
-      `<div class="help-grid"><article><span>01</span>${icon("people")}<h3>Forme seu trio</h3><p>Escolha 3 dos 15 heróis. Combine atacantes, guardiões e suportes. Todos estão disponíveis neste protótipo.</p></article><article><span>02</span>${icon("reset")}<h3>Leia a iniciativa</h3><p>A velocidade define a ordem de cada rodada. Cada herói vivo realiza uma ação. Vença ao derrotar os três rivais.</p></article><article><span>03</span>${icon("bolt")}<h3>Gerencie a energia</h3><p>Todos começam com 40 de energia. Ataques recuperam 24; defesa, 25. Técnicas custam 30 e supremas, 80.</p></article><article><span>04</span>${icon("target")}<h3>Escolha seu alvo</h3><p>Selecione uma ação, clique no herói ou no seu nome no painel e confirme em “Usar em”. Curas e barreiras escolhem aliados.</p></article></div><div class="help-extra"><div><h3>Mais do que dano</h3><p>Queimadura e sangramento tiram 6,5% da vida máxima por turno; sangramento também reduz toda cura recebida em 35%. Regeneração cura 4%. Exposição reduz a defesa em 25%; enfraquecimento reduz o ataque em 20%. Efeitos duram 2 turnos do alvo. Sombrio rouba 15% do dano causado. Arcano ignora 25% da defesa.</p><p>Defesa reduz o dano recebido em 35% até seu próximo turno. Escudos não somam: conserva o maior, até 25% da vida máxima, por 2 ações do protegido. Técnicas recarregam por 2 turnos pessoais. A partir da rodada 12, a Fratura do Nexus causa dano direto antes do turno de cada herói: 4% da vida máxima, mais 2,5 pontos percentuais por rodada, até 85%. Barreiras não absorvem esse desgaste. Fratura também reduz toda cura: −10% na rodada 12, −20% na 13, até −100% na 21. Multiplica a redução de sangramento. Curas com purificação curam antes de remover os efeitos. Críticos têm 10% de chance e causam +40% de dano.</p></div><div><h3>No seu ritmo</h3><label class="setting-toggle"><input type="checkbox" id="motion-setting" ${reduced ? "checked" : ""}> Reduzir animações</label><label class="setting-toggle"><input type="checkbox" id="sound-setting" ${sound ? "checked" : ""}> Efeitos sonoros</label><p><kbd>1</kbd>–<kbd>4</kbd> escolher ação<br><kbd>←</kbd> <kbd>→</kbd> alternar alvo<br><kbd>Enter</kbd> confirmar ação<br><kbd>Esc</kbd> fechar painel</p></div></div><button class="gold-button help-start" data-act="close">Entendi. Vamos ao combate. ${icon("arrow")}</button>`;
+      `<div class="help-grid"><article><span>01</span>${icon("people")}<h3>Forme seu trio</h3><p>Escolha 3 dos 20 heróis. Combine atacantes, guardiões e suportes. Todos estão disponíveis neste protótipo.</p></article><article><span>02</span>${icon("reset")}<h3>Leia a iniciativa</h3><p>A velocidade define a ordem de cada rodada. Cada herói vivo realiza uma ação. Vença ao derrotar os três rivais.</p></article><article><span>03</span>${icon("bolt")}<h3>Gerencie a energia</h3><p>Todos começam com 40 de energia. Ataques recuperam 24; defesa, 25. Técnicas custam 30 e supremas, 80.</p></article><article><span>04</span>${icon("target")}<h3>Escolha seu alvo</h3><p>Selecione uma ação, clique no herói ou no seu nome no painel e confirme em “Usar em”. Curas e barreiras escolhem aliados.</p></article></div><div class="help-extra"><div><h3>Mais do que dano</h3><p>Queimadura e sangramento tiram 6,5% da vida máxima por turno; sangramento também reduz toda cura recebida em 35%. Regeneração cura 4%. Exposição reduz a defesa em 25%; enfraquecimento reduz o ataque em 20%. Efeitos duram 2 turnos do alvo, exceto a Provocação e Riposta de Vesper (1 turno). Sombrio rouba 15% do dano causado. Arcano ignora 25% da defesa.</p><p>Defesa reduz o dano recebido em 35% até seu próximo turno. Escudos não somam: conserva o maior, até 25% da vida máxima, por 2 ações do protegido. Técnicas recarregam por 2 turnos pessoais. A partir da rodada 12, a Fratura do Nexus causa dano direto antes do turno de cada herói: 4% da vida máxima, mais 2,5 pontos percentuais por rodada, até 85%. Barreiras não absorvem esse desgaste. Fratura também reduz toda cura: −10% na rodada 12, −20% na 13, até −100% na 21. Multiplica a redução de sangramento. Curas com purificação curam antes de remover os efeitos. Marcas drenam 3,5% da vida por turno e curam seu autor em 60% do dano real. Égide reduz em 20% o dano direto com vantagem. Ígneos têm +5 pontos de chance crítica; tanques e suportes ígneos refletem 10% do dano à vida. Críticos têm 10% de chance base e causam +40% de dano.</p></div><div><h3>No seu ritmo</h3><label class="setting-toggle"><input type="checkbox" id="motion-setting" ${reduced ? "checked" : ""}> Reduzir animações</label><label class="setting-toggle"><input type="checkbox" id="sound-setting" ${sound ? "checked" : ""}> Efeitos sonoros</label><p><kbd>1</kbd>–<kbd>4</kbd> escolher ação<br><kbd>←</kbd> <kbd>→</kbd> alternar alvo<br><kbd>Enter</kbd> confirmar ação<br><kbd>Esc</kbd> fechar painel</p></div></div><button class="gold-button help-start" data-act="close">Entendi. Vamos ao combate. ${icon("arrow")}</button>`;
   if (modal === "mode")
     dialog.innerHTML =
       dialogHeader(
@@ -488,7 +488,7 @@ function rosterDialog() {
     dialogHeader(
       "O PODER ESTÁ NA COMBINAÇÃO",
       "Encontre a sua formação.",
-      "15 kits ativos. Cinco afinidades. Escolha os três heróis da sua próxima batalha.",
+      "20 kits ativos. Cinco afinidades. Escolha os três heróis da sua próxima batalha.",
     ) +
     `
  <div class="formation-bar"><div class="formation-tabs"><button data-roster-side="0" class="${rosterSide === 0 ? "active" : ""}">${smallLabel(0)}</button><button data-roster-side="1" class="${rosterSide === 1 ? "active" : ""}">${smallLabel(1)}</button></div><div class="formation-slots">${Array.from(
@@ -502,7 +502,7 @@ function rosterDialog() {
  ).join(
    "",
  )}</div><b class="formation-count">${draft[rosterSide].length}<span> / 3</span></b></div>
- <div class="roster-content ${detailMobile ? "show-mobile-detail" : ""}"><div class="roster-library"><div class="class-filters" role="group" aria-label="Filtrar personagens por afinidade"><button data-filter="all" class="${filter === "all" ? "selected" : ""}">Todos <b>15</b></button>${CLASSES.map((cl) => `<button data-filter="${cl.id}" class="${filter === cl.id ? "selected" : ""}" style="--affinity:${cl.color}">${classIcon(cl.id)}${cl.name}</button>`).join("")}</div><button class="mobile-detail-open" data-act="mobile-detail">${icon("eye")} Ver ficha de ${h.name} ${icon("arrow")}</button><div class="hero-grid">${HEROES.filter(
+ <div class="roster-content ${detailMobile ? "show-mobile-detail" : ""}"><div class="roster-library"><div class="class-filters" role="group" aria-label="Filtrar personagens por afinidade"><button data-filter="all" class="${filter === "all" ? "selected" : ""}">Todos <b>${HEROES.length}</b></button>${CLASSES.map((cl) => `<button data-filter="${cl.id}" class="${filter === cl.id ? "selected" : ""}" style="--affinity:${cl.color}">${classIcon(cl.id)}${cl.name}</button>`).join("")}</div><button class="mobile-detail-open" data-act="mobile-detail">${icon("eye")} Ver ficha de ${h.name} ${icon("arrow")}</button><div class="hero-grid">${HEROES.filter(
    (hero) => filter === "all" || hero.classId === filter,
  )
    .map((hero) => {
@@ -727,7 +727,7 @@ document.addEventListener("keydown", (e) => {
   if (["1", "2", "3", "4"].includes(e.key)) {
     e.preventDefault();
     const id = ["basic", "skill", "ultimate", "guard"][Number(e.key) - 1];
-    if (canUse(actor, id)) {
+    if (canUse(actor, id) && legalTargets(battle,actor,getAction(actor,id)).length) {
       actionId = id;
       targetId = null;
       render();

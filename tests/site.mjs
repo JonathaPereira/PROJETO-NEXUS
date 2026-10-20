@@ -73,7 +73,7 @@ async function open(viewport) {
   await expect(page.locator(".fighter")).toHaveCount(6);
   return { context, page };
 }
-test("static project site loads its artwork and fonts, all 15 heroes, and a player/AI turn", { timeout: 30000 }, async () => {
+test("static project site loads its artwork and fonts, all 20 heroes, and a player/AI turn", { timeout: 30000 }, async () => {
   const { context, page } = await open({ width: 1440, height: 1060 });
   try {
     assert.equal(await page.locator(".brand").getAttribute("href"), "./");
@@ -93,7 +93,7 @@ test("static project site loads its artwork and fonts, all 15 heroes, and a play
       assert(requests.has(origin + file), `Loaded separate resource: ${file}`);
     await expect(page.locator(".hero-art image").first()).toHaveAttribute("href", origin + "assets/heroes.png");
     await page.locator('.nav-link[data-act="roster"]').click();
-    await expect(page.locator(".hero-card")).toHaveCount(15);
+    await expect(page.locator(".hero-card")).toHaveCount(20);
     await page.keyboard.press("Escape");
     await page.locator('[data-act="start"]').click();
     await page.locator('[data-unit="1-vesper"]').click();
@@ -113,9 +113,9 @@ test("static project site remains usable on mobile", { timeout: 20000 }, async (
   try {
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth - innerWidth), 0);
     await page.locator('.nav-link[data-act="roster"]').click();
-    await expect(page.locator(".hero-card")).toHaveCount(15);
+    await expect(page.locator(".hero-card")).toHaveCount(20);
     await page.locator('[data-filter="arcano"]').click();
-    await expect(page.locator(".hero-card")).toHaveCount(3);
+    await expect(page.locator(".hero-card")).toHaveCount(4);
     await page.locator(".mobile-detail-open").click();
     await expect(page.locator(".hero-detail .detail-skills")).toBeVisible();
     await page.screenshot({ path: "artifacts/site-mobile.png", fullPage: true });

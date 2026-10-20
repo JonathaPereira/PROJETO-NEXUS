@@ -2,7 +2,7 @@ extends AcceptDialog
 ## Two bounded, independent local datasets: played matches and deterministic AI samples.
 const Combat = preload("res://scripts/combat.gd")
 const SimulationLog = preload("res://scripts/simulation_log.gd")
-const STORE := "user://balance-0.5.json"
+const STORE := "user://balance-0.11.json"
 var catalog
 var source: OptionButton
 var summary: Label
@@ -38,7 +38,7 @@ static func record(state: Dictionary, mode: String, difficulty: String) -> void:
 	persist(data)
 
 func _ready() -> void:
-	title = "Laboratório de balanceamento · Alpha 0.6"
+	title = "Laboratório de balanceamento · Alpha 0.11"
 	ok_button_text = "Voltar"
 	var column := VBoxContainer.new()
 	column.custom_minimum_size = Vector2(1060, 530)
@@ -54,7 +54,7 @@ func _ready() -> void:
 	source.item_selected.connect(func(_i): refresh())
 	toolbar.add_child(source)
 	simulate = Button.new()
-	simulate.text = "Simular 156 partidas"
+	simulate.text = "Simular 216 partidas"
 	simulate.pressed.connect(_simulate)
 	toolbar.add_child(simulate)
 	export_json = Button.new()
@@ -86,7 +86,7 @@ func _ready() -> void:
 		table.set_column_custom_minimum_width(i, 160 if i == 0 else 130 if i == 3 else 80)
 	column.add_child(table)
 	var foot := Label.new()
-	foot.text = "Dano e cura diretos (sem ticks). Valores por aparição, exceto N e vitória. *Escudo efetivamente consumido + dano desviado pelo protetor.\nAmostras separadas: 60 variadas + 96 testes de suporte/tanque, incluindo Saira/Maura/Sylva. Pares espelhados, sementes fixas. Até 500 partidas locais."
+	foot.text = "Dano e cura do kit, incluindo marcas; outros efeitos periódicos ficam fora dos totais. Valores por aparição, exceto N e vitória. *Escudo efetivamente consumido + dano desviado pelo protetor.\nAmostras separadas: 60 variadas + 96 testes de suporte/tanque + 60 com os cinco retornos. Pares espelhados, sementes fixas. Até 500 partidas locais."
 	foot.add_theme_font_size_override("font_size", 12)
 	column.add_child(foot)
 	refresh()
@@ -218,6 +218,14 @@ func _samples() -> Array:
 			var team: Array = ["vesper", "oren", "elun"] if role == "Tanque" else healers
 			for swap in range(2): samples.append({"teams": [team, foe] if swap == 0 else [foe, team], "seed": 331 + pair * 181, "group": "stress-" + role})
 	for seed_value in range(1, 7): samples.append({"teams": [healers, healers], "seed": seed_value * 197, "group": "stress-healing-only", "defensive": true})
+	# Each returning hero is exercised in six mixed trios, with identical seeds on both sides.
+	var returned := ["torv", "brin", "bast", "ivo", "noct"]
+	var partners := [["sylva", "axion"], ["kira", "vesper"], ["astra", "oren"], ["maura", "rhazen"], ["vektor", "nima"], ["saira", "riven"]]
+	for index in range(returned.size()):
+		for pair in range(partners.size()):
+			var team: Array = [returned[index], partners[pair][0], partners[pair][1]]
+			var foe: Array = _sample_teams(index * 6 + pair)[0]
+			for swap in range(2): samples.append({"teams": [team, foe] if swap == 0 else [foe, team], "seed": 911 + index * 199 + pair * 131, "group": "return-" + returned[index]})
 	return samples
 
 func _simulate() -> void:
@@ -246,7 +254,7 @@ func _simulate() -> void:
 	# A live battle may finish while the simulation yields frames. Preserve it.
 	persist(read_records() + data)
 	source.select(1)
-	simulate.text = "Simular 156 partidas"
+	simulate.text = "Simular 216 partidas"
 	simulate.disabled = false
 	running = false
 	refresh()

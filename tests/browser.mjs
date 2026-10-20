@@ -101,7 +101,7 @@ test(
     const { page, context } = await fresh();
     try {
       await page.locator('.nav-link[data-act="roster"]').click();
-      await expect(page.locator(".hero-card")).toHaveCount(15);
+      await expect(page.locator(".hero-card")).toHaveCount(20);
       await expect(page.locator(".hero-card.chosen")).toHaveCount(3);
       for (const id of [
         "igneo",
@@ -111,7 +111,7 @@ test(
         "sombrio",
               ]) {
         await page.locator(`[data-filter="${id}"]`).click();
-        await expect(page.locator(".hero-card")).toHaveCount(3);
+        await expect(page.locator(".hero-card")).toHaveCount(4);
       }
       await page.locator('[data-filter="all"]').click();
       await page.locator('[data-remove="veyra"]').click();
@@ -309,9 +309,9 @@ test(
         fullPage: true,
       });
       await page.locator('.nav-link[data-act="roster"]').click();
-      await expect(page.locator(".hero-card")).toHaveCount(15);
+      await expect(page.locator(".hero-card")).toHaveCount(20);
       await page.locator('[data-filter="arcano"]').click();
-      await expect(page.locator(".hero-card")).toHaveCount(3);
+      await expect(page.locator(".hero-card")).toHaveCount(4);
       await page.locator(".mobile-detail-open").click();
       await expect(page.locator(".hero-detail")).toBeVisible();
       await expect(page.locator(".hero-detail .detail-skills")).toBeVisible();

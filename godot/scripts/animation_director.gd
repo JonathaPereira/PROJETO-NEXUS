@@ -133,7 +133,7 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 	var signature: String = hero.animation
 	var ultimate: bool = tier == "ultimate"
 	var support: bool = action.kind.begins_with("heal") or action.kind.begins_with("shield") or action.kind == "guard" or action.kind.begins_with("support")
-	var melee: bool = not support and signature in ["sweep", "crater", "roots", "prism", "crescent", "daggers"]
+	var melee: bool = not support and signature in ["sweep", "crater", "roots", "prism", "crescent", "daggers", "eruption", "plates", "rift", "claws"]
 	actor.posing = true
 	posed_fighters.append(actor)
 	actor.visual_root.z_index = 30
@@ -162,8 +162,8 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 		transients.append(ultimate_scene)
 	_effect(effects, origin, origin, art_hero, action.kind, "charge", ultimate, timing.charge + 0.06, tier)
 	var anticipate := _tween(owner).set_parallel(true)
-	var heavy: bool = signature in ["crater", "roots", "hex"]
-	var floating: bool = signature in ["orbit", "runes", "threads"]
+	var heavy: bool = signature in ["crater", "roots", "hex", "eruption", "plates", "claws"]
+	var floating: bool = signature in ["orbit", "runes", "threads", "spiral"]
 	anticipate.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
 	anticipate.tween_property(actor.visual_root, "rotation", (-0.10 if heavy else -0.055) * direction, timing.charge)
 	anticipate.tween_method(func(v): actor.material_fx.set_shader_parameter("bend", v), 0.0, -6.0 * direction, timing.charge)
@@ -177,14 +177,14 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 	var strike := _tween(owner).set_parallel(true)
 	strike.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 	if melee:
-		if signature in ["crater", "roots"]:
+		if signature in ["crater", "roots", "eruption"]:
 			strike.tween_method(func(p):
 				actor.visual_root.position = home + contact * p - Vector2(0, sin(p * PI) * (76 if ultimate else 48)), 0.0, 1.0, timing.travel)
 			strike.tween_property(actor.visual_root, "rotation", 0.18 * direction, timing.travel)
 		else:
 			strike.tween_property(actor.visual_root, "position", home + contact, timing.travel)
 			strike.tween_property(actor.visual_root, "rotation", (0.18 if signature == "sweep" else 0.11 if signature == "prism" else -0.06) * direction, timing.travel)
-			if signature in ["crescent", "daggers"]: strike.tween_property(actor.visual_root, "modulate:a", 0.42, timing.travel * 0.65)
+			if signature in ["crescent", "daggers", "rift"]: strike.tween_property(actor.visual_root, "modulate:a", 0.42, timing.travel * 0.65)
 	elif signature in ["volley", "thorns"]:
 		strike.tween_property(actor.visual_root, "rotation", 0.12 * direction, timing.travel * 0.75)
 		strike.tween_property(actor.visual_root, "scale", Vector2(0.95, 1.05) * actor.depth, timing.travel)
@@ -192,7 +192,7 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 	elif signature == "rail":
 		strike.tween_property(actor.visual_root, "position", home + Vector2(-27 * direction, 4), timing.travel * 0.45)
 		strike.tween_property(actor.visual_root, "rotation", -0.095 * direction, timing.travel * 0.45)
-	elif signature in ["orbit", "runes", "drones", "threads"]:
+	elif signature in ["orbit", "runes", "drones", "threads", "spiral"]:
 		strike.tween_property(actor.visual_root, "position", home - Vector2(0, 31 if signature == "orbit" else 20 if signature == "runes" else 12), timing.travel)
 		strike.tween_property(actor.visual_root, "rotation", (-0.045 if signature == "threads" else 0.035) * direction, timing.travel)
 	else:
@@ -327,8 +327,8 @@ static func number_lines(event: Dictionary) -> Array:
 			lines.append(["Escudo total: %d" % event.get("shieldAfter", event.amount), "85dcff", 12])
 		"energy": lines.append(["+%d ENERGIA" % event.amount, "c6b4ff", 18])
 		"support": lines.append(["SUPORTE", "c6b4ff", 15])
-		"burn", "bleed", "fracture":
-			lines.append([{ "burn": "QUEIMADURA", "bleed": "SANGRAMENTO", "fracture": "FRATURA" }[event.type], "ffae88", 14])
+		"burn", "bleed", "darkmark", "fracture":
+			lines.append([{ "darkmark": "MARCA OBSCURA", "burn": "QUEIMADURA", "bleed": "SANGRAMENTO", "fracture": "FRATURA" }[event.type], "ffae88", 14])
 			lines.append(["−%d VIDA" % event.amount, "ffc5b3", 22])
 	if event.get("healingPenalty", 0) > 0: lines.append(["CURA −%d%%" % event.healingPenalty, "ffc18a", 13])
 	if event.get("passive", false): lines.append(["REGENERAÇÃO" if event.has("remaining") else ("SEMENTE" if event.get("source", "") == "seed" else "DRENO DE VIDA"), "a1e6b3", 12])

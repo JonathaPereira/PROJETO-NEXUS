@@ -22,6 +22,11 @@ var gem_buttons: Dictionary = {}
 var hero_buttons: Dictionary = {}
 var slot_buttons: Array[Button] = []
 var nav_buttons: Dictionary = {}
+var gem_preview_label: Label
+var transfer_buttons: Dictionary = {}
+var owner_pickers: Dictionary = {}
+var fill_button: Button
+var remove_all_button: Button
 var hero_picker: OptionButton
 var remove_button: Button
 var play_button: Button
@@ -126,6 +131,8 @@ func open(target: String = "menu") -> void:
 			entry.disabled = page == target_page
 			subnav.add_child(entry)
 	gem_buttons.clear()
+	transfer_buttons.clear()
+	owner_pickers.clear()
 	hero_buttons.clear()
 	slot_buttons.clear()
 	hero_details = null
@@ -385,7 +392,7 @@ func _heroes() -> void:
 	var introduction := VBoxContainer.new()
 	introduction.add_theme_constant_override("separation", 5)
 	body.add_child(introduction)
-	_text(introduction, "ARQUIVO DE RESSONÂNCIA  /  15 HERÓIS", 11, CYAN)
+	_text(introduction, "ARQUIVO DE RESSONÂNCIA  /  20 HERÓIS", 11, CYAN)
 	_heading(introduction, "Cada herói, uma razão para lutar.", 30)
 	_text(introduction, "Afinidade define vantagens. Função define o estilo. Você escolhe livremente os três integrantes da equipe.", 13, app.MUTED)
 	var split := _row(body, 20, true)
@@ -444,7 +451,7 @@ func _heroes() -> void:
 	_text(words, "%s  /  %s" % [affinity.name.to_upper(), selected.role.to_upper()], 12, tint)
 	hero_name = _heading(words, selected.name.to_upper(), 34)
 	_text(words, selected.title, 16, WHITE)
-	_text(words, selected.identity + ".", 13, app.MUTED)
+	_text(words, selected.get("specialty", selected.role) + " · " + selected.identity + ".", 13, app.MUTED)
 	var stats := _row(words, 9)
 	for item in [["VIDA", selected.hp], ["ATQ", selected.attack], ["DEF", selected.defense], ["VEL", selected.speed]]:
 		var stat := _panel(stats, Color("21374f"))
@@ -513,26 +520,148 @@ func _choose_hero(id: String) -> void:
 	open(page)
 
 func _gems() -> void:
-	_text(body, "PREPARAÇÃO  /  RESSONÂNCIA", 11, CYAN)
-	_heading(body, "Engastes de gemas", 34)
-	_text(body, "3 espaços por herói. Gemas repetidas são permitidas, desde que existam cópias no inventário. Troca e remoção gratuitas.", 15)
-	_text(body, "Os bônus se somam antes de aplicar os atributos. Valem somente na história e entram na próxima missão. Cada primeira vitória concede uma cópia extra; repetir a missão preserva o inventário.", 13, app.MUTED)
-	var selector := _panel(body)
-	var row := _row(selector, 16)
 	var hero: Dictionary = app.catalog.hero_by_id[selected_hero]
-	_portrait(row, hero, Vector2(65, 77))
-	var info := VBoxContainer.new()
-	info.size_flags_horizontal = SIZE_EXPAND_FILL
-	row.add_child(info)
-	_text(info, "HERÓI SELECIONADO", 10, CYAN)
+	var tint: Color = app.catalog.affinity_color(hero.classId)
+	var introduction := VBoxContainer.new()
+	introduction.add_theme_constant_override("separation", 5)
+	body.add_child(introduction)
+	_text(introduction, "COLEÇÃO  /  OFICINA DE RESSONÂNCIA", 11, CYAN)
+	_heading(introduction, "Prepare seu herói", 32)
+	_text(introduction, "Selecione um engaste, confira os atributos e escolha uma gema. Trocas e remoções são gratuitas; bônus valem na história.", 14, app.MUTED)
+	var layout := _row(body, 16, true)
+	var character := _panel(layout, tint.darkened(.4))
+	character.get_parent().size_flags_stretch_ratio = .85
+	_text(character, "PERSONAGEM", 11, tint)
 	hero_picker = OptionButton.new()
-	for entry in app.catalog.heroes: hero_picker.add_item("%s  ·  %s" % [entry.name, entry.role])
+	hero_picker.custom_minimum_size.y = 40
+	for entry in app.catalog.heroes: hero_picker.add_item("%s · %s" % [entry.name, entry.get("specialty", entry.role)])
 	hero_picker.select(app.catalog.heroes.find(hero))
 	hero_picker.item_selected.connect(func(index): _choose_hero(app.catalog.heroes[index].id))
-	info.add_child(hero_picker)
-	row.add_child(app._button("Ver herói", open.bind("heroes")))
-	_gem_loadout(body)
-	body.add_child(app._button("Voltar às missões", open.bind("story")))
+	character.add_child(hero_picker)
+	var portrait := _portrait(character, hero, Vector2(230, 240), true)
+	portrait.size_flags_horizontal = SIZE_EXPAND_FILL
+	_heading(character, hero.name.to_upper(), 28, tint)
+	_text(character, "%s · %s" % [app.catalog.class_by_id[hero.classId].name, hero.get("specialty", hero.role)], 13)
+	_text(character, hero.identity, 12, app.MUTED)
+	character.add_child(app._button("Habilidades e sinergias →", open.bind("heroes")))
+	var equipment := _panel(layout, Color("355770"))
+	equipment.get_parent().size_flags_stretch_ratio = .95
+	_text(equipment, "ENGASTES  /  3 ESPAÇOS", 11, CYAN)
+	var equipped: Array = app.campaign.slots(selected_hero)
+	for index in range(Campaign.SLOT_COUNT):
+		var item: Dictionary = app.campaign.gem(equipped[index])
+		var row := _row(equipment, 6)
+		var button: Button = app._button("%02d  %s\n%s" % [index+1, item.name if not item.is_empty() else "Engaste vazio", item.effect if not item.is_empty() else "Selecione para equipar"], _select_slot.bind(index))
+		button.size_flags_horizontal = SIZE_EXPAND_FILL
+		button.custom_minimum_size.y = 65
+		button.add_theme_font_size_override("font_size", 13)
+		button.add_theme_stylebox_override("normal", _surface(Color("153348") if selected_slot == index else Color("0a1424"), CYAN if selected_slot == index else Color("2b4056"), 9))
+		button.tooltip_text = "Engaste %d · %s" % [index+1, item.detail if not item.is_empty() else "Aceita qualquer tipo de gema."]
+		row.add_child(button)
+		slot_buttons.append(button)
+		var remove: Button = app._button("×", _remove_slot.bind(index))
+		remove.disabled = item.is_empty()
+		remove.tooltip_text = "Desengastar a gema do espaço %d e devolver ao inventário" % (index+1)
+		remove.custom_minimum_size = Vector2(36, 40)
+		_tight_button(remove, 40)
+		row.add_child(remove)
+		if index == selected_slot: remove_button = remove
+	_text(equipment, "ATRIBUTOS NA PRÓXIMA MISSÃO", 10, CYAN)
+	var bonus: Dictionary = app.campaign.bonuses(selected_hero)
+	for stat in [["Vida", hero.hp, app.combat.rounded(hero.hp*(1+bonus.health)), "8bd5a4"], ["Ataque", hero.attack, app.combat.rounded(hero.attack*(1+bonus.attack)), "f49b70"], ["Energia inicial", int(app.combat.rules.energy.initial), mini(int(app.combat.rules.energy.maximum), int(app.combat.rules.energy.initial)+int(bonus.energy)), "a9a0f6"]]:
+		_text(equipment, "%s   %d → %d  (+%d)" % [stat[0], stat[1], stat[2], stat[2]-stat[1]], 14, Color(stat[3]))
+	var fill: Button = app._button("Preencher vazios por função", _fill_gems)
+	fill.disabled = not equipped.has("") or not Campaign.GEMS.any(func(g): return app.campaign.available(g.id) > 0)
+	fill.tooltip_text = "Usa somente cópias livres: dano prioriza ataque, tanque vida e suporte energia. Preserva engastes ocupados e os outros heróis."
+	fill_button = fill
+	equipment.add_child(fill)
+	var remove_all: Button = app._button("Desengastar tudo", _remove_all_gems)
+	remove_all.disabled = equipped.all(func(id): return id == "")
+	remove_all_button = remove_all
+	equipment.add_child(remove_all)
+	var inventory := _panel(layout, Color("524774"))
+	inventory.get_parent().size_flags_stretch_ratio = 1.15
+	inventory.add_theme_constant_override("separation", 8)
+	_text(inventory, "INVENTÁRIO COMPARTILHADO", 11, VIOLET)
+	_text(inventory, "DESTINO  /  %s · engaste %02d" % [hero.name, selected_slot+1], 13, CYAN)
+	gem_preview_label = _text(inventory, "Passe sobre uma gema ou use Tab para conferir os atributos após a troca.", 12, app.MUTED)
+	gem_preview_label.custom_minimum_size.y = 32
+	for type in Campaign.GEMS:
+		var card := _panel(inventory, Color(type.color).darkened(.55))
+		card.get_parent().add_theme_stylebox_override("panel", _surface(Color("091323"), Color(type.color).darkened(.55), 8))
+		card.add_theme_constant_override("separation", 3)
+		var line := _row(card, 9)
+		var icon := GemIcon.new()
+		icon.tint = Color(type.color)
+		icon.custom_minimum_size = Vector2(28, 28)
+		line.add_child(icon)
+		var words := VBoxContainer.new()
+		words.size_flags_horizontal = SIZE_EXPAND_FILL
+		line.add_child(words)
+		_heading(words, type.name + " · " + type.effect, 15, Color(type.color))
+		var free: int = app.campaign.available(type.id)
+		_text(card, "%d livres   ·   %d equipadas   ·   %d no total" % [free, app.campaign.copies(type.id)-free, app.campaign.copies(type.id)], 11, app.MUTED)
+		var current: bool = equipped[selected_slot] == type.id
+		var button: Button = app._button("Já neste engaste" if current else "Engastar no espaço %02d →" % (selected_slot+1) if free > 0 else "Sem cópias livres", _equip.bind(type.id))
+		button.disabled = current or free <= 0
+		button.tooltip_text = _gem_preview(type.id)
+		var preview_text: String = button.tooltip_text
+		button.mouse_entered.connect(func(): gem_preview_label.text = preview_text)
+		button.focus_entered.connect(func(): gem_preview_label.text = preview_text)
+		button.add_theme_font_size_override("font_size", 12)
+		_tight_button(button, 28)
+		card.add_child(button)
+		gem_buttons[type.id] = button
+		var owners: Array = []
+		var owner_row := _row(card, 5)
+		var picker := OptionButton.new()
+		picker.size_flags_horizontal = SIZE_EXPAND_FILL
+		picker.add_theme_font_size_override("font_size", 11)
+		for entry in app.catalog.heroes:
+			var slots: Array = app.campaign.slots(entry.id)
+			for index in range(Campaign.SLOT_COUNT):
+				if slots[index] != type.id: continue
+				if entry.id == selected_hero and index == selected_slot: continue
+				owners.append({"hero": entry.id, "slot": index})
+				picker.add_item("%s · espaço %02d" % [entry.name, index+1])
+		if owners.is_empty(): picker.add_item("Nenhuma cópia para transferir")
+		_tight_button(picker, 28)
+		owner_row.add_child(picker)
+		var bring: Button = app._button("Trazer", _transfer_gem.bind(picker, owners))
+		bring.disabled = owners.is_empty()
+		bring.tooltip_text = "Move a cópia do herói escolhido para este engaste. A gema substituída volta ao inventário."
+		bring.add_theme_font_size_override("font_size", 12)
+		_tight_button(bring, 28)
+		owner_row.add_child(bring)
+		transfer_buttons[type.id] = bring
+		owner_pickers[type.id] = picker
+
+func _gem_preview(type: String) -> String:
+	var hero: Dictionary = app.catalog.hero_by_id[selected_hero]
+	var bonus: Dictionary = app.campaign.bonuses(selected_hero).duplicate()
+	var previous: Dictionary = app.campaign.gem(app.campaign.slots(selected_hero)[selected_slot])
+	var next: Dictionary = app.campaign.gem(type)
+	if not previous.is_empty(): bonus["health" if previous.stat == "maxHp" else previous.stat] -= previous.bonus
+	bonus["health" if next.stat == "maxHp" else next.stat] += next.bonus
+	return "Após a troca: %d vida · %d ataque · %d energia inicial. A gema anterior retorna ao inventário." % [app.combat.rounded(hero.hp*(1+bonus.health)), app.combat.rounded(hero.attack*(1+bonus.attack)), mini(int(app.combat.rules.energy.maximum), int(app.combat.rules.energy.initial)+int(bonus.energy))]
+
+func _remove_slot(index: int) -> void:
+	selected_slot = index
+	_equip("")
+
+func _remove_all_gems() -> void:
+	if app.campaign.remove_gems(selected_hero): message = "Todas as gemas de %s voltaram ao inventário." % app.catalog.hero_by_id[selected_hero].name
+	open(page)
+
+func _fill_gems() -> void:
+	if app.campaign.fill_gems(selected_hero): message = "Espaços vazios preenchidos com cópias livres. Os outros heróis mantiveram seus engastes."
+	open(page)
+
+func _transfer_gem(picker: OptionButton, owners: Array) -> void:
+	if picker.selected < 0 or picker.selected >= owners.size(): return
+	var source: Dictionary = owners[picker.selected]
+	if app.campaign.transfer_gem(source.hero, source.slot, selected_hero, selected_slot): message = "Gema transferida de %s para %s. A cópia substituída voltou ao inventário." % [app.catalog.hero_by_id[source.hero].name, app.catalog.hero_by_id[selected_hero].name]
+	open(page)
 
 func _gem_loadout(parent: Node, compact := false) -> void:
 	var hero: Dictionary = app.catalog.hero_by_id[selected_hero]
@@ -611,7 +740,7 @@ func _gem_loadout(parent: Node, compact := false) -> void:
 func _tight_button(button: Button, height: int) -> void:
 	button.custom_minimum_size.y = height
 	for state_name in ["normal", "hover", "pressed", "disabled", "focus"]:
-		var style := button.get_theme_stylebox(state_name).duplicate()
+		var style: StyleBox = button.get_theme_stylebox(state_name).duplicate() if button.has_theme_stylebox_override(state_name) else app.get_theme_stylebox(state_name, "Button").duplicate()
 		style.content_margin_top = 6
 		style.content_margin_bottom = 6
 		style.content_margin_left = 8

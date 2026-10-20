@@ -8,7 +8,7 @@ const POSITIVE_COLOR := Color("8de3bd")
 const NEGATIVE_COLOR := Color("ffac9d")
 const SHIELD_COLOR := Color("8edcff")
 const MUTED_COLOR := Color("a6b9cf")
-const SHORT_NAMES := {"burn": "Queimadura", "bleed": "Sangramento", "regen": "Regeneração", "weaken": "Enfraquecimento", "expose": "Exposição", "empower": "Fortalecimento", "fortify": "Fortificação", "cover": "Proteção", "mirror": "Espelho", "riposte": "Contra-ataque", "taunt": "Provocação", "emberguard": "Guarda de brasas", "focus": "Marca de foco", "seed": "Semente"}
+const SHORT_NAMES := {"darkmark": "Marca obscura", "elementalWard": "Égide elemental", "sentinel": "Sentinela", "burn": "Queimadura", "bleed": "Sangramento", "regen": "Regeneração", "weaken": "Enfraquecimento", "expose": "Exposição", "empower": "Fortalecimento", "fortify": "Fortificação", "cover": "Proteção", "mirror": "Espelho", "riposte": "Contra-ataque", "taunt": "Provocação", "emberguard": "Guarda de brasas", "focus": "Marca de foco", "seed": "Semente"}
 var lines: Array = []
 var target_name := ""
 var action_name := ""
@@ -86,6 +86,9 @@ static func _effect_row(effect: String, turns: int) -> Dictionary:
 	var descriptions := RulesText.status_names()
 	var status: Dictionary = RulesText.rules.status
 	descriptions.merge({
+		"darkmark": RulesText.percent(status.darkmarkMaxHpRatio) + " vida · dreno " + RulesText.percent(status.darkmarkDrainRatio),
+		"elementalWard": "Vantagem: dano −" + RulesText.percent(1.0 - float(status.elementalWardIncomingMultiplier)),
+		"sentinel": "Agressor: ataque −" + RulesText.percent(1.0 - float(status.weakenAttackMultiplier)),
 		"burn": RulesText.percent(status.burnMaxHpRatio) + " vida por ativação",
 		"bleed": RulesText.percent(status.bleedMaxHpRatio) + " vida · cura −" + RulesText.percent(1.0 - float(status.bleedHealingMultiplier)),
 		"regen": "+" + RulesText.percent(status.regenMaxHpRatio) + " vida por ativação",
@@ -129,8 +132,8 @@ static func event_lines(events: Array) -> Array:
 				result.append(["Escudo total: %d" % int(event.get("shieldAfter", amount)), "85dcff", 12])
 			"energy": result.append(["+%d ENERGIA" % amount, "c6b4ff", 18])
 			"support": result.append(["SUPORTE", "c6b4ff", 15])
-			"burn", "bleed", "fracture":
-				result.append([{"burn": "QUEIMADURA", "bleed": "SANGRAMENTO", "fracture": "FRATURA"}[event.type], "ffae88", 14])
+			"burn", "bleed", "darkmark", "fracture":
+				result.append([{"darkmark": "MARCA OBSCURA", "burn": "QUEIMADURA", "bleed": "SANGRAMENTO", "fracture": "FRATURA"}[event.type], "ffae88", 14])
 				result.append(["−%d VIDA" % amount, "ffc5b3", 22])
 			"converted": result.append(["−%d ESCUDO CONVERTIDO" % int(event.get("shieldSpent", 0)), "85dcff", 15])
 			"defeated": result.append(["DERROTADO", "ffac9d", 14])
@@ -144,7 +147,7 @@ static func event_lines(events: Array) -> Array:
 				result.append(["PURIFICADO", "8de3bd", 12])
 				for removed in event.get("cleansed", []): result.append(["Removido: " + str(SHORT_NAMES.get(removed, removed)), "8de3bd", 11])
 			else:
-				var turns := int(event.get("effectTurns", RulesText.rules.status.durationTurns)) if key == "effect" else int(RulesText.rules.status.durationTurns)
+				var turns := int(event.get("effectTurns", RulesText.rules.status.durationTurns)) if key == "effect" else int(event.get("extraEffectTurns", RulesText.rules.status.durationTurns))
 				result.append(["%s · %dT" % [RulesText.status_names().get(effect, effect), turns], "8de3bd" if effect in Combat.POSITIVE else "ffac9d", 12])
 	return result
 
@@ -182,7 +185,7 @@ static func describe_events(events: Array) -> Dictionary:
 				if event.has("shieldTurns"): result.rows.append(_detail("Escudo: %d ação(ões) do protegido" % int(event.shieldTurns), SHIELD_COLOR))
 				if type == "guard": result.rows.append(_detail("DEFESA · dano recebido −" + RulesText.percent(1.0 - float(RulesText.rules.guard.incomingDamageMultiplier)), POSITIVE_COLOR))
 			"energy": result.rows.append(_metric("+%d" % int(event.get("amount", 0)), "ENERGIA RECEBIDA", Color("c6b4ff")))
-			"burn", "bleed", "fracture":
+			"burn", "bleed", "darkmark", "fracture":
 				var label := "FRATURA" if type == "fracture" else str(SHORT_NAMES[type]).to_upper()
 				result.rows.append(_metric("−%d" % int(event.get("amount", 0)), label, NEGATIVE_COLOR))
 			"shieldExpired":
@@ -203,7 +206,7 @@ static func describe_events(events: Array) -> Dictionary:
 				for cleared in removed:
 					result.rows.append(_detail("Removido: " + str(SHORT_NAMES.get(cleared, cleared)), POSITIVE_COLOR))
 				continue
-			var turns := int(event.get("effectTurns", RulesText.rules.status.durationTurns)) if key == "effect" else int(RulesText.rules.status.durationTurns)
+			var turns := int(event.get("effectTurns", RulesText.rules.status.durationTurns)) if key == "effect" else int(event.get("extraEffectTurns", RulesText.rules.status.durationTurns))
 			if seen_effects.has(effect):
 				# A repeated application refreshes this effect; show its final receipt duration.
 				result.rows[int(seen_effects[effect])].turns = turns

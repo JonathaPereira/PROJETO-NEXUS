@@ -332,7 +332,7 @@ func refresh(data: Dictionary, is_active: bool, is_chosen: bool, can_target: boo
 	for status in data.statuses:
 		var duration: int = int(status.turns)
 		states.append("%s · %s" % [STATUS_NAMES.get(status.type, status.type), "%d turno(s) restante(s)" % duration if duration > 0 else "expira após esta ação"])
-		compact.append("%s %s" % [{"burn": "Queima", "bleed": "Sangra/Cura↓", "regen": "Regen", "weaken": "ATQ↓", "expose": "DEF↓", "empower": "ATQ↑", "fortify": "Fortif.", "cover": "Proteg.", "mirror": "Reflexo", "riposte": "Contra", "taunt": "Provoca", "emberguard": "Brasa", "focus": "Foco", "seed": "Semente"}.get(status.type, status.type), "%dT" % duration if duration > 0 else "•"])
+		compact.append("%s %s" % [{"darkmark": "Drena", "sentinel": "Sentinela", "elementalWard": "Égide", "burn": "Queima", "bleed": "Sangra/Cura↓", "regen": "Regen", "weaken": "ATQ↓", "expose": "DEF↓", "empower": "ATQ↑", "fortify": "Fortif.", "cover": "Proteg.", "mirror": "Reflexo", "riposte": "Contra", "taunt": "Provoca", "emberguard": "Brasa", "focus": "Foco", "seed": "Semente"}.get(status.type, status.type), "%dT" % duration if duration > 0 else "•"])
 	if compact.size() > 2: compact = compact.slice(0, 1) + ["+%d estados" % (compact.size() - 1)]
 	status_label.text = "DERROTADO" if dead else " · ".join(compact)
 	status_label.tooltip_text = "\n".join(states)
@@ -356,12 +356,12 @@ func apply_tick(event: Dictionary) -> void:
 	var data := display_data.duplicate(true)
 	data.hp = event.hpAfter
 	data.shield = event.shieldAfter
-	data.guarding = false
+	if event.get("source", "") != "darkmark": data.guarding = false
 	if event.has("remaining"):
 		var type: String = "regen" if event.type == "heal" else event.type
 		for status in data.statuses:
 			if status.type == type: status.turns = event.remaining
-		data.statuses = data.statuses.filter(func(s): return s.turns > 0 or not s.type in ["burn", "bleed", "regen"])
+		data.statuses = data.statuses.filter(func(s): return s.turns > 0 or not s.type in ["burn", "bleed", "darkmark", "regen"])
 	refresh(data, true, false, false)
 
 func _draw() -> void:
