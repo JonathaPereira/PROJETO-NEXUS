@@ -13,3 +13,7 @@ Código-fonte: [codex/nexus-2d](https://github.com/JonathaPereira/PROJETO-NEXUS/
 [Guia completo de publicação e integração](https://github.com/JonathaPereira/PROJETO-NEXUS/blob/codex/nexus-2d/godot/PVP.md).
 
 SHA-256: 28eec205b035e4968b8d33e7be533a55960803a6516b7d41130c05b72aff0146
+
+## Capa para o itch.io
+
+[Baixar capa PNG — 630 × 500 pixels](https://github.com/JonathaPereira/PROJETO-NEXUS/raw/refs/heads/downloads/nexus-capa-630x500.png)
