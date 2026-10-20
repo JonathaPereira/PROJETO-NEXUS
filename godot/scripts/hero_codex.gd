@@ -29,4 +29,7 @@ static func entry(id: String) -> Dictionary:
 	return ENTRIES.get(id, {})
 
 static func mission(index: int) -> Dictionary:
-	return MISSION_INTEL[clampi(index, 0, MISSION_INTEL.size() - 1)]
+	if index < MISSION_INTEL.size(): return MISSION_INTEL[maxi(0, index)]
+	var missions: Array = preload("res://scripts/campaign.gd").MISSIONS
+	var record: Dictionary = missions[clampi(index, 0, missions.size() - 1)]
+	return {"title": record.name, "before": record.story, "after": record.ending}

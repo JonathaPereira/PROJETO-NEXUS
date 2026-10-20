@@ -6,13 +6,13 @@ Protótipo jogável de RPG tático original: equipes de três, cinco afinidades 
 
 ### Nova base em Godot
 
-**Vesper — estudo de personagem:** o menu **VESPER · ATELIÊ 3D** abre uma apresentação dedicada com modelo, materiais, capa e animações próprios. [Como experimentar e editar](godot/VESPER.md).
+**Alpha 0.10 — direção 2D:** combate ilustrado, cenários animados, três capítulos com nove missões, menus com submenus e modo automático. [Novidades e como experimentar](godot/TWO-D.md).
 
 O projeto Godot está em **[godot/](godot/README.md)**. Use **Godot 4.6 Standard**, gratuito, sem a edição .NET. Importe [godot/project.godot](godot/project.godot), aguarde a importação dos recursos e pressione **F5**.
 
-A **Alpha 0.9** inicia a apresentação 3D do combate: arena com profundidade real, personagens articulados construídos com malhas procedurais, preparação/contato/recuperação dos ataques e janelas flutuantes com dano, escudo e efeitos positivos ou negativos. História e combate livre usam a nova arena; a galeria preserva a apresentação 2D anterior. Esta primeira etapa ainda precisa de modelos e animações de arte final para atingir o acabamento do conceito aprovado. [Detalhes, execução e validação da etapa 3D](godot/GRAPHICS-3D.md).
+O combate em Godot usa personagens e coreografias 2D, com vida, energia e escudo separados e janelas de resultado por alvo. Ative **Automático · A** para deixar sua equipe escolher habilidades e alvos. O estudo 3D do Vesper continua disponível em **Extras**, preservado para uma futura evolução visual.
 
-A **Alpha 0.8** moderniza o menu e o combate com a ambientação hi-tech do Sanctum, painéis azul-escuros, acentos ciano e a fonte Space Grotesk. A aba **Heróis** reúne os 15 personagens, suas três habilidades ilustradas, custos, efeitos, sinergias, origem, motivação e história. **O Farol Partido** mantém três missões, minions próprios e **Vesper como chefe**, agora com mais contexto sobre o Farol, sua queda e o vínculo dos heróis com esse conflito.
+A base visual da **Alpha 0.8** foi preservada e aprimorada: o menu e o combate usam com a ambientação hi-tech do Sanctum, painéis azul-escuros, acentos ciano e a fonte Space Grotesk. A aba **Heróis** reúne os 15 personagens, suas três habilidades ilustradas, custos, efeitos, sinergias, origem, motivação e história. **O Farol Partido** abre a campanha; **Marés da Memória** e **A Última Fornalha** completam os nove confrontos e a jornada do trio.
 
 Cada herói pode carregar **três engastes**, inclusive gemas repetidas. Você começa com **três cópias de cada tipo**: ataque +4%, vida +5% ou energia inicial +8 por cópia. Bônus iguais somam: três dão +12% ataque, +15% vida ou energia inicial de 40 para 64. Trocas são gratuitas; primeiras vitórias concedem uma cópia extra da gema da missão. Trio, engastes e avanço ficam salvos localmente, com leitura automática do progresso anterior. [Como jogar a campanha](godot/CAMPAIGN.md).
 
@@ -98,7 +98,7 @@ Enfraquecimento modifica o ataque; exposição e Arcano modificam a defesa efeti
 
 ## Apresentação e controles
 
-No Godot, o Sanctum e a arena combinam arte 2D com interfaces hi-tech, fontes modernas e formação em perspectiva. Os 15 heróis têm coreografias próprias com antecipação, deslocamento, projéteis, rastros, pausa no impacto e retorno; cinco representantes têm quatro poses desenhadas. Os demais usam movimento procedural sobre uma ilustração. Supremos têm preparação e efeitos prolongados; não há modelos 3D nem animação esquelética nesta versão.
+No Godot, o Sanctum e a arena combinam arte 2D com interfaces hi-tech, fontes modernas e formação em perspectiva. Os 15 heróis têm coreografias próprias com antecipação, deslocamento, projéteis, rastros, pausa no impacto e retorno; cinco representantes têm quatro poses desenhadas. Os demais usam movimento procedural sobre uma ilustração. Supremos têm preparação e efeitos prolongados; o combate principal usa ilustrações 2D; o modelo e as animações esqueléticas do Vesper ficam preservados no arquivo em Extras.
 
 O protótipo web anterior preserva ruínas sob eclipse e o HUD de obsidiana e ouro. Sua apresentação e seus controles seguem abaixo; a interface nativa está descrita em [godot/README.md](godot/README.md).
 
@@ -145,4 +145,4 @@ O teste de navegador inicia e encerra seu servidor na porta 5199. Usa `CHROMIUM_
 
 ## Recursos
 
-Arena, Sanctum e atlas de personagens foram gerados para este protótipo. Cinzel, Manrope e Space Grotesk são fontes sob SIL Open Font License; as licenças acompanham os recursos em `assets/` e `godot/assets/`. Todos os recursos são servidos localmente.
+Arena, Sanctum, Observatório das Marés, Última Fornalha e atlas de personagens foram gerados para este protótipo. Cinzel, Manrope e Space Grotesk são fontes sob SIL Open Font License; as licenças acompanham os recursos em `assets/` e `godot/assets/`. Todos os recursos são servidos localmente.

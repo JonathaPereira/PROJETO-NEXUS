@@ -23,6 +23,10 @@ var target_id := ""
 var started := false
 var busy := false
 var ai_pending := false
+var auto_play := false
+var ai_request := 0
+var auto_button: CheckButton
+var spatial_combat := false # Archived 3D study; normal play uses the illustrated stage.
 var battle_version := 0
 var result_shown := false
 var reduced_motion := false
@@ -173,6 +177,7 @@ func _open_menu() -> void:
 
 func _leave_battle(page: String = "menu") -> void:
 	battle_version += 1
+	ai_request += 1
 	director.cancel()
 	backdrop.cancel()
 	sound.stop()
@@ -185,11 +190,14 @@ func _leave_battle(page: String = "menu") -> void:
 	hub.open(page)
 
 func _result_confirmed() -> void:
-	if campaign_mission >= 0 and state.winner == 0: _leave_battle("story")
+	if campaign_mission >= 0 and state.winner == 0:
+		hub.selected_chapter = mini(2,int(mini(campaign.cleared,8)/3.0))
+		_leave_battle("story")
 	else: _new_battle()
 
 func _new_battle() -> void:
 	battle_version += 1
+	ai_request += 1
 	director.cancel()
 	backdrop.cancel()
 	if is_instance_valid(sound): sound.stop()
@@ -216,7 +224,7 @@ func _new_battle() -> void:
 		var hero: Dictionary = catalog.hero_by_id[data.heroId]
 		var fighter = Fighter.new()
 		fighter.setup(hero, data.id, catalog.affinity_color(hero.classId))
-		fighter.use_spatial_presentation()
+		if spatial_combat: fighter.use_spatial_presentation()
 		fighter.targeted.connect(_select_target)
 		field.add_child(fighter)
 		fighters[data.id] = fighter
@@ -225,6 +233,9 @@ func _new_battle() -> void:
 
 func _position_fighters() -> void:
 	if not is_instance_valid(field): return
+	if not spatial_combat:
+		_position_illustrated()
+		return
 	for index in range(state.get("units", []).size()):
 		var data: Dictionary = state.units[index]
 		var fighter = fighters.get(data.id)
@@ -246,11 +257,43 @@ func _position_fighters() -> void:
 			fighter.plate.position = panel_at - fighter.position
 
 func _process(_delta: float) -> void:
-	if is_instance_valid(combat_view) and combat_view.visible and not fighters.is_empty():
+	if spatial_combat and is_instance_valid(combat_view) and combat_view.visible and not fighters.is_empty():
 		_position_fighters()
 
 func _human_turn() -> bool:
+	if auto_play and combat.current(state).get("side", 1) == 0: return false
 	return (campaign_mission < 0 and mode == "local") or combat.current(state).get("side", 1) == 0
+
+func _position_illustrated() -> void:
+	# Keep resources in stable side columns and the painted bodies in the arena.
+	for data in state.get("units", []):
+		var fighter = fighters.get(data.id)
+		if not is_instance_valid(fighter): continue
+		var slot: int = data.slot
+		var x: float = [0.39, 0.25, 0.25][slot]
+		if data.side == 1: x = 1.0 - x
+		var foot := Vector2(field.size.x*x, field.size.y*[0.73,0.46,0.96][slot])
+		foot.y = maxf(186, foot.y)
+		fighter.position = foot - Vector2(93,257)
+		fighter.set_depth([0.96,0.79,0.92][slot])
+		fighter.set_formation(slot)
+		fighter.position_label.hide()
+		fighter.z_index = [12,11,13][slot]
+		fighter.plate.scale = Vector2.ONE * 0.88
+		var dimensions: Vector2 = fighter.plate.size * fighter.plate.scale
+		var row: int = [1,0,2][slot]
+		fighter.plate.position = Vector2(12 if data.side == 0 else field.size.x-dimensions.x-12, maxf(6,(field.size.y-(dimensions.y*3+24))*.5)+row*(dimensions.y+12)) - fighter.position
+
+func _set_presentation(spatial: bool) -> void:
+	# Retained for the 3D study and its tests; it is absent from primary navigation.
+	spatial_combat = spatial
+	backdrop.cancel()
+	field.remove_child(backdrop)
+	backdrop.queue_free()
+	backdrop = load("res://scripts/battle_stage_3d.gd" if spatial else "res://scripts/arena_backdrop.gd").new()
+	field.add_child(backdrop)
+	field.move_child(backdrop, 0)
+	_new_battle()
 
 func _can_act() -> bool:
 	return combat_view.visible and started and not busy and state.phase == "playing" and _human_turn()
@@ -320,7 +363,10 @@ func _play_turn(action_id: String, target: String) -> void:
 		description.text = result.error
 		return
 	busy = true
+	selected_action = action_id
+	target_id = target
 	preview_requested = false
+	CombatUI.refresh(self)
 	CombatUI.lock_action(self, hero, action)
 	var hit := func():
 		if version != battle_version: return
@@ -333,7 +379,11 @@ func _play_turn(action_id: String, target: String) -> void:
 		backdrop.sync_units(result.impactUnits)
 		CombatUI.update_actor_stats(self, result.impactUnits.filter(func(u): return u.id == actor.id)[0])
 		CombatUI.show_report(self, result.events, action.name)
-	var completed: bool = await director.play_spatial(self, backdrop, effects, fighters, hero, action, result, reduced_motion, hit)
+	var completed: bool
+	if spatial_combat:
+		completed = await director.play_spatial(self, backdrop, effects, fighters, hero, action, result, reduced_motion, hit)
+	else:
+		completed = await director.play(self, effects, fighters, hero, action, result, reduced_motion, hit)
 	if version != battle_version or not completed: return
 	if not result.turnEvents.is_empty():
 		var ticks_done: bool = await director.play_ticks(self, effects, fighters, result.turnEvents, reduced_motion, func(event):
@@ -375,17 +425,33 @@ func _set_reduced(enabled: bool) -> void:
 	if not busy: _refresh()
 
 func _schedule_ai() -> void:
-	if ai_pending or busy or not started or (mode != "training" and campaign_mission < 0) or state.phase != "playing" or _human_turn(): return
+	if ai_pending or busy or not started or not combat_view.visible or state.phase != "playing" or not _wants_ai(): return
 	ai_pending = true
 	var version := battle_version
+	var request := ai_request
 	await get_tree().create_timer(0.45).timeout
-	if version != battle_version: return
+	if version != battle_version or request != ai_request: return
 	while _any_dialog():
 		await get_tree().create_timer(0.1).timeout
-		if version != battle_version: return
+		if version != battle_version or request != ai_request: return
 	ai_pending = false
+	if not _wants_ai() or not started or state.phase != "playing" or not combat_view.visible: return
 	var choice := combat.choose_ai(state)
 	if not choice.is_empty(): _play_turn(choice.actionId, choice.targetId)
+
+func _wants_ai() -> bool:
+	var side: int = int(combat.current(state).get("side", -1))
+	return auto_play if side == 0 else side == 1 and (mode == "training" or campaign_mission >= 0)
+
+func _set_auto_play(enabled: bool) -> void:
+	auto_play = enabled and tutorial_index < 0
+	ai_request += 1
+	ai_pending = false
+	if not busy: _refresh()
+	_schedule_ai()
+
+func _screen_impact(at: Vector2, color: Color, supreme: bool) -> void:
+	if not reduced_motion and backdrop.has_method("screen_impact"): backdrop.screen_impact(at, color, supreme)
 
 func _update_log() -> void:
 	var lines: Array = []
@@ -605,10 +671,20 @@ func _input(event: InputEvent) -> void:
 		_toggle_fullscreen()
 		get_viewport().set_input_as_handled()
 		return
-	if is_instance_valid(hub) and hub.visible: return
+	if is_instance_valid(hub) and hub.visible:
+		if event.keycode == KEY_ESCAPE and hub.page != "menu":
+			hub.open("menu")
+			get_viewport().set_input_as_handled()
+		return
 	var focused := get_viewport().gui_get_focus_owner()
 	if focused is LineEdit or focused is TextEdit: return
-	if event.keycode >= KEY_1 and event.keycode <= KEY_4:
+	if event.keycode == KEY_ESCAPE:
+		_open_menu()
+		get_viewport().set_input_as_handled()
+	elif event.keycode == KEY_A:
+		_set_auto_play(not auto_play)
+		get_viewport().set_input_as_handled()
+	elif event.keycode >= KEY_1 and event.keycode <= KEY_4:
 		_select_action(ACTIONS[event.keycode - KEY_1])
 		get_viewport().set_input_as_handled()
 	elif event.keycode in [KEY_LEFT, KEY_RIGHT] and _can_act():
@@ -655,6 +731,7 @@ func _begin_lesson(index: int) -> void:
 	if is_instance_valid(hub) and hub.visible: _enter_free()
 	if free_settings.is_empty(): free_settings = {"teams": teams.duplicate(true), "mode": mode, "difficulty": difficulty}
 	tutorial_index = index
+	auto_play = false
 	teams = Lessons.TEAMS[index].duplicate(true)
 	mode = "training"
 	difficulty = "easy"

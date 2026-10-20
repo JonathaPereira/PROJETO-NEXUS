@@ -8,10 +8,21 @@ const GEMS := [
 	{"id": "sap", "name": "Seiva cristalizada", "effect": "+5% VIDA", "detail": "Cada cópia soma 5% da vida base na campanha; três somam 15%. O limite de escudo continua sendo 25% da vida máxima.", "color": "8bd5a4", "stat": "maxHp", "bonus": 0.05},
 	{"id": "pulse", "name": "Pulso de éter", "effect": "+8 EN inicial", "detail": "Cada cópia soma 8 de energia no início da missão: 48, 56 ou 64. Não aumenta a energia gerada durante o combate.", "color": "a9a0f6", "stat": "energy", "bonus": 8},
 ]
+const CHAPTERS := [
+	{"id": "beacon", "name": "O Farol Partido", "eyebrow": "CAPÍTULO I", "theme": "sanctum", "color": "79ceef", "summary": "A cidade perdeu seu pulso. Atravesse os portões, liberte o pátio e rompa a âncora que aprisiona Vesper.", "lesson": "Aprenda a escolher alvos, lidar com estados e quebrar escudos."},
+	{"id": "tides", "name": "Marés da Memória", "eyebrow": "CAPÍTULO II", "theme": "tides", "color": "70dfd7", "summary": "As coordenadas do Farol levam a um observatório submerso. Recupere os nomes que a maré levou antes que a cidade esqueça seus próprios guardiões.", "lesson": "Combine dano, purificação e proteção para atravessar a maré."},
+	{"id": "forge", "name": "A Última Fornalha", "eyebrow": "CAPÍTULO III", "theme": "forge", "color": "f7ae79", "summary": "O sinal roubado alimenta uma forja além do Trono. Interrompa a extração, desarme suas sentinelas e devolva ao Farol as cinco ressonâncias.", "lesson": "Administre energia, recargas e supremos no confronto final."},
+]
 const MISSIONS := [
 	{"id": "gate", "name": "01 · Os portões quebrados", "location": "ARREDORES DO FAROL", "story": "O Farol silenciou. Sentinelas de pedra abandonaram seus postos e as raízes ganharam vida. Seu trio precisa abrir caminho até o pátio.", "enemies": ["minion-sentinel", "minion-root", "minion-acolyte"], "scale": 1.0, "reward": "ember", "tip": "Elimine o Acólito para impedir exposição da defesa. Ataques básicos podem escolher qualquer alvo.", "ending": "Os sentinelas caem. Nos cacos há um fragmento de gema e o mesmo selo que Vesper carrega em sua lâmina."},
 	{"id": "court", "name": "02 · Ecos no pátio", "location": "PÁTIO DAS RAÍZES", "story": "A corrupção engrossa perto do núcleo. O selo não pertence a Vesper: alguém o está usando para prendê-lo ao Farol. Derrube os guardiões antes que a passagem se feche.", "enemies": ["minion-root", "minion-sentinel", "minion-acolyte"], "scale": 1.24, "reward": "sap", "tip": "Sangramento reduz a cura recebida em 35%. Purifique os feridos e concentre dano para diminuir as ações inimigas.", "ending": "A passagem se abre. Uma voz pede que vocês destruam a âncora do eclipse, mesmo que seu guardião lute para impedi-los."},
-	{"id": "eclipse", "name": "03 · O guardião do eclipse", "location": "NÚCLEO DO FAROL · CHEFE", "story": "Preso ao núcleo, Vesper é forçado a defender a âncora. Vença o guardião e seus dois servos para quebrar o vínculo. O Vesper do seu elenco continua disponível: este é um confronto de história.", "enemies": ["boss-vesper", "minion-sentinel", "minion-acolyte"], "scale": 1.05, "reward": "pulse", "tip": "Vesper provoca e contra-ataca. Ataques em área ignoram a restrição de Provocação; o escudo dele expira e não acumula.", "ending": "O eclipse se desfaz. Livre da âncora, Vesper guarda um caco do Farol: a energia que o aprisionava veio de além do Trono. Fim do capítulo I — a próxima viagem ainda será escrita."},
+	{"id": "eclipse", "name": "03 · O guardião do eclipse", "location": "NÚCLEO DO FAROL · CHEFE", "story": "Preso ao núcleo, Vesper é forçado a defender a âncora. Vença o guardião e seus dois servos para quebrar o vínculo. O Vesper do seu elenco continua disponível: este é um confronto de história.", "enemies": ["boss-vesper", "minion-sentinel", "minion-acolyte"], "scale": 1.05, "reward": "pulse", "tip": "Vesper provoca e contra-ataca. Ataques em área ignoram a restrição de Provocação; o escudo dele expira e não acumula.", "ending": "O eclipse se desfaz. Livre da âncora, Vesper guarda um caco do Farol: a energia que o aprisionava veio de além do Trono. Fim do capítulo I — as coordenadas apontam para o Observatório das Marés."},
+	{"id": "tidal-gate", "name": "04 · A escadaria das marés", "location": "OBSERVATÓRIO · CAIS EXTERIOR", "story": "A água recua apenas por alguns instantes. Sentinelas de sal guardam a escadaria, enquanto um coro repete nomes que ninguém mais recorda. Abra passagem até o observatório.", "enemies": ["minion-tide", "minion-acolyte", "minion-root"], "scale": 1.08, "reward": "ember", "tip": "Concentre ataques em um inimigo. Reduzir o número de adversários diminui a pressão sobre os aliados.", "ending": "Sob a escadaria, Saira ouve um nome conhecido. O coro não pertence à água: são as memórias desviadas do Farol."},
+	{"id": "tidal-archive", "name": "05 · O arquivo submerso", "location": "OBSERVATÓRIO · SALA DOS NOMES", "story": "Vektor encontra os registros presos em cristais de sal. A corrupção tenta apagá-los à medida que o trio avança. Proteja os guardiões e purifique as feridas antes da subida da maré.", "enemies": ["minion-tide", "minion-siren", "minion-acolyte"], "scale": 1.08, "reward": "sap", "tip": "Cure aliados feridos; Sangramento reduz a cura. Habilidades de purificação removem estados negativos.", "ending": "Os registros voltam a ter voz. Cada nome aponta para a mesma transferência: a energia foi enviada à Última Fornalha."},
+	{"id": "tidal-heart", "name": "06 · A guardiã da memória", "location": "OBSERVATÓRIO · CÂMARA LUNAR · CHEFE", "story": "A guardiã do observatório confunde o trio com os saqueadores do núcleo. Seu juramento a obriga a proteger os nomes. Rompa o selo para que ela consiga reconhecer seus aliados.", "enemies": ["boss-tide", "minion-tide", "minion-siren"], "scale": 1.0, "reward": "pulse", "tip": "A guardiã restaura os aliados. Ataque o suporte ou prepare um supremo antes de a cura estabilizar o grupo.", "ending": "A guardiã devolve os nomes à cidade e abre o caminho da forja. Fim do capítulo II — o Farol recupera sua memória, mas ainda lhe falta uma voz."},
+	{"id": "forge-road", "name": "07 · A estrada das cinzas", "location": "ÚLTIMA FORNALHA · PONTE EXTERIOR", "story": "Cinzas cobrem a ponte que liga o Trono à forja. Os coletores drenam fragmentos do Farol em silêncio. Interrompa o transporte antes que outra carga atravesse o portal.", "enemies": ["minion-cinder", "minion-sentinel", "minion-acolyte"], "scale": 1.12, "reward": "ember", "tip": "Ataques básicos recuperam energia. Guarde recursos suficientes para a proteção e o golpe decisivo.", "ending": "O último coletor para. Veyra reconhece nas cargas a luz da manhã que sua cidade perdeu. A extração ainda continua no interior."},
+	{"id": "forge-relay", "name": "08 · O coração das máquinas", "location": "ÚLTIMA FORNALHA · ANEL DE CONTENÇÃO", "story": "Três relés mantêm a câmara final fechada. A primeira descarga desperta suas sentinelas. Derrube o conjunto e abra uma janela para alcançar a origem do sinal.", "enemies": ["minion-cinder", "minion-tide", "minion-siren"], "scale": 1.17, "reward": "sap", "tip": "Escudos não acumulam e expiram. Renove a proteção quando necessário e use os estados de enfraquecimento.", "ending": "Os relés silenciam. Pela primeira vez, o Farol responde sem interferência. Apenas o juramento do Arconte impede que sua energia retorne."},
+	{"id": "forge-heart", "name": "09 · O último juramento", "location": "ÚLTIMA FORNALHA · NÚCLEO · CHEFE", "story": "O Arconte acredita que aprisionar as ressonâncias é a única forma de impedir outra queda. Mostre que elas podem voltar a coexistir. Vença a guarda e encerre o ciclo de contenção.", "enemies": ["boss-forge", "minion-cinder", "minion-acolyte"], "scale": 1.0, "reward": "pulse", "tip": "O Arconte combina pressão em área e defesa. Preserve a cura, espere a abertura e use seus supremos em conjunto.", "ending": "As cinco ressonâncias retornam ao Farol. Os nomes, as manhãs e as vozes encontram seus lugares. Vesper quebra a última corrente. Fim do capítulo III — a cidade volta a escolher seu próprio futuro."},
 ]
 var cleared := 0
 var team: Array = []
@@ -92,17 +103,18 @@ func load_progress() -> void:
 	var parse_error := parser.parse(FileAccess.get_file_as_string(store_path))
 	var data: Variant = parser.data
 	var schema: Variant = data.get("schemaVersion") if data is Dictionary else null
-	var known_schema: bool = (schema is int or schema is float) and (schema == 1 or schema == 2)
+	var known_schema: bool = (schema is int or schema is float) and (schema == 1 or schema == 2 or schema == 3)
 	if parse_error != OK or not data is Dictionary or not known_schema:
 		_backup_suffix = ".invalid.bak"
 		error_text = "O progresso salvo não pôde ser lido. O arquivo foi preservado; uma cópia será guardada antes de uma nova gravação."
 		return
 	var legacy: bool = data.schemaVersion == 1
 	if legacy: _backup_suffix = ".v1.bak"
+	elif data.schemaVersion == 2: _backup_suffix = ".v2.bak"
 	var repaired := false
 	var count: Variant = data.get("cleared", 0)
 	if (count is int or count is float) and is_finite(float(count)):
-		cleared = int(clampf(float(count), 0, MISSIONS.size()))
+		cleared = int(clampf(float(count), 0, 3 if data.schemaVersion < 3 else MISSIONS.size()))
 		repaired = float(count) != float(cleared)
 	else: repaired = true
 	var saved_team: Variant = data.get("team", [])
@@ -159,7 +171,7 @@ func save_progress() -> bool:
 	if file == null:
 		error_text = "Não foi possível salvar o progresso: " + error_string(FileAccess.get_open_error())
 		return false
-	file.store_string(JSON.stringify({"schemaVersion": 2, "cleared": cleared, "team": team, "equipped": equipped}, "\t"))
+	file.store_string(JSON.stringify({"schemaVersion": 3, "cleared": cleared, "team": team, "equipped": equipped}, "\t"))
 	file.flush()
 	var write_error := file.get_error()
 	file.close()
@@ -229,6 +241,18 @@ static func register_enemies(source) -> void:
 	var boss: Dictionary = source.hero_by_id.vesper.duplicate(true)
 	boss.merge({"id": "boss-vesper", "visualHero": "vesper", "title": "Guardião preso ao eclipse", "role": "Chefe", "hp": 1800, "attack": 205, "defense": 108, "speed": 78}, true)
 	source.hero_by_id[boss.id] = boss
+	for variant in [
+		{"id":"minion-tide","source":"oren","name":"Vigia de sal","hp":820,"attack":158,"defense":82,"role":"Minion"},
+		{"id":"minion-siren","source":"saira","name":"Eco da maré","hp":630,"attack":145,"defense":51,"role":"Minion"},
+		{"id":"minion-cinder","source":"cindra","name":"Coletora de brasas","hp":750,"attack":171,"defense":65,"role":"Minion"},
+		{"id":"boss-tide","source":"saira","name":"Guardiã das marés","hp":1550,"attack":190,"defense":85,"role":"Chefe"},
+		{"id":"boss-forge","source":"rhazen","name":"Arconte da fornalha","hp":1750,"attack":207,"defense":104,"role":"Chefe"},
+	]:
+		var enemy: Dictionary = source.hero_by_id[variant.source].duplicate(true)
+		enemy.merge(variant, true)
+		enemy.visualHero = variant.source
+		enemy.title = variant.name
+		source.hero_by_id[enemy.id] = enemy
 
 func battle(engine, index: int) -> Dictionary:
 	if not can_play(index) or not catalog.valid_team(team): return {"error": "Missão ou equipe inválida."}
@@ -240,7 +264,7 @@ func battle(engine, index: int) -> Dictionary:
 			actor.maxHp = engine.rounded(actor.maxHp * mission.scale)
 			actor.hp = actor.maxHp
 			actor.attack = engine.rounded(actor.attack * mission.scale)
-			if actor.heroId == "boss-vesper": actor.energy = 64
+			if actor.heroId.begins_with("boss-"): actor.energy = 64
 		else:
 			if slots(actor.heroId).all(func(id): return id == ""): continue
 			var bonus := bonuses(actor.heroId)

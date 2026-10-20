@@ -1,4 +1,6 @@
-# Primeira etapa da apresentação 3D
+# Arquivo — primeira etapa da apresentação 3D
+
+**A apresentação principal voltou ao 2D na Alpha 0.10.** Esta página documenta a etapa anterior, preservada como estudo. Abra o Vesper em **Extras → Arquivo 3D**; a arena 3D pode ser exercitada pelos testes e pela captura `tests/capture_3d.gd`. [Direção 2D atual](TWO-D.md).
 
 **Estudo dedicado posterior:** Vesper recebeu um modelo próprio com esqueleto e seis animações; o ateliê pode ser aberto pelo menu. Os demais personagens preservam a apresentação desta primeira etapa. [Vesper — direção de arte e controles](VESPER.md).
 

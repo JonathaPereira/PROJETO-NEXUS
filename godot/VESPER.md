@@ -1,6 +1,6 @@
 # Vesper — O último juramento
 
-Estudo de arte e animação de um único personagem. O Vesper recebeu um modelo próprio, esqueleto, materiais e seis animações, usando a ilustração encapuzada já existente no projeto como referência de identidade. Os outros personagens preservam a apresentação anterior.
+Estudo de arte e animação de um único personagem. O Vesper recebeu um modelo próprio, esqueleto, materiais e seis animações, usando a ilustração encapuzada já existente no projeto como referência de identidade. O jogo principal voltou ao 2D; este estudo permanece arquivado e executável em Extras.
 
 ![Vesper no ateliê, capturado no Godot](../docs/vesper-preview/vesper-hero.png)
 
@@ -10,7 +10,7 @@ As prévias foram renderizadas pelo próprio Godot. O vídeo foi gravado quadro 
 
 ## Abrir
 
-Importe `project.godot` no Godot 4.6 Standard, pressione **F5** e escolha **VESPER · ATELIÊ 3D** na navegação do menu. Também é possível abrir `scenes/vesper/atelier.tscn` e executar essa cena com **F6**.
+Importe `project.godot` no Godot 4.6 Standard, pressione **F5** e escolha **Extras → Arquivo 3D · Vesper**. Também é possível abrir `scenes/vesper/atelier.tscn` e executar essa cena com **F6**.
 
 - **1 — Ceifa da penumbra:** preparação, giro de tronco, avanço, arco da foice e recuperação.
 - **2 — Eclipse absoluto:** invocação, aproximação de câmera, energia na mão, golpe e dissipação.
@@ -20,7 +20,7 @@ Importe `project.godot` no Godot 4.6 Standard, pressione **F5** e escolha **VESP
 - Arraste sobre o cenário para girar o personagem; use a roda para aproximar ou afastar.
 - **Esc / Voltar:** retorna ao menu do jogo.
 
-O ateliê usa alvos de treino invisíveis para calcular os exemplos das janelas flutuantes pelo motor real: a ceifa usa o ataque básico, a proteção usa Guarda do eclipse e o supremo usa Eclipse absoluto. A janela de dano acompanha Oren; a cura do supremo inclui o dreno nos três inimigos do exemplo. Vesper começa com 300 de vida a menos para demonstrar também essa cura própria, em uma janela separada. Isso não avança partidas, campanha, gemas ou progressão. O mesmo modelo com esqueleto substitui Vesper no combate livre e sua variante de chefe na história, preservando os valores das habilidades.
+O ateliê usa alvos de treino invisíveis para calcular os exemplos das janelas flutuantes pelo motor real: a ceifa usa o ataque básico, a proteção usa Guarda do eclipse e o supremo usa Eclipse absoluto. A janela de dano acompanha Oren; a cura do supremo inclui o dreno nos três inimigos do exemplo. Vesper começa com 300 de vida a menos para demonstrar também essa cura própria, em uma janela separada. Isso não avança partidas, campanha, gemas ou progressão. A integração com a arena 3D também permanece no código e nos testes. O combate principal usa novamente as ilustrações e poses 2D.
 
 ## Direção de arte
 

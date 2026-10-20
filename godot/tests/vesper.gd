@@ -98,10 +98,11 @@ func _run() -> void:
 	await settle()
 	check(not is_instance_valid(app.vesper_atelier) and app.hub.visible, "Escape returns to the game menu")
 	check(app.teams == teams and app.campaign.cleared == progress, "The character study preserves teams and campaign progression")
+	app._set_presentation(true)
 	app._enter_free()
 	await settle()
 	var model = app.backdrop.models["1-vesper"]
-	check(model.has_method("prepare_action") and model.skeleton.get_bone_count() == 32, "The same authored Vesper is used in actual free combat")
+	check(model.has_method("prepare_action") and model.skeleton.get_bone_count() == 32, "The authored Vesper remains usable in the archived 3D battle study")
 	model.prepare_action({"kind": "shield", "id": "skill"})
 	check(model.current_kind == "ward", "Vesper's shield technique selects the defensive skeletal animation")
 	model.prepare_action({"kind": "aoe", "id": "ultimate"})
