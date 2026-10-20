@@ -286,6 +286,8 @@ func _run() -> void:
 	var app = MainScene.instantiate()
 	root.add_child(app)
 	await settle()
+	app._set_presentation(true)
+	await settle()
 	if not is_instance_valid(app.backdrop) or app.state.is_empty():
 		push_error("Main scene did not initialize its battlefield")
 		quit(1)

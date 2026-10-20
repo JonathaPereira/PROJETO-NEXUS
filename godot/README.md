@@ -1,36 +1,36 @@
-# NEXUS em Godot — Alpha 0.9 / primeira etapa 3D
+# NEXUS em Godot — Alpha 0.10 / direção 2D
 
 Godot 4.6 Standard / GDScript, gratuito e sem addons pagos. Validado com Godot 4.6.3 em Linux.
 
-**Novo estudo do Vesper:** no menu, escolha **VESPER · ATELIÊ 3D** para ver o personagem com modelo próprio, esqueleto, capa deformável, foice e seis animações. O mesmo modelo está integrado às batalhas. [Controles, direção de arte e fonte Blender](VESPER.md).
+A apresentação principal usa **2D**, com as ilustrações e poses preservadas, cenários animados, golpes refeitos, efeitos de tela e janelas de resultado. A campanha tem **três capítulos e nove missões**. O botão **Automático · A** permite que sua equipe escolha alvos e habilidades. [Guia da nova apresentação e controles](TWO-D.md).
 
-O combate principal agora usa uma arena e personagens **3D reais**, com articulações procedurais, formações triangulares, efeitos e câmera de supremo. As janelas flutuantes mostram dano à vida e ao escudo separadamente, crítico, cura e efeitos positivos/negativos com duração. A arte final dos modelos e animações continua em desenvolvimento. A campanha, os engastes e as regras descritos abaixo permanecem disponíveis; a galeria **Golpes** mantém a apresentação 2D para comparação. [Guia da etapa 3D](GRAPHICS-3D.md).
+O menu se divide em **Início**, **Modo História**, **Coleção**, **Jogar** e **Extras**. Heróis e gemas ficam nos submenus de Coleção; galeria, treinos, laboratório e estudo 3D do Vesper ficam em Extras. [Arquivo editável do Vesper](VESPER.md).
 
 ## Atualizar e abrir no Windows
 
-1. Feche o Godot. Use a pasta desta revisão do projeto, que contém `godot/scripts/battle_stage_3d.gd`. Branches anteriores e a versão web não incluem esta etapa.
+1. Feche o Godot. Use a pasta desta revisão do projeto, que contém `godot/scripts/impact_modern.gd`. Branches anteriores e a versão web não incluem esta etapa.
 2. Se baixar as fontes pelo GitHub, selecione a revisão com esta etapa, use **Code → Download ZIP** e depois **Extrair tudo**, em uma pasta nova.
 3. No gerenciador do Godot, clique em **Importar** e selecione `godot/project.godot` dentro da pasta extraída.
-4. Aguarde a importação, pressione **F5** e entre em **Combate livre** para abrir a arena 3D. O cabeçalho da batalha identifica a apresentação em desenvolvimento.
+4. Aguarde a importação, pressione **F5** e entre em **Combate livre** para abrir o campo 2D. Use Automático para delegar o controle da sua equipe.
 5. Abra **Heróis** para ver fichas e equipar gemas. Para jogar, clique em **Começar história → Jogar próxima missão → Iniciar missão**. **Combate livre** mantém os modos anteriores.
 
 Sua cópia anterior não atualiza automaticamente. Quem usa Git pode atualizar a branch com `git pull --ff-only`, preservando alterações locais.
 
 ## Menu, história e gemas
 
-O menu inicial abre **História**, **Heróis**, **Gemas**, **Combate livre**, os treinos **Aprender**, a galeria e o laboratório. O Sanctum tem arte própria, linhas de energia, painéis azul-escuros, acentos ciano e títulos em Space Grotesk, com Manrope nos textos. As fontes são gratuitas sob SIL Open Font License; as licenças ficam em `assets/`. **Menu**, durante uma luta, permite voltar; uma confirmação evita descartar a batalha por engano. Batalhas em andamento não são salvas.
+O menu inicial agrupa **Modo História**, **Coleção**, **Jogar** e **Extras**, com submenus para heróis, gemas, treinos, galeria e laboratório. O Sanctum tem arte própria, linhas de energia, painéis azul-escuros, acentos ciano e títulos em Space Grotesk, com Manrope nos textos. As fontes são gratuitas sob SIL Open Font License; as licenças ficam em `assets/`. **Menu**, durante uma luta, permite voltar; uma confirmação evita descartar a batalha por engano. Batalhas em andamento não são salvas.
 
 **Heróis** reúne o elenco de 15 personagens. A ficha exibe afinidade, função e atributos base, além das abas **Habilidades**, **História** e **Engastes**. As três habilidades têm imagens, nome, descrição, custo e recarga; a sinergia explica como o kit prepara ou aproveita ações de aliados. A história inclui origem, motivação, uma fala e a relação do personagem com o Farol. Os atributos base da ficha continuam distintos dos bônus de campanha mostrados no painel de engastes.
 
-**O Farol Partido** é um capítulo curto de três missões. O Farol mantinha cinco ressonâncias em equilíbrio; após a queda do núcleo, seus defensores passaram a tratar os guardiões como invasores. Novos relatos antes e depois das missões ligam os heróis à transmissão de socorro e à âncora que aprisiona Vesper. Sentinela de Cacos, Rastejante de Raiz e Acólito do Véu têm artes, atributos e habilidades de minions; a última missão enfrenta **Vesper como chefe**, com dois servos. O chefe tem atributos próprios, preservando o Vesper selecionável. Há dicas táticas, desbloqueio sequencial e final do capítulo. A equipe de história é independente dos dois trios do combate livre; escolha qualquer composição de três heróis distintos. Vida e energia são restauradas a cada missão.
+**A jornada do Farol** tem três capítulos: **O Farol Partido**, **Marés da Memória** e **A Última Fornalha**, cada um com três missões, relatos, dicas e um chefe. A seleção mostra avanço, bloqueios e a próxima etapa. A equipe de história é independente do combate livre; os personagens restauram vida e energia entre missões. O primeiro capítulo continua compatível com o progresso anterior. [Campanha e salvamento](CAMPAIGN.md).
 
 Cada herói tem **três engastes**, disponíveis tanto em **Heróis → Engastes** quanto em **Gemas**. Você começa com **três cópias de cada gema**: **Brasa lapidada (+4% ATQ)**, **Seiva cristalizada (+5% VIDA)** e **Pulso de éter (+8 energia inicial)**. Gemas repetidas são permitidas: três iguais somam +12% ataque, +15% vida ou +24 energia inicial, começando a missão com 64 em vez de 40. Os percentuais somam sobre o atributo base antes de um único arredondamento; não são multiplicações sucessivas.
 
-Escolha um dos três espaços e a gema disponível. Equipar, trocar e remover é gratuito, entre missões; cada espaço ocupado consome uma cópia real do estoque compartilhado. Cada primeira vitória concede mais uma gema: Brasa na missão 1, Seiva na 2 e Pulso na 3. Repetir missões não repete recompensas. O painel mostra estoque livre, donos das cópias e atributos antes/depois.
+Escolha um dos três espaços e a gema disponível. Equipar, trocar e remover é gratuito, entre missões; cada espaço ocupado consome uma cópia real do estoque compartilhado. Cada primeira vitória concede mais uma gema: Brasa, Seiva e Pulso se repetem nas três missões de cada capítulo. Repetir missões não repete recompensas. O painel mostra estoque livre, donos das cópias e atributos antes/depois.
 
-**Gemas valem somente na história.** Combate livre, duelo local, treinos, galeria e laboratório preservam as regras e os atributos de referência da Alpha 0.5. Partidas de campanha não entram na tabela de balanço. Progresso, trio e engastes são salvos em `user://campaign-0.7.json`, agora no formato `schemaVersion: 2`. O progresso antigo é lido automaticamente, mantendo o engaste anterior no primeiro espaço; antes da próxima gravação, o original é preservado em `campaign-0.7.json.v1.bak`. Não há conta nem sincronização entre dispositivos. [Regras e missões da campanha](CAMPAIGN.md).
+**Gemas valem somente na história.** Combate livre, duelo local, treinos, galeria e laboratório preservam as regras e os atributos de referência da Alpha 0.5. Partidas de campanha não entram na tabela de balanço. Progresso, trio e engastes são salvos em `user://campaign-0.7.json`, agora no formato `schemaVersion: 3`. O progresso antigo é lido automaticamente, mantendo o engaste anterior no primeiro espaço; antes da próxima gravação, o original é preservado em `campaign-0.7.json.v1.bak` ou `.v2.bak`. Não há conta nem sincronização entre dispositivos. [Regras e missões da campanha](CAMPAIGN.md).
 
-![Menu inicial](preview/menu.png)
+![Menu inicial](../docs/2d-preview/menu.png)
 
 [Missões](preview/story.png) · [Heróis](preview/heroes.png) · [História de um herói](preview/hero-lore.png) · [Engastes do herói](preview/hero-gems.png) · [Gemas](preview/gems.png) · [Minions](preview/minions.png)
 
@@ -101,9 +101,9 @@ O [relatório das simulações](SIMULATIONS.md) separa os resultados das 60 form
 
 ## Referência da apresentação 2D anterior
 
-Os parágrafos e as capturas desta seção descrevem a apresentação da Alpha 0.8, mantida na galeria **Opções → Galeria 2D**. A batalha principal da Alpha 0.9 usa os modelos, a arena e os efeitos do [guia 3D](GRAPHICS-3D.md).
+A Alpha 0.10 usa novamente esta base ilustrada, com novos cenários, efeitos e organização dos medidores. As capturas antigas abaixo documentam a origem das poses e coreografias; veja as [prévias atuais](TWO-D.md) para a apresentação principal. O [estudo 3D](GRAPHICS-3D.md) permanece arquivado.
 
-O chão é reenquadrado pela borda inferior para aparecer sob todos os pés. Silhuetas ficam ancoradas ao chão, com sombras de contato; a distância altera escala e altura. É uma apresentação 2.5D com artes em perspectiva, sem modelos 3D. A referência de disposição é o Marvel Avengers Alliance: **um personagem mais próximo do adversário, no centro, e dois atrás, um acima e outro abaixo**. As fichas acompanham cada integrante, com **VIDA**, **ENERGIA** e **ESCUDO** em barras independentes, valores exatos e duração do escudo. O trio padrão novo leva Axion à frente; equipes já salvas são preservadas. Em **Equipes**, use o seletor **Personagem na FRENTE** para ordenar seu trio sem remover integrantes.
+O chão é reenquadrado pela borda inferior para aparecer sob todos os pés. Silhuetas ficam ancoradas ao chão, com sombras de contato; a distância altera escala e altura. É uma apresentação 2.5D com artes em perspectiva, sem modelos 3D. A referência de disposição é o Marvel Avengers Alliance: **um personagem mais próximo do adversário, no centro, e dois atrás, um acima e outro abaixo**. As fichas ficam em colunas laterais estáveis para cada integrante, com **VIDA**, **ENERGIA** e **ESCUDO** em barras independentes, valores exatos e duração do escudo. O trio padrão novo leva Axion à frente; equipes já salvas são preservadas. Em **Equipes**, use o seletor **Personagem na FRENTE** para ordenar seu trio sem remover integrantes.
 
 **Ataque básico acerta somente UM alvo escolhido**, que pode estar na frente ou atrás. A posição, por si só, não bloqueia ataques nem reduz dano. **Provocação** de Rhazen/Vesper restringe golpes individuais ao provocador enquanto estiver ativa; ataques em área continuam atingindo todos os rivais vivos. Esses avisos aparecem ao selecionar uma ação.
 
@@ -152,6 +152,6 @@ node scripts/balance-report.mjs
 
 Godot deve estar no PATH (ou `GODOT_EXECUTABLE`). Os testes verificam kits, sinergias, recursos, estados, término de partidas, paridade entre os motores e interface nativa. Também exportam os dois filtros e reproduzem todas as ações dos JSONs no motor JavaScript, conferindo recibos e estados; verificam o CSV, caminhos de salvamento e erros de destino. Artefatos e preferências de teste ficam isolados em `artifacts/`.
 
-A campanha tem verificações de três missões completas, bloqueios, chefe, primeira vitória e repetição sem duplicar recompensas, derrota e nova tentativa, estoque e troca de gemas, reabertura do progresso, dados inválidos e falha de gravação. Os testes confirmam que o modo história preserva os trios livres e não altera os atributos nem as estatísticas do laboratório.
+A campanha tem verificações das nove missões completas, bloqueios, chefe, primeira vitória e repetição sem duplicar recompensas, derrota e nova tentativa, estoque e troca de gemas, reabertura do progresso, dados inválidos e falha de gravação. Os testes confirmam que o modo história preserva os trios livres e não altera os atributos nem as estatísticas do laboratório.
 
 A versão Godot é aberta no editor nesta etapa. **GitHub Pages continua com o protótipo web anterior**; exportar Godot para navegador será outra entrega. A primeira campanha e os engastes estão implementados; treinamento de skills, obtenção de heróis, multiplayer online e integração com A Lei do Trono permanecem no [roteiro de progressão](ROADMAP.md).

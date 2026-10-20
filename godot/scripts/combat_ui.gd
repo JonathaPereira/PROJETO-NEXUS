@@ -2,7 +2,7 @@ extends RefCounted
 const Fighter = preload("res://scripts/fighter.gd")
 const Card = preload("res://scripts/skill_card.gd")
 const Meter = preload("res://scripts/meter.gd")
-const Backdrop = preload("res://scripts/battle_stage_3d.gd")
+const Backdrop = preload("res://scripts/arena_backdrop.gd")
 const Lessons = preload("res://scripts/lessons.gd")
 const Sound = preload("res://scripts/sound.gd")
 const RulesText = preload("res://scripts/rules_text.gd")
@@ -27,10 +27,16 @@ static func build(app) -> void:
 	var title = app._label("NEXUS", 28, app.GOLD)
 	title.add_theme_font_override("font", preload("res://assets/space-grotesk.ttf"))
 	brand.add_child(title)
-	brand.add_child(app._label("ECOS DO CREPÚSCULO  /  3D · EM DESENVOLVIMENTO", 10, app.MUTED))
+	brand.add_child(app._label("ECOS DO CREPÚSCULO  /  TÁTICO 2D", 10, app.MUTED))
 	header.add_child(app._button("Menu", app._open_menu))
 	app.roster_button = app._button("Equipes", app._open_roster)
 	header.add_child(app.roster_button)
+	app.auto_button = CheckButton.new()
+	app.auto_button.name = "AutoPlay"
+	app.auto_button.text = "Automático · A"
+	app.auto_button.tooltip_text = "Sua equipe escolhe alvos e habilidades, cura feridos e renova a proteção conforme necessário. Desligue para assumir após a ação atual. Não controla o adversário no duelo local."
+	app.auto_button.toggled.connect(app._set_auto_play)
+	header.add_child(app.auto_button)
 	# Secondary tools stay available without occupying the battle HUD.
 	var tools_popup := PopupPanel.new()
 	app.add_child(tools_popup)
@@ -228,7 +234,7 @@ static func build(app) -> void:
 	targets.add_child(app.execute_button)
 	var footer := HBoxContainer.new()
 	layout.add_child(footer)
-	var note = app._label("1–4  Habilidades     ← →  Alvo     Enter  Confirmar", 12, app.MUTED)
+	var note = app._label("1–4  Habilidades    ← →  Alvo    Enter  Confirmar    A  Automático    Esc  Menu", 12, app.MUTED)
 	note.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	footer.add_child(note)
 	var reduce := CheckButton.new()
@@ -279,6 +285,9 @@ static func refresh(app) -> void:
 	app.difficulty_picker.disabled = (app.started and app.state.phase == "playing") or app.mode == "local" or app.tutorial_index >= 0
 	app.start_button.visible = not app.started
 	app.phase_label.text = "Prepare sua equipe" if not app.started else ("Batalha encerrada" if app.state.phase == "finished" else "%s · %s" % [hero.name, "sua vez" if app._human_turn() else "vez do rival"])
+	app.auto_button.set_pressed_no_signal(app.auto_play)
+	app.auto_button.disabled = app.tutorial_index >= 0
+	if app.started and app.auto_play and actor.side == 0 and app.state.phase == "playing": app.phase_label.text = "%s · automático" % hero.name
 	var fracture: Dictionary = app.combat.rules.fracture
 	app.round_label.text = "RODADA %02d  ·  FRATURA EM %d RODADAS" % [app.state.round, int(fracture.startRound) - app.state.round]
 	app.round_label.tooltip_text = "Fratura a partir da rodada %d: dano antes da ação, atravessa escudos. Cura recebida diminui %s adicionais por rodada, até zero." % [int(fracture.startRound), RulesText.percent(fracture.healingReductionPerRound)]
@@ -321,6 +330,7 @@ static func refresh(app) -> void:
 	app.execute_button.text = "Confirmar em todos" if all_targets else "Usar em %s" % app._unit_name(app.target_id)
 	if not app.started: app.execute_button.text = "Inicie a missão" if app.campaign_mission >= 0 else "Inicie o combate"
 	elif not selected.available: app.execute_button.text = "Em recarga" if actor.cooldowns.get(app.selected_action, 0) > 0 else "Energia insuficiente"
+	if app.auto_play and app.started and actor.side == 0: app.execute_button.text = "Equipe no automático"
 	if action.kind == "damage" and targets.size() < app.state.units.filter(func(u): return u.hp > 0 and u.side != actor.side).size(): app.step_label.text = "PROVOCAÇÃO\nAtaque o provocador."
 	elif action.kind == "aoe": app.step_label.text = "ÁREA\nTodos os rivais vivos."
 	app.execute_button.disabled = not app._can_act() or not app.combat.can_use(actor, app.selected_action) or app.target_id.is_empty()

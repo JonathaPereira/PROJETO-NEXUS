@@ -5,7 +5,7 @@ const Codex = preload("res://scripts/hero_codex.gd")
 const PATH := "user://presentation-test.json"
 
 static func _clean() -> void:
-	for suffix in ["", ".tmp", ".v1.bak", ".invalid.bak"]:
+	for suffix in ["", ".tmp", ".v1.bak", ".v2.bak", ".invalid.bak"]:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(PATH + suffix))
 
 static func _settle(tree: SceneTree) -> void:

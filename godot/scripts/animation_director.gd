@@ -1,7 +1,7 @@
 extends RefCounted
-const Impact = preload("res://scripts/impact.gd")
+const Impact = preload("res://scripts/impact_modern.gd")
 const Fighter = preload("res://scripts/fighter.gd")
-const Ultimate = preload("res://scripts/ultimate_fx.gd")
+const Ultimate = preload("res://scripts/ultimate_2d.gd")
 const AbilityArt = preload("res://scripts/ability_art.gd")
 const Receipt = preload("res://scripts/damage_receipt.gd")
 const ReceiptLink = preload("res://scripts/receipt_link.gd")
@@ -17,6 +17,7 @@ var posed_fighters: Array = []
 var receipt_bounds: Array[Rect2] = []
 var last_timing: Dictionary = {}
 var spatial_body_bounds: Array[Rect2] = []
+var flat_receipts := true
 
 func cancel(preserve_receipts := false) -> void:
 	generation += 1
@@ -58,6 +59,7 @@ func _effect(effects: Control, origin: Vector2, destination: Vector2, hero: Dict
 
 func play_spatial(owner: Node, stage: Control, effects: Control, fighters: Dictionary, hero: Dictionary, action: Dictionary, result: Dictionary, reduced: bool, on_impact: Callable) -> bool:
 	cancel(true)
+	flat_receipts = false
 	last_numbers.clear()
 	last_profile = hero.animation
 	var version := generation
@@ -112,6 +114,7 @@ func play_spatial(owner: Node, stage: Control, effects: Control, fighters: Dicti
 
 func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary, action: Dictionary, result: Dictionary, reduced: bool, on_impact: Callable) -> bool:
 	cancel()
+	flat_receipts = true
 	last_numbers.clear()
 	var version := generation
 	last_profile = hero.animation
@@ -208,15 +211,20 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 	# The only logical callback. Contact is a pose hold, never global time scaling.
 	on_impact.call()
 	impact_count += 1
+	if owner.has_method("_screen_impact"): owner._screen_impact(primary.hit_position(),actor.tint,ultimate)
 	if is_instance_valid(ultimate_scene): ultimate_scene.impact()
 	actor.visual_root.modulate.a = 1.0
+	for fighter in fighters.values():
+		spatial_body_bounds.append(Rect2(fighter.foot_position()-Vector2(fighter.artwork.size.x*fighter.depth*.5,fighter.artwork.size.y*fighter.depth),fighter.artwork.size*fighter.depth))
 	var receivers := {}
 	var reactions := {}
+	for event in result.events:
+		if not fighters.has(event.get("target", "")): continue
+		if not receivers.has(event.target): receivers[event.target] = []
+		receivers[event.target].append(event)
 	for event in _visual_events(result.events):
 		if not fighters.has(event.get("target", "")): continue
 		var target = fighters[event.target]
-		if not receivers.has(event.target): receivers[event.target] = []
-		receivers[event.target].append_array(number_lines(event))
 		if not event.has("amount"): continue
 		if not target in posed_fighters: posed_fighters.append(target)
 		var impact_kind: String = event.type
@@ -229,7 +237,7 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 			target.reaction_until = Time.get_ticks_msec() + int((timing.hold + 0.60) * 1000)
 	for id in receivers:
 		var target = fighters[id]
-		_number(owner, effects, target.hit_position() + Vector2(-94, -57), {"lines": receivers[id]}, target, fighters)
+		_number(owner, effects, target.hit_position() + Vector2(-94, -57), {"events": receivers[id], "actionName": action.name}, target, fighters)
 	await owner.get_tree().create_timer(timing.hold).timeout
 	if not _valid(version, actor): return false
 	for id in receivers:
@@ -343,7 +351,6 @@ func _number(_owner: Node, effects: Control, at: Vector2, event: Dictionary, tar
 		if lines.any(func(line): return str(line[0]).contains("ESCUDO") or str(line[0]).contains("Escudo")):
 			remaining = int(target.display_data.get("shield", 0))
 	if event.has("events"):
-		remaining = int(target.display_data.get("shield", 0)) if is_instance_valid(target) else -1
 		receipt.configure_events(event.events, name_value, capacity, remaining, event.get("actionName", ""))
 	elif event.has("type"):
 		receipt.configure_events([event], name_value, capacity, remaining)
@@ -373,7 +380,7 @@ func _receipt_position(effects: Control, preferred: Vector2, dimensions: Vector2
 	for fighter in fighters.values():
 		if not is_instance_valid(fighter): continue
 		plate_bounds.append(effects.get_global_transform().affine_inverse() * fighter.plate.get_global_rect())
-	var top := 8.0 if not spatial_body_bounds.is_empty() else 62.0
+	var top := 62.0 if flat_receipts else 8.0
 	var best := Vector2(clampf(preferred.x, 6, maxf(6, effects.size.x - dimensions.x - 6)), clampf(preferred.y, top, maxf(top, effects.size.y - dimensions.y - 6)))
 	var best_score := INF
 	for y in [preferred.y, preferred.y - dimensions.y - 12, preferred.y + dimensions.y + 12, top, effects.size.y - dimensions.y - 6]:

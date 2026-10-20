@@ -1,26 +1,23 @@
-# O Farol Partido — capítulo I
+# A jornada do Farol — três capítulos
 
-Primeira campanha jogável, introduzida na Alpha 0.7 e ampliada na **Alpha 0.8** com relatos do Farol e fichas dos heróis. São três batalhas independentes, com introdução e desfecho em texto. Treinamento de habilidades continua para uma etapa futura.
-
-O Farol mantinha em equilíbrio cinco ressonâncias — calor, vida, matéria, memória e sombra. Quando seu núcleo se partiu, as defesas começaram a reconhecer seus guardiões como invasores. Uma transmissão pede que o trio quebre a âncora sem destruir o guardião. As missões revelam pistas da sabotagem e da ligação de Vesper com o núcleo; a aba **Heróis → História** mostra por que cada personagem respondeu ao chamado.
+A Alpha 0.10 oferece **nove batalhas em três capítulos**, com introdução, tática, desfecho e recompensa por primeira vitória. O Farol perdeu suas cinco ressonâncias; o trio precisa libertar o guardião, recuperar as memórias levadas pela maré e interromper a extração da Última Fornalha.
 
 ## Como jogar
 
-1. No menu, abra **História** e use **Escolher trio**. O primeiro integrante fica na frente, com as mesmas regras de alvo livre do combate normal.
-2. Abra **Heróis → Engastes** ou **Gemas**, escolha o herói, selecione um dos três espaços e clique em **Engastar** na gema desejada. O painel mostra os atributos resultantes e quem está usando cada cópia.
-3. Volte às missões e use **Jogar próxima missão**, ou escolha uma etapa disponível. No campo de batalha, clique em **Iniciar missão**.
-4. Ao vencer, leia o desfecho e a recompensa. **Voltar às missões** retorna à seleção, com a próxima etapa desbloqueada. Use **Jogar próxima missão** para entrar nela; após concluir o capítulo, o botão oferece **Revisitar missão final**.
-5. Se perder, tente novamente ou feche o resultado e abra **Menu** para trocar trio ou gemas. A derrota não remove itens nem progresso.
+1. Abra **Modo História**. As três abas permitem consultar os capítulos; o botão **Continuar** aponta para a próxima missão disponível.
+2. Use **Escolher trio** para montar a equipe. Em **Coleção → Engastes e gemas**, distribua suas cópias entre os heróis.
+3. Escolha uma missão disponível e confirme **Iniciar missão**. O automático é opcional: ative **Automático · A** para delegar alvos e habilidades.
+4. A vitória salva o avanço, concede a primeira recompensa e libera a próxima etapa. A derrota permite tentar novamente e preserva seus itens e progresso.
 
-| Missão | Adversários | Primeira vitória |
+| Capítulo | Missões | Chefe |
 | --- | --- | --- |
-| Os portões quebrados | Sentinela, Rastejante e Acólito | +1 Brasa; abre a missão 2 |
-| Ecos no pátio | Minions reforçados | +1 Seiva; abre a missão 3 |
-| O guardião do eclipse | Vesper chefe, Sentinela e Acólito | +1 Pulso; final do capítulo |
+| I — O Farol Partido | Os portões quebrados; Ecos no pátio; O guardião do eclipse | Vesper preso à âncora |
+| II — Marés da Memória | A escadaria das marés; O arquivo submerso; A guardiã da memória | Guardiã das marés |
+| III — A Última Fornalha | A estrada das cinzas; O coração das máquinas; O último juramento | Arconte da fornalha |
 
-O Sentinela cria uma barreira própria; o Rastejante aplica sangramento; o Acólito expõe defesas. Vesper mantém sua identidade de provocação e riposta, com mais vida e ataque somente nesse confronto. O kit e os atributos do herói Vesper não mudam. Os inimigos de história não entram nos 15 heróis selecionáveis.
+Cada capítulo concede uma Brasa, uma Seiva e um Pulso. Repetir uma missão não duplica recompensas. Os inimigos de história ficam fora do elenco selecionável. As novas variantes aproveitam ilustrações de heróis existentes, com identidade e atributos isolados na campanha; os kits dos heróis selecionáveis permanecem iguais.
 
-A missão 1 usa os atributos básicos dos minions; a 2 multiplica vida/ataque por 1,24; a final usa 1,05 e um Vesper chefe com 1.800 PV, 205 ATQ, 108 DEF e 78 VEL antes desse multiplicador. O chefe começa com 64 de energia. Estes são parâmetros iniciais para teste, sem promessa de equilíbrio final entre todas as composições.
+O trio padrão completou as nove missões com o motor real em testes, sem gemas obrigatórias. Isso demonstra um caminho acessível, não equilíbrio final para todas as composições. Não há custo de entrada nem consumo de energia fora do combate. Cada tentativa restaura os integrantes.
 
 ## Engastes
 
@@ -30,7 +27,7 @@ A missão 1 usa os atributos básicos dos minions; a 2 multiplica vida/ataque po
 | Seiva cristalizada | +5% vida máxima e inicial por cópia | 3 |
 | Pulso de éter | +8 energia inicial por cópia | 3 |
 
-São **três espaços por herói**, com **gemas repetidas permitidas**. Cada espaço ocupado usa uma cópia do estoque compartilhado. Uma mesma cópia não pode ocupar dois espaços; para repetir uma gema no herói ou distribuí-la entre heróis, use cópias diferentes. Há nove cópias iniciais ao todo e mais uma de cada tipo ao concluir as três missões pela primeira vez. O herói pode estar fora do trio e continuar com as cópias equipadas: o painel identifica seus donos. Remover ou trocar devolve a cópia gratuitamente. Não há venda, custo, raridade, aumento de nível nem obtenção aleatória nesta versão.
+São **três espaços por herói**, com **gemas repetidas permitidas**. Cada espaço ocupado usa uma cópia do estoque compartilhado. Uma mesma cópia não pode ocupar dois espaços; para repetir uma gema no herói ou distribuí-la entre heróis, use cópias diferentes. Há nove cópias iniciais ao todo e mais três de cada tipo ao concluir as nove missões pela primeira vez. O herói pode estar fora do trio e continuar com as cópias equipadas: o painel identifica seus donos. Remover ou trocar devolve a cópia gratuitamente. Não há venda, custo, raridade, aumento de nível nem obtenção aleatória nesta versão.
 
 | Três gemas iguais em um herói | Resultado |
 | --- | --- |
@@ -44,9 +41,11 @@ As composições seguem livres: tanque, suporte e dano não são obrigatórios. 
 
 ## Progresso e compatibilidade
 
-O caminho continua **`user://campaign-0.7.json`**, agora com **`schemaVersion: 2`**. Ele armazena etapas concluídas, trio e os três engastes de cada herói. O estoque é derivado das vitórias, evitando duplicação ao reabrir resultados ou repetir missões.
+O caminho continua **`user://campaign-0.7.json`**, agora com **`schemaVersion: 3`**. Ele armazena etapas concluídas, trio e os três engastes de cada herói. O estoque é derivado das vitórias, evitando duplicação ao reabrir resultados ou repetir missões.
 
-O formato anterior é reconhecido automaticamente: seu engaste único ocupa o primeiro espaço e os outros dois começam vazios; trio e avanço são mantidos. O estoque passa a partir das três cópias de cada tipo desta versão. **Antes da próxima gravação**, o arquivo original é copiado para `campaign-0.7.json.v1.bak`, e o progresso passa a ser gravado no formato 2. Se já existir um backup diferente, é usado um sufixo numérico para preservá-lo.
+Os formatos 1 e 2 são reconhecidos automaticamente. O engaste único do formato 1 ocupa o primeiro espaço; os três espaços do formato 2 são mantidos. Trio e as três missões antigas concluídas são preservados. Quem terminou o primeiro capítulo já pode iniciar a missão 4.
+
+**Antes da próxima gravação**, o arquivo original é copiado para `campaign-0.7.json.v1.bak` ou `.v2.bak`, conforme o formato. O progresso passa a usar o formato 3. Se já existir um backup diferente, um sufixo numérico preserva ambos. Dados de formatos anteriores são limitados às três missões que existiam, evitando transformar um valor inválido em vitórias nos novos capítulos.
 
 A gravação usa arquivo temporário e substituição após escrita; falhas aparecem na interface. Um arquivo ilegível é preservado e recebe cópia `.invalid.bak` antes de uma nova gravação explícita por equipe, engaste ou vitória. Se não for possível preservar o original, ele não é substituído. Batalhas em andamento não são retomadas.
 
@@ -56,4 +55,4 @@ Combate livre, duelo local, treinos e laboratório usam atributos base e não re
 
 ## Próximas decisões
 
-Medir dificuldade, variedade de estratégias e impacto dos três engastes antes de expandir o sistema. Os parâmetros ficam em `scripts/campaign.gd`; o [guia de balanceamento](BALANCING.md) explica a separação entre progressão e combate base. O [relatório de simulações](SIMULATIONS.md) usa heróis sem gemas, não mede a dificuldade deste capítulo. Treinamento de skills, gemas com efeitos especiais, novos capítulos e integração com A Lei do Trono continuam para as próximas etapas.
+Medir dificuldade, variedade de estratégias e impacto dos três engastes antes de expandir o sistema. Os parâmetros ficam em `scripts/campaign.gd`; o [guia de balanceamento](BALANCING.md) explica a separação entre progressão e combate base. O [relatório de simulações](SIMULATIONS.md) usa heróis sem gemas, não mede a dificuldade da campanha. Treinamento de skills, gemas com efeitos especiais, expansões futuras e integração com A Lei do Trono continuam para as próximas etapas.

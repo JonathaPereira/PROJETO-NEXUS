@@ -44,6 +44,7 @@ func _run() -> void:
 	var app = Main.instantiate()
 	root.add_child(app)
 	await process_frame
+	app._set_presentation(true)
 	app._enter_free()
 	app.mode = "local"
 	app.reduced_motion = false

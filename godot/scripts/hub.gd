@@ -35,6 +35,10 @@ var hero_lore: Label
 var hero_tab := 0
 var scroll: ScrollContainer
 var wide := true
+var selected_chapter := 0
+var chapter_buttons: Array[Button] = []
+var mission_slots: Dictionary = {}
+var subnav: HBoxContainer
 
 func _ready() -> void:
 	set_anchors_and_offsets_preset(PRESET_FULL_RECT)
@@ -67,32 +71,23 @@ func _ready() -> void:
 	var logo := _heading(masthead, "NEXUS", 30, WHITE)
 	logo.autowrap_mode = TextServer.AUTOWRAP_OFF
 	logo.size_flags_horizontal = SIZE_SHRINK_BEGIN
-	var subtitle := _text(masthead, "ECOS DO CREPÚSCULO  /  ALPHA 0.9 · COMBATE 3D", 11, CYAN)
+	var subtitle := _text(masthead, "ECOS DO CREPÚSCULO  /  TÁTICO 2D", 11, CYAN)
 	subtitle.size_flags_vertical = SIZE_SHRINK_CENTER
 	masthead.add_child(app._button("⛶ Tela", app._show_display))
 	masthead.add_child(app._button("Sair", func(): get_tree().quit()))
 	var nav := _row(column, 8)
-	for item in [["INÍCIO", "menu"], ["HISTÓRIA", "story"], ["HERÓIS", "heroes"], ["GEMAS", "gems"]]:
+	for item in [["INÍCIO", "menu"], ["MODO HISTÓRIA", "story"], ["COLEÇÃO", "heroes"], ["JOGAR", "play"], ["EXTRAS", "extras"]]:
 		var target: String = item[1]
 		var button: Button = app._button(item[0], open.bind(target))
-		button.custom_minimum_size = Vector2(116, 37)
+		button.custom_minimum_size = Vector2(132, 42)
 		button.add_theme_font_size_override("font_size", 12)
 		nav.add_child(button)
 		nav_buttons[target] = button
-	var free: Button = app._button("COMBATE LIVRE", app._enter_free)
-	free.custom_minimum_size = Vector2(154, 37)
-	free.add_theme_font_size_override("font_size", 12)
-	nav.add_child(free)
-	play_button = free
-	var vesper: Button = app._button("VESPER · ATELIÊ 3D", app._open_vesper)
-	vesper.custom_minimum_size = Vector2(190,37)
-	vesper.add_theme_font_size_override("font_size",12)
-	vesper.add_theme_color_override("font_color",Color("c7a3ec"))
-	nav.add_child(vesper)
-	var filler := Control.new()
-	filler.size_flags_horizontal = SIZE_EXPAND_FILL
-	nav.add_child(filler)
+	subnav = HBoxContainer.new()
+	subnav.add_theme_constant_override("separation", 8)
+	column.add_child(subnav)
 	scroll = ScrollContainer.new()
+	scroll.follow_focus = true
 	scroll.size_flags_vertical = SIZE_EXPAND_FILL
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	column.add_child(scroll)
@@ -119,6 +114,17 @@ func open(target: String = "menu") -> void:
 	app.combat_view.hide()
 	app._clear(body)
 	mission_buttons.clear()
+	mission_slots.clear()
+	chapter_buttons.clear()
+	app._clear(subnav)
+	subnav.visible = page in ["heroes", "gems"]
+	if subnav.visible:
+		for item in [["Heróis e habilidades", "heroes"], ["Engastes e gemas", "gems"]]:
+			var target_page: String = item[1]
+			var entry: Button = app._button(item[0], open.bind(target_page))
+			entry.custom_minimum_size = Vector2(210,38)
+			entry.disabled = page == target_page
+			subnav.add_child(entry)
 	gem_buttons.clear()
 	hero_buttons.clear()
 	slot_buttons.clear()
@@ -128,15 +134,17 @@ func open(target: String = "menu") -> void:
 	selected_slot = clampi(selected_slot, 0, 2)
 	if selected_hero == "" or not app.campaign.active_hero(selected_hero): selected_hero = app.campaign.team[0]
 	for id in nav_buttons:
-		var active: bool = id == page
+		var active: bool = id == page or id == "heroes" and page == "gems"
 		nav_buttons[id].add_theme_stylebox_override("normal", _surface(Color("14344a") if active else Color("0b1527b8"), CYAN if active else Color("223448"), 10))
 		nav_buttons[id].add_theme_color_override("font_color", CYAN if active else app.MUTED)
 	match page:
 		"story": _story()
 		"gems": _gems()
 		"heroes": _heroes()
+		"play": _play_menu()
+		"extras": _extras()
 		_: _menu()
-	footer.text = app.campaign.error_text if app.campaign.error_text != "" else message if message != "" else "Progresso local automático  ·  3 engastes por herói  ·  Gemas somente na história  ·  Trocas gratuitas"
+	footer.text = app.campaign.error_text if app.campaign.error_text != "" else message if message != "" else "Progresso salvo neste dispositivo  ·  Configure sua equipe em Coleção  ·  Tab para navegar, Enter para selecionar"
 	footer.add_theme_color_override("font_color", Color("ffb8a8") if app.campaign.error_text != "" else app.MUTED)
 	scroll.set_deferred("scroll_vertical", 0)
 
@@ -191,43 +199,90 @@ func _row(parent: Node, gap := 14, adaptive := false) -> BoxContainer:
 
 func _menu() -> void:
 	var row := _row(body, 28, true)
-	row.size_flags_vertical = SIZE_EXPAND_FILL
 	var left := VBoxContainer.new()
 	left.size_flags_horizontal = SIZE_EXPAND_FILL
-	left.size_flags_stretch_ratio = 1.35
-	left.add_theme_constant_override("separation", 16)
+	left.size_flags_stretch_ratio = 1.20
+	left.add_theme_constant_override("separation", 18)
 	row.add_child(left)
-	_text(left, "CAMPANHA  /  CAPÍTULO 01", 12, CYAN)
-	_heading(left, "O Farol\nPartido", 62 if wide else 42)
-	_text(left, "Cinco ressonâncias. Um núcleo em silêncio.\nQuinze razões para voltar à luz.", 21 if wide else 18)
-	_text(left, "O Farol deveria proteger a cidade. Agora suas sentinelas caçam os próprios guardiões. Reúna três heróis, descubra a origem do eclipse e liberte Vesper antes que sua última voz desapareça.", 15, app.MUTED)
-	story_button = app._button("COMEÇAR HISTÓRIA  →" if app.campaign.cleared == 0 else "CONTINUAR HISTÓRIA  ·  %d/3  →" % app.campaign.cleared if app.campaign.cleared < 3 else "REVISITAR O CAPÍTULO  →", open.bind("story"))
-	story_button.custom_minimum_size.y = 52
+	_text(left, "UMA CIDADE. CINCO RESSONÂNCIAS.", 12, CYAN)
+	_heading(left, "O mundo ainda\nse lembra.", 58 if wide else 38)
+	_text(left, "Reúna seu trio. Recupere as vozes do Farol.\nEscolha como lutar em uma jornada de três capítulos.", 19)
+	_text(left, "Combate tático em 2D, habilidades que se combinam e uma equipe que cresce com suas escolhas.", 15, app.MUTED)
+	story_button = app._button("COMEÇAR HISTÓRIA  →" if app.campaign.cleared == 0 else "CONTINUAR HISTÓRIA  ·  %d/%d  →" % [app.campaign.cleared, Campaign.MISSIONS.size()], _continue_story)
+	story_button.custom_minimum_size.y = 54
 	story_button.add_theme_stylebox_override("normal", _surface(Color("123b50"), CYAN, 14))
 	story_button.add_theme_color_override("font_color", CYAN)
 	left.add_child(story_button)
-	var choices := _row(left)
-	var free: Button = app._button("Combate livre", app._enter_free)
-	free.size_flags_horizontal = SIZE_EXPAND_FILL
-	free.custom_minimum_size.y = 42
-	choices.add_child(free)
-	var heroes: Button = app._button("Conhecer heróis", open.bind("heroes"))
-	heroes.size_flags_horizontal = SIZE_EXPAND_FILL
-	choices.add_child(heroes)
-	var tools := _row(left, 8)
-	for item in [["Aprender", app._show_lessons], ["Galeria de golpes", app._open_showcase], ["Simulações / logs", app._show_lab]]:
-		var button: Button = app._button(item[0], item[1])
-		button.size_flags_horizontal = SIZE_EXPAND_FILL
-		button.add_theme_font_size_override("font_size", 12)
-		tools.add_child(button)
-	var right := _panel(row, Color("574d8a"))
+	var choices := _row(left, 10)
+	play_button = app._button("Combate livre", app._enter_free)
+	play_button.custom_minimum_size = Vector2(180,44)
+	choices.add_child(play_button)
+	var collection: Button = app._button("Minha coleção", open.bind("heroes"))
+	collection.custom_minimum_size = Vector2(180,44)
+	choices.add_child(collection)
+	_text(left, "3 capítulos  /  9 missões  /  15 heróis", 12, CYAN)
+	var right := _panel(row, Color("36576d"))
 	right.size_flags_stretch_ratio = 1.0
-	_text(right, "ARQUIVO 013  /  VIGÍLIA DO ECLIPSE", 11, VIOLET)
-	var art := _portrait(right, app.catalog.hero_by_id.vesper, Vector2(0, 280 if wide else 220), true)
-	art.size_flags_vertical = SIZE_EXPAND_FILL
-	_heading(right, "VESPER", 27)
-	_text(right, "Um juramento transformado em corrente.", 16, VIOLET)
-	_text(right, "15 heróis originais  ·  5 afinidades  ·  Trio livre\n3 missões de história  ·  3 engastes por herói", 13, app.MUTED)
+	_text(right, "SEU PRÓXIMO DESTINO", 11, CYAN)
+	var chapter: int = mini(2, int(mini(app.campaign.cleared,8)/3.0))
+	var record: Dictionary = Campaign.CHAPTERS[chapter]
+	var art := TextureRect.new()
+	art.texture = _chapter_art(chapter)
+	art.custom_minimum_size = Vector2(0,240 if wide else 160)
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	art.mouse_filter = MOUSE_FILTER_IGNORE
+	right.add_child(art)
+	_text(right, record.eyebrow, 11, Color(record.color))
+	_heading(right, record.name, 29)
+	_text(right, record.summary, 15, app.MUTED)
+	var progress := ProgressBar.new()
+	progress.max_value = Campaign.MISSIONS.size()
+	progress.value = app.campaign.cleared
+	progress.custom_minimum_size.y = 8
+	progress.show_percentage = false
+	right.add_child(progress)
+
+func _continue_story() -> void:
+	selected_chapter = mini(2, int(mini(app.campaign.cleared,8)/3.0))
+	open("story")
+	next_mission_button.grab_focus()
+
+func _chapter_art(index: int) -> Texture2D:
+	if index == 1 and ResourceLoader.exists("res://assets/environments/tidal-observatory.png"): return load("res://assets/environments/tidal-observatory.png")
+	return preload("res://assets/arena.png") if index == 2 else preload("res://assets/nexus-sanctum.png")
+
+func _play_menu() -> void:
+	_text(body, "JOGAR  /  ESCOLHA SEU MODO", 11, CYAN)
+	_heading(body, "Seu ritmo. Sua equipe.", 38)
+	var row := _row(body,18,true)
+	for item in [["Contra a IA", "Pratique combinações, escolha a dificuldade e ative o automático quando quiser.", "training"], ["Duelo local", "Duas pessoas no mesmo dispositivo, com os mesmos atributos e regras.", "local"]]:
+		var card := _panel(row)
+		_heading(card,item[0],26)
+		_text(card,item[1],16,app.MUTED)
+		var chosen_mode: String = item[2]
+		var launch: Button = app._button("Preparar equipes  →", func():
+			app.mode = chosen_mode
+			app.mode_picker.select(0 if chosen_mode == "training" else 1)
+			app._save_preferences()
+			app._enter_free())
+		launch.custom_minimum_size.y = 48
+		card.add_child(launch)
+	_text(body,"Na campanha, gemas aprimoram seus heróis. O combate livre preserva os atributos de referência.",14,app.MUTED)
+
+func _extras() -> void:
+	_text(body,"EXTRAS  /  APRENDER E EXPLORAR",11,CYAN)
+	_heading(body,"Tudo no seu lugar.",36)
+	var grid := GridContainer.new()
+	grid.columns = 2 if wide else 1
+	grid.add_theme_constant_override("h_separation",16)
+	grid.add_theme_constant_override("v_separation",16)
+	body.add_child(grid)
+	for item in [["Aprender a jogar","Treinos guiados sobre afinidades, escudos e estados.",app._show_lessons], ["Galeria de golpes","Explore as habilidades dos quinze heróis.",app._open_showcase], ["Afinidades e regras","Consulte vantagens e funcionamento do combate.",app._show_classes], ["Laboratório","Simulações, resultados e registros de balanceamento.",app._show_lab], ["Arquivo 3D · Vesper","O estudo de modelo e animações permanece disponível.",app._open_vesper]]:
+		var card := _panel(grid)
+		_heading(card,item[0],23)
+		_text(card,item[1],14,app.MUTED)
+		card.add_child(app._button("Abrir  →",item[2]))
 
 func _team_row(parent: Node) -> void:
 	var row := _row(parent)
@@ -248,54 +303,83 @@ func _team_row(parent: Node) -> void:
 	buttons.add_child(team_button)
 	buttons.add_child(app._button("Engastes", open.bind("gems")))
 
+func _select_chapter(index: int) -> void:
+	selected_chapter = clampi(index,0,Campaign.CHAPTERS.size()-1)
+	open("story")
+	chapter_buttons[selected_chapter].grab_focus()
+
 func _story() -> void:
-	_text(body, "ARQUIVO DA CAMPANHA  /  01", 11, CYAN)
-	_heading(body, "O Farol Partido", 36)
-	var next_mission: int = mini(app.campaign.cleared, Campaign.MISSIONS.size() - 1)
-	next_mission_button = app._button("Jogar próxima missão  ·  %02d  →" % (next_mission + 1) if app.campaign.cleared < Campaign.MISSIONS.size() else "Revisitar missão final  →", app._begin_mission.bind(next_mission))
-	next_mission_button.custom_minimum_size.y = 46
-	next_mission_button.add_theme_stylebox_override("normal", _surface(Color("123b50"), CYAN, 12))
-	next_mission_button.add_theme_color_override("font_color", CYAN)
-	body.add_child(next_mission_button)
-	var introduction := _panel(body, Color("35526c"))
-	_text(introduction, Codex.WORLD, 15)
-	_text(introduction, Codex.CHAPTER, 14, app.MUTED)
-	_text(body, "%d/3 missões concluídas  ·  Qualquer trio pode entrar  ·  Vida e energia restauradas entre missões" % app.campaign.cleared, 13, CYAN)
+	_text(body,"MODO HISTÓRIA  /  JORNADA DO FAROL",11,CYAN)
+	var top := _row(body,18,true)
+	_heading(top,"Sua jornada",36)
+	var next_mission: int = mini(app.campaign.cleared,Campaign.MISSIONS.size()-1)
+	next_mission_button = app._button("Continuar · missão %02d  →" % (next_mission+1) if app.campaign.cleared < Campaign.MISSIONS.size() else "Revisitar o desfecho  →",app._begin_mission.bind(next_mission))
+	next_mission_button.custom_minimum_size = Vector2(285,48)
+	next_mission_button.add_theme_color_override("font_color",CYAN)
+	top.add_child(next_mission_button)
+	_text(body,"%d/%d missões concluídas · Cada primeira vitória concede uma gema. Repetições preservam seu progresso." % [app.campaign.cleared,Campaign.MISSIONS.size()],13,app.MUTED)
+	var chapters := _row(body,12,true)
+	for index in range(Campaign.CHAPTERS.size()):
+		var chapter: Dictionary = Campaign.CHAPTERS[index]
+		var unlocked: bool = app.campaign.cleared >= index*3
+		var completed: int = clampi(app.campaign.cleared-index*3,0,3)
+		var button: Button = app._button("%s  ·  %d/3\n%s%s" % [chapter.eyebrow,completed,chapter.name,"  ·  BLOQUEADO" if not unlocked else ""],_select_chapter.bind(index))
+		button.custom_minimum_size.y = 76
+		button.size_flags_horizontal = SIZE_EXPAND_FILL
+		button.add_theme_font_size_override("font_size",15)
+		button.add_theme_stylebox_override("normal",_surface(Color("103044") if selected_chapter == index else SURFACE,Color(chapter.color) if selected_chapter == index else Color("263b54"),12))
+		button.tooltip_text = "Você pode consultar este capítulo. Para jogar, conclua o anterior." if not unlocked else chapter.summary
+		chapters.add_child(button)
+		chapter_buttons.append(button)
+	var chapter: Dictionary = Campaign.CHAPTERS[selected_chapter]
+	var overview := _panel(body,Color(chapter.color).darkened(.5))
+	var chapter_row := _row(overview,20,true)
+	var art := TextureRect.new()
+	art.texture = _chapter_art(selected_chapter)
+	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
+	art.custom_minimum_size = Vector2(270,140)
+	chapter_row.add_child(art)
+	var words := VBoxContainer.new()
+	words.size_flags_horizontal = SIZE_EXPAND_FILL
+	words.add_theme_constant_override("separation",8)
+	chapter_row.add_child(words)
+	_heading(words,chapter.name,28,Color(chapter.color))
+	_text(words,chapter.summary,15)
+	_text(words,chapter.lesson,13,app.MUTED)
 	_team_row(body)
-	var row := _row(body, 18, true)
-	for index in range(Campaign.MISSIONS.size()):
+	var missions := _row(body,14,true)
+	for index in range(selected_chapter*3,selected_chapter*3+3):
 		var mission: Dictionary = Campaign.MISSIONS[index]
 		var intel: Dictionary = Codex.mission(index)
 		var unlocked: bool = app.campaign.can_play(index)
 		var complete: bool = index < app.campaign.cleared
-		var card := _panel(row, Color("447080") if unlocked else Color("253348"))
-		_text(card, "CONCLUÍDA" if complete else "DISPONÍVEL" if unlocked else "BLOQUEADA", 11, CYAN if unlocked else app.MUTED)
-		_heading(card, mission.name, 22)
-		_text(card, mission.location, 10, app.MUTED)
-		var enemies := _row(card, 8)
+		var card := _panel(missions,Color("447080") if unlocked else Color("253348"))
+		_text(card,"CONCLUÍDA" if complete else "DISPONÍVEL" if unlocked else "BLOQUEADA · CONCLUA A ANTERIOR",11,CYAN if unlocked else app.MUTED)
+		_heading(card,mission.name,21)
+		_text(card,mission.location,10,app.MUTED)
+		var enemies := _row(card,8)
 		enemies.alignment = BoxContainer.ALIGNMENT_CENTER
-		for id in mission.enemies: _portrait(enemies, app.catalog.hero_by_id[id], Vector2(64, 76))
-		_text(card, intel.before, 14)
-		_text(card, "TÁTICA  /  " + mission.tip, 12, Color("a7c3de"))
+		for id in mission.enemies: _portrait(enemies,app.catalog.hero_by_id[id],Vector2(54,65))
+		_text(card,intel.before,14)
+		_text(card,"TÁTICA  /  "+mission.tip,12,Color("a7c3de"))
 		var reward: Dictionary = app.campaign.gem(mission.reward)
-		_text(card, ("RECOMPENSA RECEBIDA  /  " if complete else "PRIMEIRA VITÓRIA  /  ") + reward.name, 12, Color(reward.color))
-		_text(card, "Repetir não concede outra gema." if complete else "Desbloqueia a próxima etapa." if index < 2 else "Conclusão do capítulo I.", 11, app.MUTED)
-		var spacer := Control.new()
-		spacer.size_flags_vertical = SIZE_EXPAND_FILL
-		card.add_child(spacer)
-		var launch: Button = app._button("Rejogar missão" if complete else "Jogar missão  →" if unlocked else "Conclua a missão anterior", app._begin_mission.bind(index))
+		_text(card,("RECEBIDA  /  " if complete else "PRIMEIRA VITÓRIA  /  ")+reward.name,12,Color(reward.color))
+		var launch: Button = app._button("Rejogar missão" if complete else "Jogar missão  →" if unlocked else "Missão bloqueada",app._begin_mission.bind(index))
 		launch.disabled = not unlocked
-		launch.custom_minimum_size.y = 43
+		launch.tooltip_text = mission.name + "\n" + (mission.tip if unlocked else "Conclua a missão anterior para desbloquear.")
+		launch.custom_minimum_size.y = 46
 		card.add_child(launch)
 		mission_buttons.append(launch)
+		mission_slots[index] = launch
 		if complete:
-			var archive := _panel(card, Color("263b4a"))
-			_text(archive, "REGISTRO RECUPERADO", 10, CYAN)
-			_text(archive, intel.after, 12, app.MUTED)
-	if app.campaign.cleared == 3:
-		var ending := _panel(body, Color("574d8a"))
-		_heading(ending, "O primeiro silêncio terminou.", 25, VIOLET)
-		_text(ending, Codex.mission(2).after, 16)
+			var archive := _panel(card,Color("263b4a"))
+			_text(archive,"REGISTRO RECUPERADO",10,CYAN)
+			_text(archive,intel.after,12,app.MUTED)
+	if app.campaign.cleared >= (selected_chapter+1)*3:
+		var ending := _panel(body,Color(chapter.color).darkened(.4))
+		_heading(ending,"Capítulo concluído",25,Color(chapter.color))
+		_text(ending,Campaign.MISSIONS[selected_chapter*3+2].ending,15)
 
 func _heroes() -> void:
 	var introduction := VBoxContainer.new()
