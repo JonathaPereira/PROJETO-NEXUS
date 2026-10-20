@@ -6,6 +6,8 @@ Protótipo jogável de RPG tático original: equipes de três, cinco afinidades 
 
 ### Nova base em Godot
 
+**Vesper — estudo de personagem:** o menu **VESPER · ATELIÊ 3D** abre uma apresentação dedicada com modelo, materiais, capa e animações próprios. [Como experimentar e editar](godot/VESPER.md).
+
 O projeto Godot está em **[godot/](godot/README.md)**. Use **Godot 4.6 Standard**, gratuito, sem a edição .NET. Importe [godot/project.godot](godot/project.godot), aguarde a importação dos recursos e pressione **F5**.
 
 A **Alpha 0.9** inicia a apresentação 3D do combate: arena com profundidade real, personagens articulados construídos com malhas procedurais, preparação/contato/recuperação dos ataques e janelas flutuantes com dano, escudo e efeitos positivos ou negativos. História e combate livre usam a nova arena; a galeria preserva a apresentação 2D anterior. Esta primeira etapa ainda precisa de modelos e animações de arte final para atingir o acabamento do conceito aprovado. [Detalhes, execução e validação da etapa 3D](godot/GRAPHICS-3D.md).
