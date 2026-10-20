@@ -20,7 +20,7 @@ static func choose_profile(affinity_value: String, signature_value: String, kind
 	if kind_value.begins_with("shield") or kind_value == "guard": return 6
 	if signature_value == "runes": return 2 # Saira's established Maré de éter.
 	if kind_value.begins_with("heal") or kind_value.begins_with("support") or kind_value == "energy": return 7
-	if signature_value in ["sweep","crescent","daggers","prism"]: return 0
+	if signature_value in ["sweep","crescent","daggers","prism","rift","claws"]: return 0
 	return {"igneo":1,"natural":3,"tecnico":4,"arcano":4,"sombrio":5}.get(affinity_value,0)
 
 func _ready() -> void:

@@ -92,18 +92,18 @@ func geometry(app) -> void:
 
 func roster(app) -> void:
 	var seen := {}
-	for group in range(5):
+	for group in range(7):
 		var own: Array = []
 		var rival: Array = []
 		for slot in range(3):
-			own.append(app.catalog.heroes[group * 3 + slot].id)
-			rival.append(app.catalog.heroes[((group + 1) % 5) * 3 + slot].id)
+			own.append(app.catalog.heroes[(group * 3 + slot) % app.catalog.heroes.size()].id)
+			rival.append(app.catalog.heroes[((group + 1) * 3 + slot) % app.catalog.heroes.size()].id)
 		app.teams = [own, rival]
 		app._new_battle()
 		await settle()
 		geometry(app)
 		for id in own: seen[id] = true
-	check(seen.size() == 15, "Every active hero can be constructed in the playable 3D battlefield")
+	check(seen.size() == 20, "Every active hero can be constructed in the playable 3D battlefield")
 	# Campaign enemies have visual aliases and boss-specific data; they must also
 	# build without requiring active-roster IDs or changing their combat stats.
 	var original_cleared: int = app.campaign.cleared

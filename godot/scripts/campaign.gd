@@ -207,6 +207,50 @@ func equip(hero: String, type: String, slot: int = 0) -> bool:
 	equipped = before
 	return false
 
+## All loadout edits save once and roll back together on a disk failure.
+func remove_gems(hero: String) -> bool:
+	if not active_hero(hero): return false
+	var before := equipped.duplicate(true)
+	equipped.erase(hero)
+	if save_progress(): return true
+	equipped = before
+	return false
+
+func transfer_gem(source_hero: String, source_slot: int, target_hero: String, target_slot: int) -> bool:
+	if not active_hero(source_hero) or not active_hero(target_hero): return false
+	if source_slot < 0 or source_slot >= SLOT_COUNT or target_slot < 0 or target_slot >= SLOT_COUNT: return false
+	if source_hero == target_hero and source_slot == target_slot: return false
+	var source := slots(source_hero)
+	var type: String = source[source_slot]
+	if type == "": return false
+	var before := equipped.duplicate(true)
+	source[source_slot] = ""
+	if source.all(func(id): return id == ""): equipped.erase(source_hero)
+	else: equipped[source_hero] = source
+	var target := slots(target_hero)
+	target[target_slot] = type
+	equipped[target_hero] = target
+	if save_progress(): return true
+	equipped = before
+	return false
+
+func fill_gems(hero: String) -> bool:
+	if not active_hero(hero): return false
+	var before := equipped.duplicate(true)
+	var items := slots(hero)
+	var role: String = catalog.hero_by_id[hero].role
+	var priorities: Array = ["sap", "sap", "ember"] if role == "Tanque" else (["pulse", "sap", "pulse"] if role == "Suporte" else ["ember", "pulse", "ember"])
+	for index in range(SLOT_COUNT):
+		if items[index] != "": continue
+		for type in [priorities[index], "sap", "pulse", "ember"]:
+			if available(type) <= 0: continue
+			items[index] = type
+			equipped[hero] = items.duplicate()
+			break
+	if save_progress(): return true
+	equipped = before
+	return false
+
 func complete(index: int) -> Dictionary:
 	if not can_play(index): return {"error": "Missão bloqueada."}
 	if index < cleared: return {"first": false, "saved": save_progress()}

@@ -127,10 +127,10 @@ func _ui() -> void:
 		for action_id in ["basic", "skill", "ultimate"]:
 			var icon: AtlasTexture = Art.icon(int(hero.index), action_id)
 			icons.append("%s:%s" % [icon.atlas.resource_path, icon.region])
-	check(icons.size() == 45 and icons.all(func(icon): return icons.count(icon) == 1), "Every hero's three skills use their own illustrated texture region")
+	check(icons.size() == 60 and icons.all(func(icon): return icons.count(icon) == 1), "Every hero's three skills use their own illustrated texture region")
 	check(app.sound.cues.size() == 10 and app.sound.cues[0].data.size() > 0, "Synthesized audio cues loaded")
 	app.roster_button.pressed.emit()
-	check(app.hero_grid.get_child_count() == 15, "Roster contains 15 active heroes")
+	check(app.hero_grid.get_child_count() == 20, "Roster contains 20 active heroes")
 	var original_members: Array = app.roster_work[0].duplicate()
 	app.roster_front_picker.select(2)
 	app.roster_front_picker.item_selected.emit(2)
@@ -149,7 +149,7 @@ func _ui() -> void:
 	for index in range(1, 6):
 		app.roster_filter.select(index)
 		app.roster_filter.item_selected.emit(index)
-		check(app.hero_grid.get_child_count() == 3, "Each class filters to three heroes")
+		check(app.hero_grid.get_child_count() == 4, "Each class filters to four heroes")
 	app.roster_dialog.hide()
 	app._save_roster()
 	var restored = MainScene.instantiate()
@@ -314,7 +314,7 @@ func _gallery(app) -> void:
 	await process_frame
 	var gallery = app.showcase
 	var preserved: Dictionary = app.state.duplicate(true)
-	check(gallery.hero_buttons.size() == 5 and gallery.hero_picker.item_count == 15, "Gallery exposes all fifteen heroes and five quick class buttons")
+	check(gallery.hero_buttons.size() == 5 and gallery.hero_picker.item_count == 20, "Gallery exposes all twenty heroes and five quick class buttons")
 	check(gallery.size.y <= root.get_visible_rect().size.y, "Gallery window fits the viewport instead of inflating during text wrapping")
 	var content := Rect2(Vector2.ZERO, Vector2(gallery.size))
 	for button in gallery.action_buttons: check(content.encloses(button.get_global_rect()), "Gallery action buttons stay visible")
@@ -333,7 +333,7 @@ func _gallery(app) -> void:
 		await gallery._play("ultimate")
 		check(not gallery.playing, "%s supreme completes" % id)
 		check(gallery.omitted_receipts == 0, "%s supreme cannot derive hidden drain or healing from offscreen stand-ins" % id)
-	check(profiles.size() == 15 and profiles.all(func(profile): return profiles.count(profile) == 1), "All fifteen active heroes have distinct choreography profiles")
+	check(profiles.size() == 20 and profiles.all(func(profile): return profiles.count(profile) == 1), "All twenty active heroes have distinct choreography profiles")
 	check(gallery.director.Ultimate.effect_texture != null, "Supremes load the painted effect atlas, including its shader presentation")
 	check(app.state == preserved, "The gallery does not mutate the live battle")
 	gallery.scenario.select(1)
@@ -415,8 +415,8 @@ func _new_features(app) -> void:
 	check(app.state == before, "HUD preview cannot spend energy or advance RNG")
 	for affinity in app.catalog.classes:
 		var roles: Array = app.catalog.heroes.filter(func(h): return h.classId == affinity.id).map(func(h): return h.role)
-		check(roles.size() == 3 and roles.has("Tanque") and roles.has("Suporte") and roles.has("Dano"), "Every affinity has all three roles")
-	check(app.catalog.archived_heroes.size() == 9, "Archived heroes remain in catalog")
+		check(roles.size() == 4 and roles.has("Tanque") and roles.has("Suporte") and roles.has("Dano"), "Every affinity has all three roles")
+	check(app.catalog.archived_heroes.size() == 4, "Archived heroes remain in catalog")
 	var teams_before: Array = app.teams.duplicate(true)
 	for index in range(3):
 		app._begin_lesson(index)
@@ -458,15 +458,15 @@ func _new_features(app) -> void:
 	check(Rect2(Vector2.ZERO, Vector2(app.lab.size)).encloses(app.lab.get_ok_button().get_global_rect()), "Balance close button remains visible")
 	await app.lab._simulate()
 	check(app.lab.rows.size() == 60, "Lab stores exactly sixty AI matches in its own dataset")
-	check(app.lab.rows.filter(func(m): return m.fracture).size() < 30, "Most varied AI matches end without Fracture after shield tuning")
-	check(app.lab.table.get_root().get_child_count() == 15, "Lab reports all fifteen active heroes")
+	check(app.lab.rows.all(func(m): return m.rounds <= 24 and m.actions < 400), "Mixed class teams resolve within the finite Fracture window")
+	check(app.lab.table.get_root().get_child_count() == 20, "Lab reports all twenty active heroes")
 	var compositions := {}
 	for match_data in app.lab.rows:
 		compositions[str(match_data.units.slice(0, 3).map(func(u): return u.heroId))] = true
 	check(compositions.size() >= 20, "AI sample includes varied compositions rather than repeating fixed trios")
 	app.lab.source.select(2)
 	app.lab.refresh()
-	check(app.lab.rows.size() == 96, "Lab separates ninety-six sustain stress matches from the varied sample")
+	check(app.lab.rows.size() == 156, "Lab separates ninety-six sustain cases and sixty returning-hero cases from the varied sample")
 	var healing_only: Array = app.lab.rows.filter(func(m): return m.mode == "stress-healing-only")
 	check(healing_only.size() == 6 and healing_only.all(func(m): return m.rounds <= 21), "Reported healer mirrors cannot outheal Fracture indefinitely")
 	check(app.lab.rows.filter(func(m): return m.mode == "stress-healers").size() == 30, "Reported Saira Maura Sylva trio tested against varied trios on both sides")
@@ -485,8 +485,8 @@ func _new_features(app) -> void:
 
 func _exports(app) -> void:
 	var batch: Dictionary = app.lab.SimulationLog.read_batch()
-	check(batch.matches.size() == 156 and batch.matches.all(func(m): return m.finished and m.steps.size() == m.actions), "Persisted logs contain every action of all 156 simulations")
-	check(batch.matches[-1].steps.size() > 100, "Long defensive matches retain actions beyond the engine's bounded live log")
+	check(batch.matches.size() == 216 and batch.matches.all(func(m): return m.finished and m.steps.size() == m.actions), "Persisted logs contain every action of all 216 simulations")
+	check(batch.matches.any(func(m): return m.get("policy") == "support-or-guard" and m.steps.size() > 100), "Long defensive matches retain actions beyond the engine's bounded live log")
 	for filter_index in [1, 2]:
 		app.lab.source.select(filter_index)
 		app.lab.refresh()
@@ -499,7 +499,7 @@ func _exports(app) -> void:
 		await process_frame
 		check(app.lab.export_note.text.contains("Arquivo salvo:"), "Successful export reports where the file was saved")
 		var content: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(destination))
-		check(content.fullLogMatches == (60 if filter_index == 1 else 96), "JSON export respects the selected simulation sample")
+		check(content.fullLogMatches == (60 if filter_index == 1 else 156), "JSON export respects the selected simulation sample")
 		exported_files.append(ProjectSettings.globalize_path(destination))
 		var csv_path := "user://export-%d.csv" % filter_index
 		check(app.lab.export_to(csv_path, "csv") == OK, "CSV table exports successfully")

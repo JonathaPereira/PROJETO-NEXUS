@@ -305,6 +305,11 @@ static func refresh(app) -> void:
 		var presented_action: Dictionary = app.combat.get_action(actor, id).duplicate()
 		if id in ["basic", "guard"]: presented_action.energyGain = app.combat.rules.energy.basicGain if id == "basic" else app.combat.rules.energy.guardGain
 		card.configure(presented_action, id, index + 1, app.catalog.affinity_color(hero.classId), int(actor.energy), int(actor.cooldowns.get(id, 0)), app._can_inspect(), int(hero.index))
+		if app.combat.legal_targets(app.state, actor, presented_action).is_empty():
+			card.disabled = true
+			card.available = false
+			card.reason = "Nenhum aliado disponível para interceptar."
+			card.tooltip_text += "\n" + card.reason
 		if id == "skill":
 			card.glyph.symbol = hero.classId
 			card.glyph.queue_redraw()
@@ -330,6 +335,7 @@ static func refresh(app) -> void:
 	app.execute_button.text = "Confirmar em todos" if all_targets else "Usar em %s" % app._unit_name(app.target_id)
 	if not app.started: app.execute_button.text = "Inicie a missão" if app.campaign_mission >= 0 else "Inicie o combate"
 	elif not selected.available: app.execute_button.text = "Em recarga" if actor.cooldowns.get(app.selected_action, 0) > 0 else "Energia insuficiente"
+	if targets.is_empty(): app.execute_button.text = "Sem alvos válidos"
 	if app.auto_play and app.started and actor.side == 0: app.execute_button.text = "Equipe no automático"
 	if action.kind == "damage" and targets.size() < app.state.units.filter(func(u): return u.hp > 0 and u.side != actor.side).size(): app.step_label.text = "PROVOCAÇÃO\nAtaque o provocador."
 	elif action.kind == "aoe": app.step_label.text = "ÁREA\nTodos os rivais vivos."
@@ -386,8 +392,8 @@ static func event_detail(event: Dictionary) -> String:
 		"converted": detail = "%d ESCUDO CONVERTIDO EM DANO" % event.shieldSpent
 		"support": detail = "SUPORTE"
 		"status": detail = "ESTADO APLICADO"
-		"burn", "bleed", "fracture":
-			detail = "[color=#ffb49b]%s · −%d VIDA[/color]  ·  atravessa escudos" % [{"burn": "QUEIMADURA", "bleed": "SANGRAMENTO", "fracture": "FRATURA"}[event.type], event.amount]
+		"burn", "bleed", "darkmark", "fracture":
+			detail = "[color=#ffb49b]%s · −%d VIDA[/color]  ·  atravessa escudos" % [{"darkmark": "MARCA OBSCURA", "burn": "QUEIMADURA", "bleed": "SANGRAMENTO", "fracture": "FRATURA"}[event.type], event.amount]
 			if event.has("remaining"): detail += "  ·  %d ativação(ões) restante(s)" % event.remaining
 	if event.get("healingPenalty", 0) > 0: detail += "  ·  [color=#ffc18a]CURA −%d%%[/color]" % event.healingPenalty
 	if event.has("extraEffect"): detail += "  ·  %s %dT" % [Fighter.STATUS_NAMES.get(event.extraEffect, event.extraEffect), int(RulesText.rules.status.durationTurns)]

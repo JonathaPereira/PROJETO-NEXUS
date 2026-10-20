@@ -1,3 +1,9 @@
+# Estado atual — Alpha 0.11
+
+A direção principal é **2D**, com nove missões, automático, vinte heróis, identidades de classe e oficina de engastes. [Implementação e capturas](CLASSES.md). PvP online e evolução futura para 3D continuam no roteiro.
+
+O registro abaixo descreve as etapas anteriores; números e regras atuais estão em [KITS.md](KITS.md) e [SIMULATIONS-0.11.md](SIMULATIONS-0.11.md).
+
 # Progressão e próximas etapas
 
 **Etapa 3D (Alpha 0.9):** a batalha principal usa arena, iluminação e personagens volumétricos com articulações procedurais, ataques com contato sincronizado e janelas de resultado detalhadas. Esta é a base jogável para evoluir o conceito visual; modelos e animações de arte final, novos capítulos e PvP online continuam sendo entregas futuras. [Escopo e validação](GRAPHICS-3D.md).

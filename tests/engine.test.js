@@ -9,10 +9,10 @@ function scene(id='veyra') {
  return {s,a,t:s.units[3]};
 }
 const damage=r=>r.events.find(e=>e.type==='damage'&&!e.reaction&&!e.intercepted);
-test('five affinities each have a distinct tank, support and damage kit; nine archived heroes retain art indices',()=>{
- assert.equal(HEROES.length,15);assert.equal(ARCHIVED_HEROES.length,9);assert.equal(CLASSES.length,5);
+test('five affinities each have a distinct tank, support and damage kit; four archived heroes retain art indices',()=>{
+ assert.equal(HEROES.length,20);assert.equal(ARCHIVED_HEROES.length,4);assert.equal(CLASSES.length,5);
  assert.equal(new Set([...HEROES,...ARCHIVED_HEROES].map(h=>h.index)).size,24);
- for(const c of CLASSES) assert.deepEqual(HEROES.filter(h=>h.classId===c.id).map(h=>h.role).sort(),['Dano','Suporte','Tanque']);
+ for(const c of CLASSES) assert.deepEqual([...new Set(HEROES.filter(h=>h.classId===c.id).map(h=>h.role))].sort(),['Dano','Suporte','Tanque']);
  for(const h of HEROES) {assert(h.identity&&h.synergy);for(const k of ['basic','skill','ultimate'])assert(h[k].description&&h[k].name);}
  assert(!HERO_BY_ID.auren);
 });
@@ -70,7 +70,7 @@ test('mirror and riposte react once, and do not trigger infinite counter chains'
 });
 test('Kira pierces shield while Elun spends his stored shield once for an area supreme',()=>{
  const q=scene('kira');q.t.shield=300;q.t.shieldTurns=2;const d=damage(act(q.s,'skill',q.t.id,false));assert(d.amount>0&&d.absorbed>0);
- const {s,a,t}=scene('elun');a.shield=300;a.shieldTurns=2;const r=act(s,'ultimate',t.id,false);assert.equal(r.impactUnits[0].shield,0);assert.equal(r.events.filter(e=>e.type==='converted').length,1);assert.equal(r.events.filter(e=>e.type==='damage').length,3);
+ const {s,a,t}=scene('elun');a.shield=300;a.shieldTurns=2;const r=act(s,'ultimate',t.id,false);assert.equal(r.impactUnits[0].shield,Math.round(a.maxHp*.08));assert.equal(r.events.find(e=>e.type==='converted').shieldSpent,300);assert.equal(r.events.filter(e=>e.type==='converted').length,1);assert.equal(r.events.filter(e=>e.type==='damage'&&!e.reaction).length,3);
 });
 test('Vektor restores only available energy and purification preserves positive statuses',()=>{
  const {s,a}=scene('vektor');const ally=s.units[1];ally.energy=90;ally.statuses=['burn','bleed','expose','regen','fortify','empower'].map(type=>({type,turns:2}));
@@ -95,9 +95,9 @@ test('Fracture starts at round 12 with 4% max HP, bypasses barriers and ends def
  const {s,a}=scene();s.round=11;s.order=[a.id];a.speed=999;const hp=a.hp;act(s,'guard',a.id);assert.equal(s.round,12);assert.equal(a.hp,hp-Math.ceil(a.maxHp*.04));assert(a.shield>0);
  const q=createBattle(...DEFAULT_TEAMS);while(q.phase==='playing'&&q.turns<400)act(q,'guard',currentUnit(q).id);assert.equal(q.phase,'finished');
 });
-test('deterministic AI exercises all fifteen kits and keeps resources bounded through complete matches',()=>{
- for(let i=0;i<15;i++){
- const teams=[0,5].map(offset=>[0,1,2].map(j=>HEROES[(i+offset+j)%15].id));const s=createBattle(...teams,{seed:i+1});
+test('deterministic AI exercises all twenty kits and keeps resources bounded through complete matches',()=>{
+ for(let i=0;i<HEROES.length;i++){
+ const teams=[0,5].map(offset=>[0,1,2].map(j=>HEROES[(i+offset+j)%HEROES.length].id));const s=createBattle(...teams,{seed:i+1});
  while(s.phase==='playing'&&s.turns<400){const m=chooseAI(s);assert(m);assert(canUse(currentUnit(s),m.actionId));act(s,m.actionId,m.targetId);for(const u of s.units){assert(u.hp>=0&&u.hp<=u.maxHp);assert(u.shield>=0&&u.shield<=Math.round(u.maxHp*.25));assert(u.energy>=0&&u.energy<=100);}}
  assert.equal(s.phase,'finished',`match ${i}`);
  }
@@ -164,11 +164,86 @@ test('Fracture reduces every healing source progressively from round 12 and bloc
   assert.equal(h.amount,Math.round(a.maxHp*.2*multiplier));assert.equal(h.healingPenalty,Math.min(100,Math.max(0,round-11)*10));
   if(round>=21){
    const q=scene('riven');q.s.round=round;q.a.hp=100;q.t.statuses=[{type:'seed',turns:2}];
-   const result=act(q.s,'basic',q.t.id,false);assert.equal(q.a.hp,100);assert.equal(q.a.stats.healing,0);
+   const result=act(q.s,'basic',q.t.id,false);assert.equal(q.a.hp,100-result.events.filter(e=>e.reaction).reduce((n,e)=>n+e.amount,0));assert.equal(q.a.stats.healing,0);
    assert.equal(result.events.find(e=>e.source==='seed').amount,0);assert(!result.events.some(e=>e.source==='drain'));
    const m=scene('maura');m.s.round=round;m.a.hp=100;assert.equal(act(m.s,'skill',m.t.id,false).events.find(e=>e.source==='secondary').amount,0);
   }
  }
  const {s,a,t}=scene();s.round=21;s.order=[a.id,t.id];t.hp=t.maxHp;t.statuses=[{type:'regen',turns:2}];
  const events=act(s,'guard',a.id).turnEvents;assert.equal(events.find(e=>e.type==='heal').amount,0);assert.equal(events.find(e=>e.type==='heal').healingPenalty,100);
+});
+
+test('one archived hero per affinity returns with a distinct specialty and stable artwork index',()=>{
+ const returned=['torv','brin','bast','ivo','noct'].map(id=>HERO_BY_ID[id]);
+ assert.deepEqual(returned.map(h=>h.index),[3,7,10,15,18]);
+ assert.equal(new Set(returned.map(h=>h.classId)).size,5);
+ assert.equal(new Set(returned.map(h=>h.specialty)).size,5);
+ assert(ARCHIVED_HEROES.every(h=>h.classId==='lumi'));
+ for(const c of CLASSES)assert.equal(HEROES.filter(h=>h.classId===c.id).length,4);
+});
+test('dark marks tick actual HP through shields, heal only their living author and record correct off-turn endpoints',()=>{
+ const {s,a,t}=scene('noct');a.hp=300;t.shield=200;t.shieldTurns=2;
+ s.order=[a.id,t.id];t.statuses=[{type:'darkmark',turns:2,owner:a.id}];
+ const r=act(s,'guard',a.id,false),tick=r.turnEvents.find(e=>e.type==='darkmark'),h=r.turnEvents.find(e=>e.source==='darkmark');
+ assert.equal(tick.amount,Math.round(t.maxHp*.035));assert.equal(t.shield,200);
+ assert.equal(h.amount,Math.round(tick.amount*.6));assert.equal(h.hpAfter,300+h.amount);assert.equal(h.target,a.id);assert.equal(t.statuses.find(x=>x.type==='darkmark').turns,1);
+ const q=scene('noct');q.a.hp=0;q.s.order=[q.s.units[1].id,q.t.id];q.t.statuses=[{type:'darkmark',turns:2,owner:q.a.id}];
+ const d=act(q.s,'guard',q.s.units[1].id,false);assert(d.turnEvents.some(e=>e.type==='darkmark'));assert(!d.turnEvents.some(e=>e.source==='darkmark'));assert.equal(q.a.hp,0);
+});
+test('mark refresh cannot stack; purification removes marks and preserves elemental protection',()=>{
+ const {s,a,t}=scene('noct');t.statuses=[{type:'darkmark',turns:1,owner:'0-maura'}];
+ const r=act(s,'basic',t.id,false),mark=r.impactUnits.find(u=>u.id===t.id).statuses.filter(x=>x.type==='darkmark');
+ assert.deepEqual(mark,[{type:'darkmark',turns:2,owner:a.id}]);
+ const q=scene('brin');const ally=q.s.units[1];ally.hp=500;ally.statuses=[{type:'darkmark',owner:q.t.id,turns:2},{type:'elementalWard',turns:2}];
+ const clean=act(q.s,'skill',ally.id,false).events.find(e=>e.type==='heal');
+ assert(clean.cleansed.includes('darkmark'));assert(ally.statuses.some(x=>x.type==='elementalWard'));assert(!ally.statuses.some(x=>x.type==='darkmark'));
+});
+test('Ivo spreads exactly one existing affliction without extending its duration or taking ownership',()=>{
+ const {s,a,t}=scene('ivo');t.statuses=[{type:'darkmark',turns:1,owner:'0-maura'},{type:'bleed',turns:2}];
+ const r=act(s,'skill',t.id,false),copy=r.events.filter(e=>e.source==='spread');
+ assert.equal(copy.length,1);assert.equal(copy[0].effect,'darkmark');assert.equal(copy[0].effectTurns,1);
+ const recipient=r.impactUnits.find(u=>u.id===copy[0].target);
+ assert.deepEqual(recipient.statuses.find(x=>x.type==='darkmark'),{type:'darkmark',turns:1,owner:'0-maura'});
+ const empty=scene('ivo');assert(!act(empty.s,'skill',empty.t.id,false).events.some(e=>e.source==='spread'));
+});
+test('elemental ward reduces advantageous direct damage only; enemies remain selectable',()=>{
+ const {s,a,t}=scene();t.heroId='sylva';t.statuses=[{type:'elementalWard',turns:2}];
+ const shielded=damage(act(structuredClone(s),'basic',t.id,false));t.statuses=[];
+ const plain=damage(act(structuredClone(s),'basic',t.id,false));assert(Math.abs(shielded.total-plain.total*.8)<=1);
+ t.heroId='kira';const neutral=damage(act(structuredClone(s),'basic',t.id,false));t.statuses=[{type:'elementalWard',turns:2}];
+ assert.equal(damage(act(structuredClone(s),'basic',t.id,false)).total,neutral.total);
+ assert.equal(legalTargets(s,a,getAction(a,'basic')).length,3);
+});
+test('Sentinel weakens a direct aggressor after contact and never chains counter reactions',()=>{
+ const {s,a,t}=scene();t.statuses=[{type:'sentinel',turns:2},{type:'mirror',turns:2}];a.statuses=[{type:'mirror',turns:2}];
+ const r=act(s,'basic',t.id,false);assert.equal(r.events.filter(e=>e.source==='sentinel').length,1);assert.equal(r.events.filter(e=>e.reaction).length,1);
+ assert(r.impactUnits.find(u=>u.id===a.id).statuses.some(x=>x.type==='weaken'));
+});
+test('a nearly defeated interceptor cannot erase overflow damage and cannot intercept an area attack',()=>{
+ const {s,a,t}=scene('kira'),guardian=s.units[4];guardian.hp=1;guardian.shield=0;t.statuses=[{type:'cover',owner:guardian.id,turns:2}];
+ const r=act(s,'basic',t.id,false),direct=damage(r),intercept=r.events.find(e=>e.intercepted);
+ const plain=structuredClone(s);plain.phase='playing';plain.order=[a.id];plain.cursor=0;plain.units.find(u=>u.id===t.id).hp=t.maxHp;plain.units.find(u=>u.id===t.id).statuses=[];
+ const p=damage(act(plain,'basic',t.id,false));assert.equal(intercept.amount,1);assert.equal(direct.total+intercept.amount,p.total);
+ const q=scene('astra');q.t.statuses=[{type:'cover',owner:q.s.units[4].id,turns:2}];assert(!act(q.s,'ultimate',q.t.id,false).events.some(e=>e.intercepted));
+});
+test('Vesper creates one-turn taunt and riposte while multi-status combos consume just one opening',()=>{
+ const q=scene('vesper'),r=act(q.s,'skill',q.a.id,false);const statuses=r.impactUnits[0].statuses;
+ assert.equal(statuses.find(s=>s.type==='taunt').turns,1);assert.equal(statuses.find(s=>s.type==='riposte').turns,1);
+ assert.equal(r.events.find(e=>e.extraEffect==='riposte').extraEffectTurns,1);
+ const {s,a,t}=scene('veyra');t.statuses=[{type:'bleed',turns:2},{type:'burn',turns:2}];const hit=act(s,'skill',t.id,false);
+ const after=hit.impactUnits.find(u=>u.id===t.id);assert(!after.statuses.some(x=>x.type==='burn'));assert(after.statuses.some(x=>x.type==='bleed'));
+});
+test('Igneo defensive reflection uses HP damage only, and Torv receives his advertised critical window',()=>{
+ const q=scene('kira');q.t.heroId='rhazen';q.t.shield=2000;q.t.shieldTurns=2;
+ assert(!act(structuredClone(q.s),'basic',q.t.id,false).events.some(e=>e.reaction));q.t.shield=0;
+ const r=act(q.s,'basic',q.t.id,false);assert.equal(r.events.find(e=>e.reaction).amount,Math.round(damage(r).amount*.1));
+ const x=scene('torv');let seed=0;while(true){const roll=((Math.imul(seed,1664525)+1013904223)>>>0)/4294967296;if(roll>.4&&roll<.49)break;seed++;}
+ x.s.random=seed;assert(damage(act(structuredClone(x.s),'skill',x.t.id)).critical);assert(!damage(act(x.s,'basic',x.t.id)).critical);
+});
+test('an isolated interceptor skips its unavailable ally protection and always selects a legal attack',()=>{
+ for(const id of ['oren','bast']){
+  const {s,a}=scene(id);s.units[1].hp=0;s.units[2].hp=0;a.energy=40;
+  const action=chooseAI(s);assert(action);assert.notEqual(action.actionId,'skill');
+  assert(legalTargets(s,a,getAction(a,action.actionId)).some(t=>t.id===action.targetId));
+ }
 });

@@ -1,3 +1,7 @@
+# Simulações atuais e histórico
+
+A revisão atual usa regras **0.11.0**, laboratório de **216 partidas** e comparação ampliada de **900 partidas**. [Método, taxas e limites atuais](SIMULATIONS-0.11.md). Os números abaixo são o registro histórico da Alpha 0.8 e não descrevem o balanceamento atual.
+
 # Como ler as simulações — Alpha 0.8
 
 Relatório reproduzido em **19/10/2026** com o motor de combate de referência. As regras e os atributos do combate livre continuam na versão **0.5.0**; a Alpha 0.8 melhora a apresentação e amplia os engastes da campanha. Gemas, minions e o chefe da história **não participam desta amostra**.

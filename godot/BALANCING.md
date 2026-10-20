@@ -15,11 +15,11 @@ Os heróis e os parâmetros globais têm fontes editáveis separadas. O catálog
 | Minions, chefe e dificuldade das missões | `godot/scripts/campaign.gd` | `register_enemies()` e `MISSIONS[].scale` |
 | Entender os testes simulados | `godot/SIMULATIONS.md` | Amostras, filtros, limitações e exportação |
 
-`godot/data/catalog.json` e `godot/data/combat-rules.json` são **cópias geradas**: alterações manuais neles serão substituídas na sincronização. Os 15 heróis ativos vêm de `KITS`; os nove arquivados mantêm seus dados e índices de arte. Não renumere o elenco para remover um personagem da seleção.
+`godot/data/catalog.json` e `godot/data/combat-rules.json` são **cópias geradas**: alterações manuais neles serão substituídas na sincronização. Os 20 heróis ativos vêm de `KITS`; os quatro arquivados mantêm seus dados e índices de arte. Não renumere o elenco para remover um personagem da seleção.
 
 ## Parâmetros globais: `src/balance.json`
 
-`schemaVersion: 1` descreve o formato; `rulesVersion: "0.5.0"` identifica as regras atuais. A organização nova preserva todos os números, a ordem de resolução e o arredondamento da versão anterior.
+`schemaVersion: 1` descreve o formato; `rulesVersion: "0.11.0"` identifica as regras atuais. A Alpha 0.11 aplica novas identidades e reworks. A ordem de resolução e o arredondamento são iguais nos dois motores.
 
 Valores `Ratio` são frações da quantidade indicada: `0.25` = 25%. Um `Multiplier` multiplica a quantidade: `0.85` significa receber/produzir 85%, uma redução de 15%. Durações são contadas em turnos/ações pessoais, não em rodadas da equipe.
 
@@ -37,7 +37,7 @@ Valores `Ratio` são frações da quantidade indicada: `0.25` = 25%. Um `Multipl
 | `status` | `weakenAttackMultiplier: 0.8`, `empowerAttackMultiplier: 1.2`, `exposeDefenseMultiplier: 0.75` | Ataque enfraquecido, ataque fortalecido e defesa exposta |
 | `status` | `fortifyIncomingDamageMultiplier: 0.85`, `focusDamageMultiplier: 1.25` | Fortificação e amplificação do próximo golpe pelo Selo |
 | `status` | `coverRedirectRatio: 0.25`, `seedHealMaxHpRatio: 0.1` | Parcela interceptada pelo protetor e cura da Semente |
-| `status` | `mirrorDamageRatio: 0.2`, `riposteAttackRatio: 0.4` | Reflexão do dano à vida e contra-ataque baseado no ataque |
+| `status` | `mirrorDamageRatio: 0.2`, `riposteAttackRatio: 0.3` | Reflexão do dano à vida e contra-ataque baseado no ataque |
 | `classPassives` | `arcanoDefenseMultiplier: 0.75`, `sombrioDrainRatio: 0.15` | Arcano considera 75% da defesa; Sombrio drena 15% do dano efetivo à vida |
 | `fracture` | `startRound: 12`, `initialMaxHpRatio: 0.04`, `perRoundMaxHpRatio: 0.025`, `maxHpRatioCap: 0.85` | Fratura começa com 4% da vida máxima, cresce 2,5 pontos por rodada e limita em 85% |
 | `fracture` | `healingReductionPerRound: 0.1` | Cura reduzida em mais 10 pontos percentuais por rodada desde a primeira Fratura |
@@ -86,7 +86,7 @@ Gemas e multiplicadores das missões são aplicados em `campaign.battle()` sobre
 
 Três gemas iguais somam os bônus antes de arredondar uma vez: três gemas de ataque dão +12% do ataque base, não três multiplicações sucessivas de 1,04. A vida adicional também aumenta valores baseados em vida máxima, incluindo o teto de escudo; avalie sustentação junto com dano e tempo até a eliminação.
 
-Ao mudar valores de verdade, crie uma nova versão das regras e mantenha os resultados históricos separados. Os identificadores usados nos relatórios estão em `godot/scripts/simulation_log.gd`; o armazenamento dos resumos fica em `godot/scripts/lab.gd`. Não misture partidas antigas e novas sob o mesmo número de versão. Esta reorganização mantém `0.5.0` porque os resultados não mudaram.
+Ao mudar valores de verdade, crie uma nova versão das regras e mantenha os resultados históricos separados. Os identificadores usados nos relatórios estão em `godot/scripts/simulation_log.gd`; o armazenamento dos resumos fica em `godot/scripts/lab.gd`. Não misture partidas antigas e novas sob o mesmo número de versão. A versão atual é `0.11.0`, com resumos em `balance-0.11.json` e logs em `simulations-0.11.json`; os arquivos anteriores são preservados.
 
 ## Rotina depois de editar
 
@@ -104,3 +104,15 @@ A sincronização atualiza o catálogo e copia os parâmetros globais para o God
 Abra o Godot, confirme a habilidade alterada e rode uma nova bateria no laboratório. Compare primeiro o mesmo conjunto de adversários e sementes. Leia N, dano à vida, dano ao escudo, cura, proteção e duração das partidas junto do win rate; uma amostra pequena ou formada só por contrapartidas favoráveis não prova dominância.
 
 O protótipo web importa `src/balance.json` como módulo JSON e precisa ser servido por HTTP com `Content-Type: application/json`; o servidor do projeto já faz isso. `npm run build` inclui o arquivo na versão estática. `npm run build:pages` publica os arquivos do protótipo web e deve ser usado somente quando essa publicação fizer parte da entrega.
+
+## Campos da Alpha 0.11
+
+- `specialty`: especialidade exibida na ficha.
+- `duration`: duração personalizada de efeitos principais e adicionais (Vesper usa 1).
+- `combo.statuses`: lista de alternativas; aplica o bônus e consome no máximo uma aflição. `combo.status` continua aceito.
+- `secondary.whenStatuses`: alternativas que ampliam um efeito secundário, sem multiplicar por quantidade de estados.
+- `criticalChance`: pontos adicionais de chance para aquela habilidade, além da base e do bônus ígneo.
+- `spread`: copia uma queimadura, sangramento ou marca para um outro inimigo, sem estender duração ou trocar autoria.
+- `darkmark`, `elementalWard`, `sentinel`: marca drenante, mitigação contra vantagem e supressão do agressor. Veja [regras completas](CLASSES.md).
+
+A marca usa `status.darkmarkMaxHpRatio: 0.035` e `darkmarkDrainRatio: 0.6`; Égide usa `elementalWardIncomingMultiplier: 0.8`. Ígneo soma `igneoCriticalChance: 0.05`; tanques e suportes ígneos refletem `igneoReflectRatio: 0.1` do dano direto à vida. Reações não geram reações.

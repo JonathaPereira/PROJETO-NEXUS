@@ -57,12 +57,13 @@ export function crest() {
   return `<svg viewBox="0 0 64 64" class="crest" aria-hidden="true"><path d="M32 2 41 22 61 32 41 42 32 62 23 42 3 32 23 22Z" fill="none" stroke="currentColor" stroke-width="1.2"/><path d="m32 8 5 19 19 5-19 5-5 19-5-19-19-5 19-5Z" fill="currentColor" opacity=".2"/><path d="M24 42V22l16 20V22" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="32" cy="32" r="22" fill="none" stroke="currentColor" stroke-width=".5"/></svg>`;
 }
 export const STATUS_LABELS = {
+  darkmark:"Marca obscura", sentinel:"Sentinela", elementalWard:"Égide elemental",
   burn: "Queimadura",
   bleed: "Sangramento",
   regen: "Regeneração",
   weaken: "Ataque reduzido",
   expose: "Defesa exposta",
-  empower:"Ataque +20%", fortify:"Dano recebido −20%", cover:"Proteção 35%", mirror:"Reflete dano", riposte:"Contra-ataque", taunt:"Provocação", emberguard:"Brasa reativa", focus:"Próximo golpe +25%", seed:"Próximo atacante cura 10%",
+  empower:"Ataque +20%", fortify:"Dano recebido −15%", cover:"Proteção 25%", mirror:"Reflete dano", riposte:"Contra-ataque", taunt:"Provocação", emberguard:"Brasa reativa", focus:"Próximo golpe +25%", seed:"Próximo atacante cura 10%",
 };
 export function statusIcon(type) {
   return icon(

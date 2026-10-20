@@ -9,7 +9,7 @@ export const ALL_CLASSES = [
     icon: "flame",
     verb: "Queima",
     description:
-      "Pressão constante. Aplica queimadura e obriga o rival a reagir.",
+      "Queimadura e crítico (+5 pontos de chance). Tanques e suportes refletem 10% do dano direto à vida.",
   },
   {
     id: "natural",
@@ -19,7 +19,7 @@ export const ALL_CLASSES = [
     icon: "leaf",
     verb: "Regenera",
     description:
-      "Resistência viva. Recupera aliados e atravessa batalhas longas.",
+      "Cura, sangramento e controle de estados. Sementes sustentam atacantes de qualquer afinidade.",
   },
   {
     id: "tecnico",
@@ -29,7 +29,7 @@ export const ALL_CLASSES = [
     icon: "gear",
     verb: "Rompe",
     description:
-      "Precisão e controle. Cria barreiras e expõe as defesas do rival.",
+      "Escudos, ataque e defesa fortalecidos. Protege aliados e expõe as defesas do rival.",
   },
   {
     id: "arcano",
@@ -39,7 +39,7 @@ export const ALL_CLASSES = [
     icon: "spark",
     verb: "Amplifica",
     description:
-      "Poder instável. Ataques que atravessam parte da defesa inimiga.",
+      "Área, manipulação de aflições e égides elementais. Ignora 25% da defesa nos golpes diretos.",
   },
   {
     id: "sombrio",
@@ -49,7 +49,7 @@ export const ALL_CLASSES = [
     icon: "moon",
     verb: "Drena",
     description:
-      "Oportunismo e desgaste. Rouba vida e enfraquece o ataque inimigo.",
+      "Roubo de vida (15% do dano direto à vida), marcas que drenam e explosão em um alvo.",
   },
   {
     id: "lumi",

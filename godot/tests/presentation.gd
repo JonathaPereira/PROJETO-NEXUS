@@ -79,7 +79,7 @@ static func run(tree: SceneTree, scene: PackedScene, check: Callable) -> void:
 	var selectable: Array = app.hub.hero_buttons.keys()
 	ids.sort()
 	selectable.sort()
-	check.call(selectable == ids and selectable.size() == 15, "Heroes selector contains exactly the fifteen active heroes")
+	check.call(selectable == ids and selectable.size() == 20, "Heroes selector contains exactly the twenty active heroes")
 	for hero in app.catalog.heroes:
 		app.hub.hero_buttons[hero.id].pressed.emit()
 		await _settle(tree)

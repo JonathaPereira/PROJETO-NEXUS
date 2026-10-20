@@ -49,7 +49,7 @@ static func model(check: Callable) -> void:
 	check.call(engine.unit(mission, "0-astra").energy == 64 and engine.unit(baseline, "0-astra").energy == 40, "Three energy gems change only campaign starting energy")
 	check.call(engine.unit(mission, "0-veyra").attack == 281 and engine.unit(mission, "0-axion").hp == engine.unit(mission, "0-axion").maxHp, "Triple gems avoid multiplicative or iterative rounding and begin at full health")
 	check.call(engine.unit(baseline, "0-veyra").attack == engine.catalog.hero_by_id.veyra.attack, "Gems never mutate catalog or free combat stats")
-	check.call(engine.catalog.heroes.size() == 15 and not engine.catalog.heroes.any(func(h): return h.role == "Minion"), "Campaign enemies do not enter the selectable roster")
+	check.call(engine.catalog.heroes.size() == 20 and not engine.catalog.heroes.any(func(h): return h.role == "Minion"), "Campaign enemies do not enter the selectable roster")
 	check.call(progress.complete(2).has("error") and progress.cleared == 0, "Locked missions cannot award gems")
 	var reward: Dictionary = progress.complete(0)
 	check.call(reward.first and reward.saved and progress.copies("ember") == 4 and progress.can_play(1), "First victory unlocks next mission and awards one gem")

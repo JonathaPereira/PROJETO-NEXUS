@@ -1,4 +1,6 @@
-# NEXUS em Godot — Alpha 0.10 / direção 2D
+# NEXUS em Godot — Alpha 0.11 / classes e engastes
+
+[Novidades da Alpha 0.11, retornos e oficina de gemas](CLASSES.md).
 
 Godot 4.6 Standard / GDScript, gratuito e sem addons pagos. Validado com Godot 4.6.3 em Linux.
 
@@ -20,7 +22,7 @@ Sua cópia anterior não atualiza automaticamente. Quem usa Git pode atualizar a
 
 O menu inicial agrupa **Modo História**, **Coleção**, **Jogar** e **Extras**, com submenus para heróis, gemas, treinos, galeria e laboratório. O Sanctum tem arte própria, linhas de energia, painéis azul-escuros, acentos ciano e títulos em Space Grotesk, com Manrope nos textos. As fontes são gratuitas sob SIL Open Font License; as licenças ficam em `assets/`. **Menu**, durante uma luta, permite voltar; uma confirmação evita descartar a batalha por engano. Batalhas em andamento não são salvas.
 
-**Heróis** reúne o elenco de 15 personagens. A ficha exibe afinidade, função e atributos base, além das abas **Habilidades**, **História** e **Engastes**. As três habilidades têm imagens, nome, descrição, custo e recarga; a sinergia explica como o kit prepara ou aproveita ações de aliados. A história inclui origem, motivação, uma fala e a relação do personagem com o Farol. Os atributos base da ficha continuam distintos dos bônus de campanha mostrados no painel de engastes.
+**Heróis** reúne o elenco de 20 personagens. A ficha exibe afinidade, função e atributos base, além das abas **Habilidades**, **História** e **Engastes**. As três habilidades têm imagens, nome, descrição, custo e recarga; a sinergia explica como o kit prepara ou aproveita ações de aliados. A história inclui origem, motivação, uma fala e a relação do personagem com o Farol. Os atributos base da ficha continuam distintos dos bônus de campanha mostrados no painel de engastes.
 
 **A jornada do Farol** tem três capítulos: **O Farol Partido**, **Marés da Memória** e **A Última Fornalha**, cada um com três missões, relatos, dicas e um chefe. A seleção mostra avanço, bloqueios e a próxima etapa. A equipe de história é independente do combate livre; os personagens restauram vida e energia entre missões. O primeiro capítulo continua compatível com o progresso anterior. [Campanha e salvamento](CAMPAIGN.md).
 
@@ -28,25 +30,25 @@ Cada herói tem **três engastes**, disponíveis tanto em **Heróis → Engastes
 
 Escolha um dos três espaços e a gema disponível. Equipar, trocar e remover é gratuito, entre missões; cada espaço ocupado consome uma cópia real do estoque compartilhado. Cada primeira vitória concede mais uma gema: Brasa, Seiva e Pulso se repetem nas três missões de cada capítulo. Repetir missões não repete recompensas. O painel mostra estoque livre, donos das cópias e atributos antes/depois.
 
-**Gemas valem somente na história.** Combate livre, duelo local, treinos, galeria e laboratório preservam as regras e os atributos de referência da Alpha 0.5. Partidas de campanha não entram na tabela de balanço. Progresso, trio e engastes são salvos em `user://campaign-0.7.json`, agora no formato `schemaVersion: 3`. O progresso antigo é lido automaticamente, mantendo o engaste anterior no primeiro espaço; antes da próxima gravação, o original é preservado em `campaign-0.7.json.v1.bak` ou `.v2.bak`. Não há conta nem sincronização entre dispositivos. [Regras e missões da campanha](CAMPAIGN.md).
+**Gemas valem somente na história.** Combate livre, duelo local, treinos, galeria e laboratório usam os kits base da versão 0.11, sem bônus de gemas. Partidas de campanha não entram na tabela de balanço. Progresso, trio e engastes são salvos em `user://campaign-0.7.json`, agora no formato `schemaVersion: 3`. O progresso antigo é lido automaticamente, mantendo o engaste anterior no primeiro espaço; antes da próxima gravação, o original é preservado em `campaign-0.7.json.v1.bak` ou `.v2.bak`. Não há conta nem sincronização entre dispositivos. [Regras e missões da campanha](CAMPAIGN.md).
 
 ![Menu inicial](../docs/2d-preview/menu.png)
 
 [Missões](preview/story.png) · [Heróis](preview/heroes.png) · [História de um herói](preview/hero-lore.png) · [Engastes do herói](preview/hero-gems.png) · [Gemas](preview/gems.png) · [Minions](preview/minions.png)
 
-## Cinco afinidades, três funções por classe
+## Cinco afinidades, especialidades e três funções gerais
 
 O ciclo é **Ígneo → Natural → Técnico → Arcano → Sombrio → Ígneo**. Vantagem: +25%; resistência na direção inversa: −15%; demais relações neutras. Classe define afinidade, enquanto tanque, suporte e dano são funções do kit. Você pode combinar livremente três personagens distintos, sem obrigação de levar um de cada função.
 
-Há **15 personagens ativos**. Lumi e nove personagens ficam arquivados, preservando dados, imagens e índices de atlas. Preferências antigas com personagens inativos usam a equipe padrão ao importar a nova versão. [Kits e sinergias](KITS.md).
+Há **20 personagens ativos**. Os quatro personagens Lumi ficam arquivados, preservando dados, imagens e índices de atlas. Preferências antigas com personagens inativos usam a equipe padrão ao importar a nova versão. [Kits e sinergias](KITS.md).
 
-| Classe | Tanque | Suporte | Dano |
-| --- | --- | --- | --- |
-| Ígneo | Rhazen | Cindra | Veyra |
-| Natural | Oren | Sylva | Nima |
-| Técnico | Axion | Vektor | Kira |
-| Arcano | Elun | Saira | Astra |
-| Sombrio | Vesper | Maura | Riven |
+| Classe | Tanque | Suporte | Dano | Retorno / especialidade |
+| --- | --- | --- | --- | --- |
+| Ígneo | Rhazen | Cindra | Veyra | Torv / crítico |
+| Natural | Oren | Sylva | Nima | Brin / purificação |
+| Técnico | Axion | Vektor | Kira | Bast / interceptação |
+| Arcano | Elun | Saira | Astra | Ivo / aflições |
+| Sombrio | Vesper | Maura | Riven | Noct / execução |
 
 ## Leitura do combate
 
@@ -82,11 +84,11 @@ Estas são combinações para testar, sem garantia de vitória. [Kits completos]
 
 O laboratório abre por **Simulações / logs** no menu ou **Balanço** no combate. Mostra aparições e vitórias por herói, dano direto à vida, dano a escudos, cura direta, proteção efetiva, energia e combos. Danos e curas periódicos ainda não entram nos totais individuais. A duração média e a frequência da Fratura ajudam a identificar combates arrastados. Escudo concedido sem ser consumido não conta como proteção útil; a absorção é atribuída ao dono do escudo, e o dano à vida desviado, ao protetor.
 
-As partidas jogadas ficam separadas das **simulações IA × IA**. O botão simula **156 partidas** com sementes fixas. O filtro **formações variadas** mantém 60 partidas com três funções, classes únicas e mistas, em pares espelhados. O filtro **testes de sustentação** separa outras 96: Vesper/Kira/Oren, Saira/Maura/Sylva, trios de suporte, trios de tanque e espelhos que priorizam cura e substituem ataques sem cura por defesa. Assim, a amostra defensiva não distorce as médias da amostra variada. As amostras são limitadas e dependem de composição, dificuldade e decisões; a taxa de vitória não comprova equilíbrio competitivo. Guarda até 500 partidas em `user://balance-0.5.json`; apagar esse arquivo reinicia o histórico. As regras e o TTK da Alpha 0.5 foram preservados; suas estatísticas continuam no mesmo arquivo. O histórico da Alpha 0.4 permanece no arquivo anterior. Equipes e preferências ficam em `user://preferences.cfg`. Batalhas em andamento não são salvas.
+As partidas jogadas ficam separadas das **simulações IA × IA**. O botão simula **216 partidas** com sementes fixas. O filtro **formações variadas** mantém 60 partidas com três funções, classes únicas e mistas, em pares espelhados. O filtro **Sustentação e retornos** separa outras 156, incluindo sessenta com os cinco retornos: Vesper/Kira/Oren, Saira/Maura/Sylva, trios de suporte, trios de tanque e espelhos que priorizam cura e substituem ataques sem cura por defesa. Assim, a amostra defensiva não distorce as médias da amostra variada. As amostras são limitadas e dependem de composição, dificuldade e decisões; a taxa de vitória não comprova equilíbrio competitivo. Guarda até 500 partidas em `user://balance-0.11.json`; apagar esse arquivo reinicia o histórico. As regras 0.11 usam arquivos separados; os dados da Alpha 0.5 permanecem no arquivo anterior. O histórico da Alpha 0.4 permanece no arquivo anterior. Equipes e preferências ficam em `user://preferences.cfg`. Batalhas em andamento não são salvas.
 
 ## Exportar simulações
 
-1. Abra **Simulações / logs** no menu ou **Balanço** no combate e clique em **Simular 156 partidas**.
+1. Abra **Simulações / logs** no menu ou **Balanço** no combate e clique em **Simular 216 partidas**.
 2. Escolha **formações variadas** ou **testes de sustentação**.
 3. Clique em **Exportar logs JSON**, escolha a pasta e salve. O painel mostra o caminho salvo.
 4. Use **Exportar tabela CSV** para abrir os resultados em uma planilha. O CSV usa UTF-8, separador `;` e vírgula decimal.
@@ -107,15 +109,15 @@ O chão é reenquadrado pela borda inferior para aparecer sob todos os pés. Sil
 
 **Ataque básico acerta somente UM alvo escolhido**, que pode estar na frente ou atrás. A posição, por si só, não bloqueia ataques nem reduz dano. **Provocação** de Rhazen/Vesper restringe golpes individuais ao provocador enquanto estiver ativa; ataques em área continuam atingindo todos os rivais vivos. Esses avisos aparecem ao selecionar uma ação.
 
-**Escudos não somam e não são permanentes.** Mantém-se o valor maior, limitado a 25% da vida máxima, por duas ações seguintes do protegido. Um escudo menor não renova um maior ainda válido. Um escudo que já chegou à última ação pode ser substituído pelo novo valor; a defesa comum fornece 6%. Expiração, absorção e quebra têm recibos distintos. Oren protege um aliado com desvio de 25%; o dreno Sombrio passou a 15%, e a regeneração, a 4% por ativação. Na Alpha 0.5, cura, escudos e atributos dos kits foram revistos; veja a [comparação das simulações](BALANCE.md). Os dez ativos que dependiam do atlas antigo receberam recortes novos em três folhas com células separadas, preservando as identidades. O atlas anterior continua arquivado. Os 15 ativos usam 45 imagens de habilidades, mantendo os atlas completos de 72 imagens. Cinco representantes ativos (Veyra, Sylva, Axion, Astra e Vesper) têm quatro poses desenhadas; os outros dez usam uma ilustração com movimento procedural. As artes de Auren e dos demais arquivados continuam disponíveis no projeto.
+**Escudos não somam e não são permanentes.** Mantém-se o valor maior, limitado a 25% da vida máxima, por duas ações seguintes do protegido. Um escudo menor não renova um maior ainda válido. Um escudo que já chegou à última ação pode ser substituído pelo novo valor; a defesa comum fornece 6%. Expiração, absorção e quebra têm recibos distintos. Oren protege um aliado com desvio de 25%; o dreno Sombrio passou a 15%, e a regeneração, a 4% por ativação. Na Alpha 0.5, cura, escudos e atributos dos kits foram revistos; veja a [comparação das simulações](BALANCE.md). Os dez ativos que dependiam do atlas antigo receberam recortes novos em três folhas com células separadas, preservando as identidades. O atlas anterior continua arquivado. Os 20 ativos usam 60 imagens de habilidades, mantendo os atlas completos de 72 imagens. Cinco representantes ativos (Veyra, Sylva, Axion, Astra e Vesper) têm quatro poses desenhadas; os outros quinze usam uma ilustração com movimento procedural. As artes de Auren e dos demais arquivados continuam disponíveis no projeto.
 
 Supremos combinam texturas pintadas com brilho aditivo e distorção animada, junto de uma sequência visual própria: preparação com sigilo no chão, partículas convergentes, condução até os alvos e impacto prolongado. Ígneo usa chuva de brasas e fissuras; Natural, raízes e folhas; Técnico, feixes orbitais e campos hexagonais; Arcano, constelações e portais; Sombrio, eclipse e vórtices. Curas e proteção usam auras restauradoras. Os efeitos respeitam **Reduzir animações** e não alteram dano, recargas ou TTK.
 
-Cada um dos 15 personagens tem coreografia identificada por seu golpe, com preparação, disparo ou avanço, contato, reação e retorno. Há saltos de martelo, cortes duplos, flechas, trilhos de energia, drones, prismas, runas, órbitas e fios. A Alpha 0.8 adiciona rastros de silhueta e pausas no contato, com tempos distintos: **1,44 s no ataque básico, 1,94 s na técnica e 2,80 s no supremo** para a sequência principal. Recibos e partículas podem permanecer durante a recuperação. As animações mais lentas detalham a ação sem mudar seu dano nem o TTK em rodadas.
+Cada um dos 20 personagens tem coreografia identificada por seu golpe, com preparação, disparo ou avanço, contato, reação e retorno. Há saltos de martelo, cortes duplos, flechas, trilhos de energia, drones, prismas, runas, órbitas e fios. A Alpha 0.8 adiciona rastros de silhueta e pausas no contato, com tempos distintos: **1,44 s no ataque básico, 1,94 s na técnica e 2,80 s no supremo** para a sequência principal. Recibos e partículas podem permanecer durante a recuperação. As animações mais lentas detalham a ação sem mudar seu dano nem o TTK em rodadas.
 
-A derrota tem reação própria. As cinco artes com quatro poses e os dez movimentos sobre ilustração continuam distintos: esta atualização não adiciona animação esquelética nem novas poses desenhadas para todos os heróis. Suportes não avançam sobre o inimigo ao conjurar; escudo e crítico possuem sons próprios. A opção **Reduzir animações** mantém as regras e remove a coreografia.
+A derrota tem reação própria. As cinco artes com quatro poses e os quinze movimentos sobre ilustração continuam distintos: esta atualização não adiciona animação esquelética nem novas poses desenhadas para todos os heróis. Suportes não avançam sobre o inimigo ao conjurar; escudo e crítico possuem sons próprios. A opção **Reduzir animações** mantém as regras e remove a coreografia.
 
-**Golpes** abre a galeria isolada com seletor para **todos os 15 personagens** e cinco atalhos de classe. Há cenários normal, escudo com crítico demonstrativo e queimadura/sangramento. A técnica de Veyra consome a queimadura para seu combo; use o ataque básico nesse cenário para observar os dois efeitos contínuos. A galeria calcula ações somente para o par exibido, evitando dreno ou cura derivados de figurantes invisíveis. Passe o mouse sobre o resultado para ler todos os recibos. A galeria não altera a partida.
+**Golpes** abre a galeria isolada com seletor para **todos os 20 personagens** e cinco atalhos de classe. Há cenários normal, escudo com crítico demonstrativo e queimadura/sangramento. A técnica de Veyra consome a queimadura para seu combo; use o ataque básico nesse cenário para observar os dois efeitos contínuos. A galeria calcula ações somente para o par exibido, evitando dreno ou cura derivados de figurantes invisíveis. Passe o mouse sobre o resultado para ler todos os recibos. A galeria não altera a partida.
 
 ![HUD nativo](preview/hud.png)
 
@@ -127,7 +129,7 @@ O **[guia de balanceamento](BALANCING.md)** indica onde mudar cada número e exp
 
 | Arquivo editável | Responsabilidade |
 | --- | --- |
-| `src/kits.js` | Atributos nomeados `hp`, `attack`, `defense`, `speed`; habilidades, combos e sinergias dos 15 heróis |
+| `src/kits.js` | Atributos nomeados `hp`, `attack`, `defense`, `speed`; habilidades, combos e sinergias dos 20 heróis |
 | `src/balance.json` | Parâmetros globais de dano, crítico, energia, escudos, estados, Fratura e IA |
 | `src/data.js` | Identidade, afinidade, elenco e custos/recargas padrão |
 | `scripts/combat.gd` e `src/engine.js` | Sequência das fórmulas e resolução equivalente nos dois motores |
@@ -138,7 +140,7 @@ O **[guia de balanceamento](BALANCING.md)** indica onde mudar cada número e exp
 | `scripts/animation_director.gd` e `scripts/damage_receipt.gd` | Coreografias, pausas, rastros e apresentação dos recibos |
 | `scripts/lab.gd` e `scripts/simulation_log.gd` | Amostras, estatísticas e logs exportáveis |
 
-Os caminhos `src/` são relativos à raiz do repositório; `scripts/` nesta tabela é relativo a `godot/`. `npm run sync:godot` gera `data/catalog.json` e `data/combat-rules.json`, sem sobrescrever os recortes e poses refinados. Edite as fontes, não esses JSONs gerados. A reorganização preserva os valores e a ordem de resolução da versão de regras **0.5.0**. O motor JavaScript continua sendo a referência de paridade do combate livre e sustenta o protótipo web.
+Os caminhos `src/` são relativos à raiz do repositório; `scripts/` nesta tabela é relativo a `godot/`. `npm run sync:godot` gera `data/catalog.json` e `data/combat-rules.json`, sem sobrescrever os recortes e poses refinados. Edite as fontes, não esses JSONs gerados. As regras **0.11.0** são compartilhadas pelos dois motores, com os reworks e identidades desta revisão. O motor JavaScript continua sendo a referência de paridade do combate livre e sustenta o protótipo web.
 
 Na raiz do repositório:
 

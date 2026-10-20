@@ -34,7 +34,7 @@ function scenario(name, teams, difficulty, seed, patch = {}, defensive = false) 
   fixtures.push({ name, teams, difficulty, seed, patch, initial, commands, final: state });
 }
 for (let group = 0; group < 5; group++) {
-  const teams = [0,1].map(offset => HEROES.slice(((group+offset)%5)*3, ((group+offset)%5)*3+3).map(h=>h.id));
+  const teams = [0,1].map(offset => HEROES.filter(h=>h.classId===Object.keys(CLASS_BY_ID)[(group+offset)%5]).slice(0,3).map(h=>h.id));
   for (const [index,difficulty] of ['easy','normal','hard'].entries())
     scenario(`class-${group}-${difficulty}`,teams,difficulty,73+group*139+index*113);
 }
@@ -52,6 +52,16 @@ for (const [index,foe] of [['saira','maura','sylva'],['nima','riven','kira'],['v
 scenario('bleeding-heals-and-cleanses', [['saira','maura','sylva'],['nima','riven','kira']], 'normal',331, Object.fromEntries(
  ['saira','maura','sylva'].map(id=>[`0-${id}`,{hp:400,energy:100,statuses:['bleed','regen'].map(type=>({type,turns:2}))}])
 ));
+for (const [i,id] of ['torv','brin','bast','ivo','noct'].entries()) {
+  scenario(`returned-${id}`,[[id,'sylva','axion'],['nima','maura','elun']],'normal',799+i*131,{
+    [`0-${id}`]:{energy:100}, '1-nima':{statuses:[{type:'darkmark',owner:`0-${id}`,turns:2},{type:'bleed',turns:1}]}
+  });
+}
+scenario('spread-and-finite-protection',[['ivo','maura','bast'],['noct','torv','brin']],'normal',503,{
+ '0-ivo':{energy:40},'1-noct':{statuses:[{type:'darkmark',turns:1,owner:'0-maura'}]},
+ '0-maura':{hp:200,statuses:[{type:'cover',turns:2,owner:'0-bast'},{type:'sentinel',turns:2},{type:'elementalWard',turns:2}]},
+ '0-bast':{hp:1,shield:0}
+});
 const fixturePath = resolve(scratch, "cases.json");
 const outputPath = resolve(scratch, "results.json");
 await writeFile(fixturePath, JSON.stringify(fixtures));
@@ -69,7 +79,7 @@ function run(args, timeout = 240000) {
 }
 console.log("Importando o projeto com Godot…");
 run(["--headless", "--path", "godot", "--editor", "--import", "--quit"]);
-for (const suite of ["damage_receipt", "two_d", "stage_3d", "vesper"]) {
+for (const suite of ["damage_receipt", "progression", "two_d", "stage_3d", "vesper"]) {
   console.log(run(["--headless", "--audio-driver", "Dummy", "--path", "godot", "--script", `res://tests/${suite}.gd`]).trim());
 }
 console.log("Executando paridade do motor e teste de interface…");
@@ -88,15 +98,15 @@ for (const path of actual.exports) {
   const contents = await readFile(path, "utf8");
   if (path.endsWith('.csv')) {
     const lines = contents.trim().split(/\r?\n/);
-    assert.equal(lines.length, 16, "CSV contains the header and all fifteen heroes");
+    assert.equal(lines.length, 21, "CSV contains the header and all twenty heroes");
     assert(lines.every(line=>line.split(';').length===12), "CSV columns remain aligned");
     continue;
   }
   const report = JSON.parse(contents);
-  assert.equal(report.rulesVersion, '0.5.0', 'Presentation changes preserve the ruleset');
+  assert.equal(report.rulesVersion, RULES.rulesVersion, 'Exports identify the current ruleset');
   assert.equal(report.fullLogMatches, report.matches.length);
   assert.equal(report.summaryMatches, report.historicalSummaries.length);
-  assert.equal(report.heroSummary.length, 15);
+  assert.equal(report.heroSummary.length, 20);
   for (const match of report.matches) {
     const state = createBattle(...match.teams, {difficulty:match.difficulty, seed:match.seed});
     assert.deepEqual(state,match.initial,'Exported seed and teams reconstruct the initial battle');
@@ -117,7 +127,7 @@ for (const path of actual.exports) {
     exportedMatches++;
   }
 }
-assert.equal(exportedMatches,156);
+assert.equal(exportedMatches,216);
 console.log(log.trim());
 console.log(`✓ ${fixtures.length} partidas reproduzidas com resultados idênticos ao JavaScript (${fixtures.reduce((n, f) => n + f.commands.length, 0)} ações).`);
 console.log(`✓ ${actual.checks} verificações nativas, incluindo ${actual.uiChecks} de interface: formação, persistência, IA, animação, partida completa e replay.`);

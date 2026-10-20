@@ -31,9 +31,12 @@
         "power": 1.55,
         "cost": 30,
         "cooldown": 2,
-        "description": "155% do ataque. Contra queimadura: +40% de dano e consome a queimadura.",
+        "description": "155% do ataque. Contra queimadura ou sangramento: +40% e consome apenas uma dessas aflições.",
         "combo": {
-          "status": "burn",
+          "statuses": [
+            "burn",
+            "bleed"
+          ],
           "multiplier": 1.4,
           "consume": true
         }
@@ -53,7 +56,8 @@
         }
       },
       "identity": "Duelista que detona brasas",
-      "synergy": "Cindra ou Rhazen preparam queimadura; Veyra a consome para antecipar dano."
+      "synergy": "Cindra e Rhazen preparam queimadura; Nima oferece sangramento. Veyra consome uma dessas aberturas para antecipar dano.",
+      "specialty": "Detonadora"
     },
     {
       "id": "rhazen",
@@ -88,10 +92,10 @@
         "name": "Coração de ferro",
         "kind": "shield",
         "power": 0.16,
-        "effect": "taunt",
+        "effect": "mirror",
         "cost": 30,
         "cooldown": 2,
-        "description": "Escudo de 16% em si. Provoca ataques individuais e queima quem o atingir por 2 turnos. Escudo dura 2 ações do protegido; não soma com outro escudo.",
+        "description": "Escudo próprio de 16%, Espelho e Brasa reativa por 2 turnos. Reflete 30% do dano à vida (10% ígneo +20% do Espelho) e queima quem o atingir. Escudo dura 2 ações do protegido; não soma com outro escudo.",
         "self": true,
         "extraEffect": "emberguard"
       },
@@ -110,8 +114,9 @@
           "power": 0.08
         }
       },
-      "identity": "Fornalha que atrai e pune ataques",
-      "synergy": "Provoca para proteger a equipe e devolve queimadura, preparando detonadores."
+      "identity": "Fornalha que pune quem atravessa sua defesa",
+      "synergy": "Reflete parte do dano à vida e devolve queimadura; Veyra e Torv aproveitam as brasas.",
+      "specialty": "Retaliação ígnea"
     },
     {
       "id": "cindra",
@@ -163,7 +168,62 @@
         }
       },
       "identity": "Artilheira que abastece o trio",
-      "synergy": "Prepara queimadura para Veyra e fortalece atacantes de qualquer afinidade."
+      "synergy": "Prepara queimadura para Veyra e fortalece atacantes de qualquer afinidade.",
+      "specialty": "Artilharia de apoio"
+    },
+    {
+      "id": "torv",
+      "index": 3,
+      "name": "Torv",
+      "classId": "igneo",
+      "title": "Errante vulcânico",
+      "lore": "Cada passo seu ecoa nos vulcões adormecidos de Asterion.",
+      "hp": 1130,
+      "attack": 235,
+      "defense": 86,
+      "speed": 88,
+      "weapon": "gauntlet",
+      "animation": "eruption",
+      "role": "Dano",
+      "basic": {
+        "id": "basic",
+        "name": "Punho de magma",
+        "kind": "damage",
+        "power": 0.9,
+        "cost": 0,
+        "cooldown": 0,
+        "description": "90% do ataque e queimadura por 2 turnos. Recupera 24 de energia.",
+        "effect": "burn"
+      },
+      "skill": {
+        "id": "skill",
+        "name": "Ponto de fusão",
+        "kind": "damage",
+        "power": 1.4,
+        "cost": 30,
+        "cooldown": 2,
+        "description": "140% do ataque, +35 pontos de chance crítica. Contra queimadura: +15% de dano, sem consumir.",
+        "criticalChance": 0.35,
+        "combo": {
+          "status": "burn",
+          "multiplier": 1.15,
+          "consume": false
+        }
+      },
+      "ultimate": {
+        "id": "ultimate",
+        "name": "Ruptura vulcânica",
+        "kind": "damage",
+        "power": 2.35,
+        "effect": "expose",
+        "cost": 80,
+        "cooldown": 0,
+        "description": "235% do ataque em um alvo, +25 pontos de chance crítica e defesa exposta por 2 turnos.",
+        "criticalChance": 0.25
+      },
+      "identity": "Demolidor que procura golpes críticos",
+      "synergy": "Queimadura de Cindra ou Rhazen abre sua janela de crítico; Exposição de aliados facilita a ruptura.",
+      "specialty": "Demolidor crítico"
     },
     {
       "id": "sylva",
@@ -210,7 +270,8 @@
         "description": "Cura 22% da vida máxima da equipe; depois remove todos os efeitos negativos."
       },
       "identity": "Semeadora de cura por agressão",
-      "synergy": "Sua Semente cura o próximo aliado que atingir o alvo; combina com tanques e finalizadores."
+      "synergy": "Sua Semente cura o próximo aliado que atingir o alvo; combina com tanques e finalizadores.",
+      "specialty": "Cura por agressão"
     },
     {
       "id": "oren",
@@ -257,7 +318,8 @@
         "description": "Escudo de 10% e regeneração para todos os aliados por 2 turnos. Escudo dura 2 ações do protegido; não soma com outro escudo."
       },
       "identity": "Colosso que divide o peso do golpe",
-      "synergy": "Cobre um aliado frágil; escudo e regeneração sustentam essa proteção."
+      "synergy": "Cobre um aliado frágil; escudo e regeneração sustentam essa proteção.",
+      "specialty": "Guardião de raízes"
     },
     {
       "id": "nima",
@@ -309,7 +371,56 @@
         "description": "165% do ataque em área e sangramento por 2 turnos. Sangramento reduz toda cura recebida em 35% enquanto durar."
       },
       "identity": "Caçadora que abre feridas e armaduras",
-      "synergy": "Sangramento de Nima ou Riven prepara o disparo que expõe a defesa para outros atacantes."
+      "synergy": "Sangramento de Nima ou Riven prepara o disparo que expõe a defesa para outros atacantes.",
+      "specialty": "Caçadora de feridas"
+    },
+    {
+      "id": "brin",
+      "index": 7,
+      "name": "Brin",
+      "classId": "natural",
+      "title": "Oráculo da seiva",
+      "lore": "Ouve o que as raízes sussurram muito abaixo das ruínas.",
+      "hp": 1140,
+      "attack": 177,
+      "defense": 98,
+      "speed": 99,
+      "weapon": "orb",
+      "animation": "spiral",
+      "role": "Suporte",
+      "basic": {
+        "id": "basic",
+        "name": "Orbe de seiva",
+        "kind": "damage",
+        "power": 0.65,
+        "cost": 0,
+        "cooldown": 0,
+        "description": "65% do ataque e Semente por 2 turnos. O próximo atacante se cura em 10% da própria vida máxima. Recupera 24 de energia.",
+        "effect": "seed"
+      },
+      "skill": {
+        "id": "skill",
+        "name": "Sopro verdejante",
+        "kind": "heal",
+        "power": 0.18,
+        "effect": "cleanse",
+        "cost": 30,
+        "cooldown": 1,
+        "description": "Cura 18% da vida de um aliado e depois purifica efeitos negativos. Recarga de 1 ação."
+      },
+      "ultimate": {
+        "id": "ultimate",
+        "name": "Canção do mundo",
+        "kind": "healAll",
+        "power": 0.2,
+        "effect": "regen",
+        "cost": 80,
+        "cooldown": 0,
+        "description": "Cura 20% da vida da equipe e concede regeneração por 2 turnos."
+      },
+      "identity": "Oráculo que limpa feridas persistentes",
+      "synergy": "Purifica sangramento e marcas; a Semente deixa a cura chegar também aos atacantes de outras classes.",
+      "specialty": "Purificador"
     },
     {
       "id": "axion",
@@ -343,7 +454,8 @@
         "effect": "fortify",
         "cost": 30,
         "cooldown": 2,
-        "description": "Escudo de 8% para a equipe e Fortificação: recebe 15% menos dano por 2 turnos. Escudo dura 2 ações do protegido; não soma com outro escudo."
+        "description": "Escudo de 8%, Fortificação (−15% dano) e Sentinela para a equipe por 2 turnos. Um agressor direto recebe ataque −20% após o golpe. Escudo dura 2 ações do protegido; não soma com outro escudo.",
+        "extraEffect": "sentinel"
       },
       "ultimate": {
         "id": "ultimate",
@@ -353,15 +465,17 @@
         "effect": "fortify",
         "cost": 80,
         "cooldown": 0,
-        "description": "Escudo de 16%, Fortificação por 2 turnos e +10 de energia para cada aliado. Escudo dura 2 ações do protegido; não soma com outro escudo.",
+        "description": "Escudo de 16%, Fortificação e Sentinela por 2 turnos; +10 de energia para cada aliado. Sentinela enfraquece o agressor após o golpe. Escudo dura 2 ações do protegido; não soma com outro escudo.",
         "secondary": {
           "kind": "energy",
           "target": "allies",
           "amount": 10
-        }
+        },
+        "extraEffect": "sentinel"
       },
       "identity": "Sentinela que fortifica a equipe",
-      "synergy": "Barreiras e redução de dano protegem suportes; seus golpes expõem alvos para Kira e Astra."
+      "synergy": "Barreiras e redução de dano protegem suportes; seus golpes expõem alvos para Kira e Astra.",
+      "specialty": "Supressão defensiva"
     },
     {
       "id": "kira",
@@ -412,7 +526,57 @@
         "pierce": 0.5
       },
       "identity": "Atiradora que atravessa barreiras",
-      "synergy": "Axion, Vektor ou Nima expõem o alvo. Kira concentra dano e penetra escudos."
+      "synergy": "Axion, Vektor ou Nima expõem o alvo. Kira concentra dano e penetra escudos.",
+      "specialty": "Atiradora perfurante"
+    },
+    {
+      "id": "bast",
+      "index": 10,
+      "name": "Bast",
+      "classId": "tecnico",
+      "title": "Muralha ambulante",
+      "lore": "Despertou sem memória, mas com a certeza de que deveria proteger.",
+      "hp": 1450,
+      "attack": 170,
+      "defense": 126,
+      "speed": 63,
+      "weapon": "gauntlet",
+      "animation": "plates",
+      "role": "Tanque",
+      "basic": {
+        "id": "basic",
+        "name": "Impacto hidráulico",
+        "kind": "damage",
+        "power": 0.75,
+        "cost": 0,
+        "cooldown": 0,
+        "description": "75% do ataque e ataque inimigo −20% por 2 turnos. Recupera 24 de energia.",
+        "effect": "weaken"
+      },
+      "skill": {
+        "id": "skill",
+        "name": "Linha de interceptação",
+        "kind": "shield",
+        "power": 0.18,
+        "effect": "cover",
+        "cost": 30,
+        "cooldown": 2,
+        "description": "Escudo de 18% em um aliado. Bast recebe 25% de seus golpes individuais por 2 turnos; golpes em área atingem normalmente. O aliado recebe 15% menos dano por 2 turnos. Escudo dura 2 ações do protegido; não soma com outro escudo.",
+        "extraEffect": "fortify"
+      },
+      "ultimate": {
+        "id": "ultimate",
+        "name": "Bastião magnético",
+        "kind": "shieldAll",
+        "power": 0.14,
+        "effect": "fortify",
+        "cost": 80,
+        "cooldown": 0,
+        "description": "Escudo de 14% e redução de dano de 15% para a equipe por 2 turnos. Escudo dura 2 ações do protegido; não soma com outro escudo."
+      },
+      "identity": "Muralha que intercepta por um aliado",
+      "synergy": "Divide o golpe individual recebido pelo aliado protegido; barreiras de outros técnicos ajudam Bast a suportar essa carga.",
+      "specialty": "Interceptador"
     },
     {
       "id": "vektor",
@@ -446,22 +610,23 @@
         "effect": "cleanse",
         "cost": 30,
         "cooldown": 2,
-        "description": "Remove efeitos negativos de um aliado e entrega até 30 de energia.",
+        "description": "Purifica um aliado, concede ataque +20% por 2 turnos e entrega até 30 de energia.",
         "secondary": {
           "kind": "energy",
           "target": "target",
           "amount": 30
-        }
+        },
+        "extraEffect": "empower"
       },
       "ultimate": {
         "id": "ultimate",
         "name": "Rede de cobalto",
-        "kind": "supportAll",
-        "power": 0,
-        "effect": "regen",
+        "kind": "shieldAll",
+        "power": 0.1,
+        "effect": "empower",
         "cost": 80,
         "cooldown": 0,
-        "description": "Regeneração por 2 turnos e até +20 de energia para toda a equipe.",
+        "description": "Escudo de 10% e ataque +20% para a equipe por 2 turnos. Entrega até 20 de energia por aliado. Escudo dura 2 ações do protegido; não soma com outro escudo.",
         "secondary": {
           "kind": "energy",
           "target": "allies",
@@ -469,7 +634,8 @@
         }
       },
       "identity": "Engenheiro que acelera os aliados",
-      "synergy": "Entrega energia a um aliado para antecipar técnicas e supremos; remove debuffs sem precisar curar."
+      "synergy": "Entrega energia a um aliado para antecipar técnicas e supremos; remove debuffs sem precisar curar.",
+      "specialty": "Engenheiro de energia"
     },
     {
       "id": "astra",
@@ -519,7 +685,8 @@
         }
       },
       "identity": "Cartógrafa que abre uma janela de explosão",
-      "synergy": "Seu Selo aumenta o próximo golpe de qualquer aliado. Defesa exposta fortalece seu supremo."
+      "synergy": "Seu Selo aumenta o próximo golpe de qualquer aliado. Defesa exposta fortalece seu supremo.",
+      "specialty": "Explosão em área"
     },
     {
       "id": "elun",
@@ -553,8 +720,8 @@
         "effect": "mirror",
         "cost": 30,
         "cooldown": 2,
-        "description": "Escudo próprio de 18% e Espelho por 2 turnos: devolve 20% do dano sofrido à vida. Escudo dura 2 ações do protegido; não soma com outro escudo.",
-        "self": true
+        "description": "Escudo de 18% em um aliado, Espelho (reflete 20% do dano à vida) e Égide elemental por 2 turnos: −20% do dano direto que tenha vantagem de afinidade. Escudo dura 2 ações do protegido; não soma com outro escudo.",
+        "extraEffect": "elementalWard"
       },
       "ultimate": {
         "id": "ultimate",
@@ -564,11 +731,17 @@
         "effect": "expose",
         "cost": 80,
         "cooldown": 0,
-        "description": "100% do ataque em área, mais 45% do escudo armazenado. Consome o escudo e expõe a defesa por 2 turnos.",
-        "shieldScale": 0.45
+        "description": "100% do ataque em área, mais 45% do escudo armazenado. Consome o escudo e expõe a defesa por 2 turnos. Concede escudo de 8% à equipe após a conversão. Escudo dura 2 ações do protegido; não soma com outro escudo.",
+        "shieldScale": 0.45,
+        "secondary": {
+          "kind": "shield",
+          "target": "allies",
+          "power": 0.08
+        }
       },
       "identity": "Espelho que transforma defesa em ataque",
-      "synergy": "Recebe escudos da equipe para fortalecer o supremo; o Espelho pune dano à vida."
+      "synergy": "Protege um aliado com escudo, Espelho e Égide. Escudos recebidos de outros aliados abastecem seu supremo.",
+      "specialty": "Espelho elemental"
     },
     {
       "id": "saira",
@@ -609,13 +782,67 @@
         "name": "Coro das constelações",
         "kind": "healAll",
         "power": 0.22,
-        "effect": "empower",
+        "effect": "elementalWard",
         "cost": 80,
         "cooldown": 0,
-        "description": "Cura 22% da vida máxima e concede ataque +20% por 2 turnos para a equipe."
+        "description": "Cura 22% da vida da equipe e concede Égide elemental por 2 turnos: −20% do dano direto com vantagem de afinidade."
       },
       "identity": "Voz que purifica e prepara ofensivas",
-      "synergy": "Remove queimadura, sangramento e marcas. Seu supremo fortalece aliados já preparados para atacar."
+      "synergy": "Remove queimadura, sangramento e marcas. Seu supremo fortalece aliados já preparados para atacar.",
+      "specialty": "Amparo elemental"
+    },
+    {
+      "id": "ivo",
+      "index": 15,
+      "name": "Ivo",
+      "classId": "arcano",
+      "title": "Peregrino dimensional",
+      "lore": "Atravessou tantas portas que esqueceu qual delas levava para casa.",
+      "hp": 1070,
+      "attack": 241,
+      "defense": 78,
+      "speed": 110,
+      "weapon": "dual",
+      "animation": "rift",
+      "role": "Dano",
+      "basic": {
+        "id": "basic",
+        "name": "Dardo de fenda",
+        "kind": "damage",
+        "power": 0.8,
+        "cost": 0,
+        "cooldown": 0,
+        "description": "80% do ataque e defesa exposta por 2 turnos. Recupera 24 de energia.",
+        "effect": "expose"
+      },
+      "skill": {
+        "id": "skill",
+        "name": "Eco entre mundos",
+        "kind": "damage",
+        "power": 1.15,
+        "cost": 30,
+        "cooldown": 2,
+        "description": "115% do ataque. Copia uma queimadura, sangramento ou marca do alvo para outro inimigo vivo, com a duração restante. Não cria nem acumula aflições.",
+        "spread": true
+      },
+      "ultimate": {
+        "id": "ultimate",
+        "name": "Horizonte quebrado",
+        "kind": "aoe",
+        "power": 1.5,
+        "effect": "weaken",
+        "cost": 80,
+        "cooldown": 0,
+        "description": "150% do ataque em área e ataque inimigo −20% por 2 turnos. Concede escudo de 6% à equipe. Escudo dura 2 ações do protegido; não soma com outro escudo.",
+        "secondary": {
+          "kind": "shield",
+          "target": "allies",
+          "power": 0.06
+        }
+      },
+      "identity": "Peregrino que espalha aflições existentes",
+      "synergy": "Transmite uma queimadura, sangramento ou marca obscura já aplicada, mantendo a duração restante e a origem da marca.",
+      "specialty": "Manipulador de aflições"
     },
     {
       "id": "vesper",
@@ -649,9 +876,10 @@
         "effect": "taunt",
         "cost": 30,
         "cooldown": 2,
-        "description": "Escudo próprio de 14%, Provocação e Riposta por 2 turnos. Ao ser atingido, contra-ataca com 40% do ataque. Escudo dura 2 ações do protegido; não soma com outro escudo.",
+        "description": "Escudo próprio de 14%. Provocação e Riposta até o fim da próxima ação de Vesper (1 turno pessoal): atrai golpes individuais e responde com 30% do ataque. Área continua atingindo todos. Escudo dura 2 ações do protegido; não soma com outro escudo.",
         "self": true,
-        "extraEffect": "riposte"
+        "extraEffect": "riposte",
+        "duration": 1
       },
       "ultimate": {
         "id": "ultimate",
@@ -669,7 +897,8 @@
         }
       },
       "identity": "Duelista que protege por contra-ataques",
-      "synergy": "Atrai golpes individuais, enfraquece rivais e responde com uma riposta enquanto mantém escudo."
+      "synergy": "Atrai golpes individuais, enfraquece rivais e responde com uma riposta enquanto mantém escudo.",
+      "specialty": "Provocador de duelo"
     },
     {
       "id": "maura",
@@ -692,8 +921,8 @@
         "power": 0.7,
         "cost": 0,
         "cooldown": 0,
-        "description": "70% do ataque e ataque inimigo −20% por 2 turnos. Recupera 24 de energia.",
-        "effect": "weaken"
+        "description": "70% do ataque e Marca obscura por 2 turnos: 3,5% da vida por ativação; o autor recupera 60% do dano periódico real. Recupera 24 de energia.",
+        "effect": "darkmark"
       },
       "skill": {
         "id": "skill",
@@ -703,13 +932,16 @@
         "effect": "weaken",
         "cost": 30,
         "cooldown": 2,
-        "description": "90% do ataque e enfraquecimento por 2 turnos. Cura o aliado mais ferido em 14%; contra sangramento, cura 21%.",
+        "description": "90% do ataque e enfraquecimento por 2 turnos. Cura o aliado mais ferido em 14%; contra sangramento ou marca obscura, cura 21%.",
         "secondary": {
           "kind": "heal",
           "target": "lowestAlly",
           "power": 0.14,
-          "whenStatus": "bleed",
-          "multiplier": 1.5
+          "multiplier": 1.5,
+          "whenStatuses": [
+            "bleed",
+            "darkmark"
+          ]
         }
       },
       "ultimate": {
@@ -728,7 +960,72 @@
         }
       },
       "identity": "Tecelã que transforma feridas em sustento",
-      "synergy": "Riven ou Nima aplicam sangramento; Maura aproveita a ferida para curar mais o aliado mais ferido."
+      "synergy": "Nima abre sangramento e Noct aplica marcas; qualquer uma dessas aflições aumenta a cura do Pacto.",
+      "specialty": "Drenagem vital"
+    },
+    {
+      "id": "noct",
+      "index": 18,
+      "name": "Noct",
+      "classId": "sombrio",
+      "title": "Vigia sem rosto",
+      "lore": "Permanece imóvel entre os mundos, esperando um chamado.",
+      "hp": 1140,
+      "attack": 240,
+      "defense": 88,
+      "speed": 82,
+      "weapon": "gauntlet",
+      "animation": "claws",
+      "role": "Dano",
+      "basic": {
+        "id": "basic",
+        "name": "Garra noturna",
+        "kind": "damage",
+        "power": 0.8,
+        "cost": 0,
+        "cooldown": 0,
+        "description": "80% do ataque e Marca obscura por 2 turnos: drena 3,5% da vida por ativação; o autor recupera 60% do dano periódico real. Recupera 24 de energia.",
+        "effect": "darkmark"
+      },
+      "skill": {
+        "id": "skill",
+        "name": "Cobrança do vazio",
+        "kind": "damage",
+        "power": 1.45,
+        "cost": 30,
+        "cooldown": 2,
+        "description": "145% do ataque. Contra marca obscura ou sangramento: +25%, consumindo apenas uma dessas aflições.",
+        "combo": {
+          "statuses": [
+            "darkmark",
+            "bleed"
+          ],
+          "multiplier": 1.25,
+          "consume": true
+        }
+      },
+      "ultimate": {
+        "id": "ultimate",
+        "name": "Noite sem fim",
+        "kind": "damage",
+        "power": 2.4,
+        "cost": 80,
+        "cooldown": 0,
+        "description": "240% do ataque em uma presa. Contra marca ou sangramento: +20%. Abaixo de 35% da vida: mais +20%.",
+        "combo": {
+          "statuses": [
+            "darkmark",
+            "bleed"
+          ],
+          "multiplier": 1.2,
+          "consume": false
+        },
+        "executeThreshold": 0.35,
+        "executeMultiplier": 1.2
+      },
+      "identity": "Vigia que executa uma presa marcada",
+      "synergy": "Maura prepara marcas, Nima fornece sangramento e Ivo espalha a aflição. Noct converte uma dessas aberturas em dano concentrado.",
+      "specialty": "Executor de marcas"
     },
     {
       "id": "riven",
@@ -785,230 +1082,11 @@
         }
       },
       "identity": "Executor que prepara a própria oportunidade",
-      "synergy": "Sangramento aliado habilita seu combo. Alvos abaixo de 35% da vida ficam mais expostos à finalização."
+      "synergy": "Sangramento aliado habilita seu combo. Alvos abaixo de 35% da vida ficam mais expostos à finalização.",
+      "specialty": "Duelista de feridas"
     }
   ],
   "archivedHeroes": [
-    {
-      "id": "torv",
-      "index": 3,
-      "name": "Torv",
-      "classId": "igneo",
-      "title": "Errante vulcânico",
-      "lore": "Cada passo seu ecoa nos vulcões adormecidos de Asterion.",
-      "hp": 1220,
-      "attack": 185,
-      "defense": 99,
-      "speed": 85,
-      "weapon": "gauntlet",
-      "animation": "eruption",
-      "role": "Atacante",
-      "basic": {
-        "id": "basic",
-        "name": "Punho de magma",
-        "kind": "damage",
-        "power": 1,
-        "cost": 0,
-        "cooldown": 0,
-        "description": "Causa dano a um rival e recupera 24 de energia."
-      },
-      "skill": {
-        "id": "skill",
-        "name": "Fissura tectônica",
-        "kind": "damage",
-        "power": 1.7,
-        "effect": "expose",
-        "cost": 30,
-        "cooldown": 2,
-        "description": "Causa 170% do ataque a um rival. Reduz a defesa do alvo em 25% por 2 turnos."
-      },
-      "ultimate": {
-        "id": "ultimate",
-        "name": "Erupção primordial",
-        "kind": "aoe",
-        "power": 2.05,
-        "effect": "expose",
-        "cost": 80,
-        "cooldown": 0,
-        "description": "Causa 205% do ataque a todos os rivais. Reduz a defesa do alvo em 25% por 2 turnos."
-      }
-    },
-    {
-      "id": "brin",
-      "index": 7,
-      "name": "Brin",
-      "classId": "natural",
-      "title": "Oráculo da seiva",
-      "lore": "Ouve o que as raízes sussurram muito abaixo das ruínas.",
-      "hp": 1120,
-      "attack": 169,
-      "defense": 91,
-      "speed": 100,
-      "weapon": "orb",
-      "animation": "spiral",
-      "role": "Suporte",
-      "basic": {
-        "id": "basic",
-        "name": "Orbe de seiva",
-        "kind": "damage",
-        "power": 1,
-        "cost": 0,
-        "cooldown": 0,
-        "description": "Causa dano a um rival e recupera 24 de energia."
-      },
-      "skill": {
-        "id": "skill",
-        "name": "Sopro verdejante",
-        "kind": "healAll",
-        "power": 0.2,
-        "effect": "regen",
-        "cost": 30,
-        "cooldown": 2,
-        "description": "Recupera 20% da vida máxima da equipe. Regeneração: recupera 4% da vida máxima no início de 2 turnos."
-      },
-      "ultimate": {
-        "id": "ultimate",
-        "name": "Canção do mundo",
-        "kind": "healAll",
-        "power": 0.42,
-        "effect": "cleanse",
-        "cost": 80,
-        "cooldown": 0,
-        "description": "Recupera 42% da vida máxima de toda a equipe e purifica efeitos negativos."
-      }
-    },
-    {
-      "id": "bast",
-      "index": 10,
-      "name": "Bast",
-      "classId": "tecnico",
-      "title": "Muralha ambulante",
-      "lore": "Despertou sem memória, mas com a certeza de que deveria proteger.",
-      "hp": 1480,
-      "attack": 153,
-      "defense": 146,
-      "speed": 64,
-      "weapon": "gauntlet",
-      "animation": "plates",
-      "role": "Guardião",
-      "basic": {
-        "id": "basic",
-        "name": "Impacto hidráulico",
-        "kind": "damage",
-        "power": 1,
-        "cost": 0,
-        "cooldown": 0,
-        "description": "Causa dano a um rival e recupera 24 de energia."
-      },
-      "skill": {
-        "id": "skill",
-        "name": "Placa reativa",
-        "kind": "shield",
-        "power": 0.3,
-        "effect": "regen",
-        "cost": 30,
-        "cooldown": 2,
-        "description": "Protege um aliado com barreira de 30% da vida máxima. Regeneração: recupera 4% da vida máxima no início de 2 turnos."
-      },
-      "ultimate": {
-        "id": "ultimate",
-        "name": "Bastião magnético",
-        "kind": "shieldAll",
-        "power": 0.36,
-        "effect": "regen",
-        "cost": 80,
-        "cooldown": 0,
-        "description": "Concede barreira de 36% da vida máxima e regeneração a toda a equipe."
-      }
-    },
-    {
-      "id": "ivo",
-      "index": 15,
-      "name": "Ivo",
-      "classId": "arcano",
-      "title": "Peregrino dimensional",
-      "lore": "Atravessou tantas portas que esqueceu qual delas levava para casa.",
-      "hp": 1000,
-      "attack": 218,
-      "defense": 64,
-      "speed": 116,
-      "weapon": "dual",
-      "animation": "rift",
-      "role": "Atacante",
-      "basic": {
-        "id": "basic",
-        "name": "Dardo de fenda",
-        "kind": "damage",
-        "power": 1,
-        "cost": 0,
-        "cooldown": 0,
-        "description": "Causa dano a um rival e recupera 24 de energia."
-      },
-      "skill": {
-        "id": "skill",
-        "name": "Passo entre mundos",
-        "kind": "damage",
-        "power": 1.8,
-        "effect": "expose",
-        "cost": 30,
-        "cooldown": 2,
-        "description": "Causa 180% do ataque a um rival. Reduz a defesa do alvo em 25% por 2 turnos."
-      },
-      "ultimate": {
-        "id": "ultimate",
-        "name": "Horizonte quebrado",
-        "kind": "aoe",
-        "power": 2.05,
-        "effect": "expose",
-        "cost": 80,
-        "cooldown": 0,
-        "description": "Causa 205% do ataque a todos os rivais. Reduz a defesa do alvo em 25% por 2 turnos."
-      }
-    },
-    {
-      "id": "noct",
-      "index": 18,
-      "name": "Noct",
-      "classId": "sombrio",
-      "title": "Vigia sem rosto",
-      "lore": "Permanece imóvel entre os mundos, esperando um chamado.",
-      "hp": 1390,
-      "attack": 164,
-      "defense": 131,
-      "speed": 73,
-      "weapon": "gauntlet",
-      "animation": "claws",
-      "role": "Guardião",
-      "basic": {
-        "id": "basic",
-        "name": "Garra noturna",
-        "kind": "damage",
-        "power": 1,
-        "cost": 0,
-        "cooldown": 0,
-        "description": "Causa dano a um rival e recupera 24 de energia."
-      },
-      "skill": {
-        "id": "skill",
-        "name": "Armadura do vazio",
-        "kind": "shield",
-        "power": 0.25,
-        "effect": "regen",
-        "cost": 30,
-        "cooldown": 2,
-        "description": "Protege um aliado com barreira de 25% da vida máxima. Regeneração: recupera 4% da vida máxima no início de 2 turnos."
-      },
-      "ultimate": {
-        "id": "ultimate",
-        "name": "Noite sem fim",
-        "kind": "shieldAll",
-        "power": 0.36,
-        "effect": "regen",
-        "cost": 80,
-        "cooldown": 0,
-        "description": "Concede barreira de 36% da vida máxima e regeneração a toda a equipe."
-      }
-    },
     {
       "id": "auren",
       "index": 20,
@@ -1194,7 +1272,7 @@
       "soft": "#341c1c",
       "icon": "flame",
       "verb": "Queima",
-      "description": "Pressão constante. Aplica queimadura e obriga o rival a reagir.",
+      "description": "Queimadura e crítico (+5 pontos de chance). Tanques e suportes refletem 10% do dano direto à vida.",
       "index": 0,
       "strongAgainst": "natural",
       "weakAgainst": "sombrio"
@@ -1206,7 +1284,7 @@
       "soft": "#1e2b22",
       "icon": "leaf",
       "verb": "Regenera",
-      "description": "Resistência viva. Recupera aliados e atravessa batalhas longas.",
+      "description": "Cura, sangramento e controle de estados. Sementes sustentam atacantes de qualquer afinidade.",
       "index": 1,
       "strongAgainst": "tecnico",
       "weakAgainst": "igneo"
@@ -1218,7 +1296,7 @@
       "soft": "#1a2935",
       "icon": "gear",
       "verb": "Rompe",
-      "description": "Precisão e controle. Cria barreiras e expõe as defesas do rival.",
+      "description": "Escudos, ataque e defesa fortalecidos. Protege aliados e expõe as defesas do rival.",
       "index": 2,
       "strongAgainst": "arcano",
       "weakAgainst": "natural"
@@ -1230,7 +1308,7 @@
       "soft": "#28223c",
       "icon": "spark",
       "verb": "Amplifica",
-      "description": "Poder instável. Ataques que atravessam parte da defesa inimiga.",
+      "description": "Área, manipulação de aflições e égides elementais. Ignora 25% da defesa nos golpes diretos.",
       "index": 3,
       "strongAgainst": "sombrio",
       "weakAgainst": "tecnico"
@@ -1242,7 +1320,7 @@
       "soft": "#301e35",
       "icon": "moon",
       "verb": "Drena",
-      "description": "Oportunismo e desgaste. Rouba vida e enfraquece o ataque inimigo.",
+      "description": "Roubo de vida (15% do dano direto à vida), marcas que drenam e explosão em um alvo.",
       "index": 4,
       "strongAgainst": "igneo",
       "weakAgainst": "arcano"
