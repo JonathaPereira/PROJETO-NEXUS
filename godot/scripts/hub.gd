@@ -582,7 +582,7 @@ func _heroes() -> void:
 		_heading(action_words, action.name, 17)
 		_text(card, "+%d energia" % int(app.combat.rules.energy.basicGain) if action_id == "basic" else "%d energia  ·  %s" % [action.cost, "recarga de %d ações" % action.cooldown if action.cooldown > 0 else "sem recarga"], 12, CYAN)
 		_text(card, action.description, 14)
-	_text(skills, "Valores base antes de defesa, afinidade, crítico e efeitos. Escudos não acumulam: limite de %s da vida, por %d ações do protegido. Sangramento reduz cura em %s." % [RulesText.percent(app.combat.rules.shield.maxHpRatio), int(app.combat.rules.shield.durationActions), RulesText.percent(1 - app.combat.rules.status.bleedHealingMultiplier)], 12, app.MUTED)
+	_text(skills, "Valores base antes de defesa, afinidade, crítico e efeitos. Camadas somam até %s da vida; cada aplicação dura %d rodadas globais. Sangramento reduz cura em %s." % [RulesText.percent(app.combat.rules.shield.maxHpRatio), int(app.combat.rules.shield.durationRounds), RulesText.percent(1 - app.combat.rules.status.bleedHealingMultiplier)], 12, app.MUTED)
 	var story := _tab("História")
 	_text(story, record.origin.to_upper(), 11, tint)
 	_heading(story, "“" + record.quote + "”", 22, WHITE)

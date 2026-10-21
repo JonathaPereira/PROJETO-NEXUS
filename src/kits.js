@@ -13,7 +13,7 @@ export const KITS = {
     "identity": "Duelista que detona brasas",
     "synergy": "Cindra e Rhazen preparam queimadura; Nima oferece sangramento. Veyra consome uma dessas aberturas para antecipar dano.",
     "stats": {
-      "hp": 1080,
+      "hp": 1015,
       "attack": 251,
       "defense": 78,
       "speed": 112
@@ -57,7 +57,7 @@ export const KITS = {
     "synergy": "Reflete parte do dano à vida e devolve queimadura; Veyra e Torv aproveitam as brasas.",
     "stats": {
       "hp": 1390,
-      "attack": 180,
+      "attack": 194,
       "defense": 116,
       "speed": 69
     },
@@ -139,7 +139,7 @@ export const KITS = {
     "synergy": "Cobre um aliado frágil; escudo e regeneração sustentam essa proteção.",
     "stats": {
       "hp": 1380,
-      "attack": 179,
+      "attack": 193,
       "defense": 118,
       "speed": 66
     },
@@ -204,7 +204,7 @@ export const KITS = {
     "identity": "Caçadora que abre feridas e armaduras",
     "synergy": "Sangramento de Nima ou Riven prepara o disparo que expõe a defesa para outros atacantes.",
     "stats": {
-      "hp": 1050,
+      "hp": 987,
       "attack": 252,
       "defense": 75,
       "speed": 114
@@ -243,7 +243,7 @@ export const KITS = {
     "synergy": "Barreiras e redução de dano protegem suportes; seus golpes expõem alvos para Kira e Astra.",
     "stats": {
       "hp": 1340,
-      "attack": 186,
+      "attack": 201,
       "defense": 114,
       "speed": 80
     },
@@ -326,7 +326,7 @@ export const KITS = {
     "identity": "Atiradora que atravessa barreiras",
     "synergy": "Axion, Vektor ou Nima expõem o alvo. Kira concentra dano e penetra escudos.",
     "stats": {
-      "hp": 1030,
+      "hp": 968,
       "attack": 265,
       "defense": 73,
       "speed": 108
@@ -364,7 +364,7 @@ export const KITS = {
     "synergy": "Protege um aliado com escudo, Espelho e Égide. Escudos recebidos de outros aliados abastecem seu supremo.",
     "stats": {
       "hp": 1340,
-      "attack": 183,
+      "attack": 198,
       "defense": 110,
       "speed": 78
     },
@@ -436,7 +436,7 @@ export const KITS = {
     "identity": "Cartógrafa que abre uma janela de explosão",
     "synergy": "Seu Selo aumenta o próximo golpe de qualquer aliado. Defesa exposta fortalece seu supremo.",
     "stats": {
-      "hp": 1040,
+      "hp": 978,
       "attack": 276,
       "defense": 70,
       "speed": 104
@@ -473,7 +473,7 @@ export const KITS = {
     "synergy": "Atrai golpes individuais, enfraquece rivais e responde com uma riposta enquanto mantém escudo.",
     "stats": {
       "hp": 1320,
-      "attack": 195,
+      "attack": 211,
       "defense": 108,
       "speed": 76
     },
@@ -488,11 +488,11 @@ export const KITS = {
       "name": "Guarda do eclipse",
       "kind": "shield",
       "power": 0.14,
-      "description": "Escudo próprio de 14%. Provocação e Riposta até o fim da próxima ação de Vesper (1 turno pessoal): atrai golpes individuais e responde com 30% do ataque. Área continua atingindo todos.",
+      "description": "Escudo próprio de 14%. Provocação e Riposta por 2 turnos pessoais: atrai golpes individuais e responde com 30% do ataque, mas a defesa de Vesper cai 25% enquanto provoca. Área continua atingindo todos.",
       "self": true,
       "effect": "taunt",
       "extraEffect": "riposte",
-      "duration": 1
+      "duration": 2
     },
     "ultimate": {
       "name": "Eclipse absoluto",
@@ -561,7 +561,7 @@ export const KITS = {
     "identity": "Executor que prepara a própria oportunidade",
     "synergy": "Sangramento aliado habilita seu combo. Alvos abaixo de 35% da vida ficam mais expostos à finalização.",
     "stats": {
-      "hp": 1060,
+      "hp": 996,
       "attack": 263,
       "defense": 76,
       "speed": 107
@@ -604,7 +604,7 @@ export const KITS = {
     "identity": "Demolidor que procura golpes críticos",
     "synergy": "Queimadura de Cindra ou Rhazen abre sua janela de crítico; Exposição de aliados facilita a ruptura.",
     "stats": {
-      "hp": 1130,
+      "hp": 1062,
       "attack": 235,
       "defense": 86,
       "speed": 88
@@ -678,7 +678,7 @@ export const KITS = {
     "synergy": "Divide o golpe individual recebido pelo aliado protegido; barreiras de outros técnicos ajudam Bast a suportar essa carga.",
     "stats": {
       "hp": 1450,
-      "attack": 170,
+      "attack": 184,
       "defense": 126,
       "speed": 63
     },
@@ -711,7 +711,7 @@ export const KITS = {
     "identity": "Peregrino que espalha aflições existentes",
     "synergy": "Transmite uma queimadura, sangramento ou marca obscura já aplicada, mantendo a duração restante e a origem da marca.",
     "stats": {
-      "hp": 1070,
+      "hp": 1006,
       "attack": 241,
       "defense": 78,
       "speed": 110
@@ -749,7 +749,7 @@ export const KITS = {
     "identity": "Vigia que executa uma presa marcada",
     "synergy": "Maura prepara marcas, Nima fornece sangramento e Ivo espalha a aflição. Noct converte uma dessas aberturas em dano concentrado.",
     "stats": {
-      "hp": 1140,
+      "hp": 1072,
       "attack": 240,
       "defense": 88,
       "speed": 82
@@ -802,7 +802,7 @@ export function applyKit(hero) {
   for (const id of ['basic','skill','ultimate']) result[id] = {...hero[id], effect:undefined, ...kit[id], name:kit[id].name || hero[id].name};
   for (const id of ['basic','skill','ultimate']) {
     const a = result[id];
-    if (a.kind.startsWith('shield') || a.secondary?.kind === 'shield') a.description += ' Escudo dura 2 ações do protegido; não soma com outro escudo.';
+    if (a.kind.startsWith('shield') || a.secondary?.kind === 'shield') a.description += ' Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.';
     if (a.effect === 'bleed') a.description += ' Sangramento reduz toda cura recebida em 35% enquanto durar.';
   }
   // JSON and runtime must expose the same keys.

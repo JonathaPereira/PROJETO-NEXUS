@@ -349,7 +349,9 @@ func refresh(data: Dictionary, is_active: bool, is_chosen: bool, can_target: boo
 	shield_label.text = "ESCUDO  %d" % data.shield
 	health.caption = "VIDA  %d / %d" % [data.hp, data.maxHp]
 	energy.caption = "ENERGIA  %d / %d" % [data.energy, int(RulesText.rules.energy.maximum)]
-	shield.caption = "ESCUDO  %d / %d%s" % [data.shield, int(shield.max_value), (" · %dT" % data.get("shieldTurns", 0)) if data.shield > 0 and data.get("shieldTurns", 0) > 0 else " · AGORA" if data.shield > 0 else ""]
+	shield.tooltip_text = "Camadas independentes: expiram no início da rodada indicada. Limite total: 25% da vida."
+	for layer in data.get("shieldLayers", []): shield.tooltip_text += "\n%d de escudo · expira na rodada %d" % [layer.amount,layer.expiresRound]
+	shield.caption = "ESCUDO  %d / %d%s" % [data.shield, int(shield.max_value), (" · %dR" % data.get("shieldTurns", 0)) if data.shield > 0 and data.get("shieldTurns", 0) > 0 else " · AGORA" if data.shield > 0 else ""]
 	shield_label.modulate.a = 1.0 if data.shield > 0 else 0.55
 	stats.text = "%d/%d PV · %d EN" % [data.hp, data.maxHp, data.energy]
 	var states: Array = []
@@ -365,7 +367,7 @@ func refresh(data: Dictionary, is_active: bool, is_chosen: bool, can_target: boo
 	status_label.text = "DERROTADO" if dead else " · ".join(compact)
 	status_strip.configure(data.statuses, data.guarding, hero_name, dead)
 	status_label.tooltip_text = "\n".join(states)
-	tooltip_text = base_tooltip + "\nEscudo único; dura %d ações do protegido. Não acumula.\nEscudo: %d / %d máximo" % [int(RulesText.rules.shield.durationActions), data.shield, int(shield.max_value)] + ("\n\nESTADOS\n" + "\n".join(states) if not states.is_empty() else "")
+	tooltip_text = base_tooltip + "\nCamadas independentes; cada aplicação dura %d rodadas globais.\nEscudo: %d / %d máximo" % [int(RulesText.rules.shield.durationRounds), data.shield, int(shield.max_value)] + ("\n\nESTADOS\n" + "\n".join(states) if not states.is_empty() else "")
 	if data.has("gem"):
 		var gems: Variant = data.gem
 		var summary: String = " · ".join(gems) if gems is Array else str(gems)

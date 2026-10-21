@@ -128,9 +128,9 @@ static func event_lines(events: Array) -> Array:
 			"heal": result.append(["+%d VIDA" % amount, "a1e6b3", 20])
 			"shieldExpired":
 				result.append(["ESCUDO EXPIROU", "9ebad2", 15])
-				result.append(["−%d ESCUDO · resta 0" % amount, "85dcff", 15])
+				result.append(["−%d ESCUDO · resta %d" % [amount,event.get("shieldAfter",0)], "85dcff", 15])
 			"shield", "guard":
-				result.append(["+%d ESCUDO" % amount if amount > 0 else "ESCUDO RENOVADO", "85dcff", 20])
+				result.append(["+%d ESCUDO" % amount if amount > 0 else "LIMITE DE ESCUDO", "85dcff", 20])
 				result.append(["Escudo total: %d" % int(event.get("shieldAfter", amount)), "85dcff", 12])
 			"energy": result.append(["+%d ENERGIA" % amount, "c6b4ff", 18])
 			"support": result.append(["SUPORTE", "c6b4ff", 15])
@@ -184,15 +184,15 @@ static func describe_events(events: Array) -> Dictionary:
 				var amount := int(event.get("amount", 0))
 				result.rows.append(_metric("+%d" % amount, "ESCUDO RECEBIDO" if amount > 0 else "ESCUDO MANTIDO", SHIELD_COLOR))
 				if event.has("shieldAfter"): result.shieldAfter = int(event.shieldAfter)
-				if event.has("shieldTurns"): result.rows.append(_detail("Escudo: %d ação(ões) do protegido" % int(event.shieldTurns), SHIELD_COLOR))
+				if event.has("shieldTurns"): result.rows.append(_detail("Última camada: %d rodada(s) global(is)" % int(event.shieldTurns), SHIELD_COLOR))
 				if type == "guard": result.rows.append(_detail("DEFESA · dano recebido −" + RulesText.percent(1.0 - float(RulesText.rules.guard.incomingDamageMultiplier)), POSITIVE_COLOR))
 			"energy": result.rows.append(_metric("+%d" % int(event.get("amount", 0)), "ENERGIA RECEBIDA", Color("c6b4ff")))
 			"burn", "bleed", "darkmark", "fracture":
 				var label := "FRATURA" if type == "fracture" else str(SHORT_NAMES[type]).to_upper()
 				result.rows.append(_metric("−%d" % int(event.get("amount", 0)), label, NEGATIVE_COLOR))
 			"shieldExpired":
-				result.rows.append(_metric("−%d" % int(event.get("amount", 0)), "ESCUDO EXPIROU", SHIELD_COLOR))
-				result.shieldAfter = 0
+				result.rows.append(_metric("−%d" % int(event.get("amount", 0)), "CAMADA EXPIROU", SHIELD_COLOR))
+				result.shieldAfter = int(event.get("shieldAfter",0))
 			"converted":
 				result.rows.append(_metric("−%d" % int(event.get("shieldSpent", 0)), "ESCUDO CONVERTIDO", SHIELD_COLOR))
 				result.shieldAfter = 0

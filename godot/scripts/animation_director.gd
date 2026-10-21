@@ -365,9 +365,9 @@ static func number_lines(event: Dictionary) -> Array:
 		"heal": lines.append(["+%d VIDA" % event.amount, "a1e6b3", 20])
 		"shieldExpired":
 			lines.append(["ESCUDO EXPIROU", "9ebad2", 15])
-			lines.append(["−%d ESCUDO · resta 0" % event.amount, "85dcff", 15])
+			lines.append(["−%d ESCUDO · resta %d" % [event.amount,event.get("shieldAfter",0)], "85dcff", 15])
 		"shield", "guard":
-			lines.append(["+%d ESCUDO" % event.amount if event.amount > 0 else "ESCUDO RENOVADO", "85dcff", 20])
+			lines.append(["+%d ESCUDO" % event.amount if event.amount > 0 else "LIMITE DE ESCUDO", "85dcff", 20])
 			lines.append(["Escudo total: %d" % event.get("shieldAfter", event.amount), "85dcff", 12])
 		"energy": lines.append(["+%d ENERGIA" % event.amount, "c6b4ff", 18])
 		"support": lines.append(["SUPORTE", "c6b4ff", 15])

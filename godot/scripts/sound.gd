@@ -30,6 +30,8 @@ func _ready() -> void:
 	for key in NAMES: cues.append(bank[key][0])
 	for index in range(VOICES):
 		var voice := AudioStreamPlayer.new()
+		# Route through Godot's mixer: Web sample playback bypasses bus effects.
+		voice.playback_type = AudioServer.PLAYBACK_TYPE_STREAM
 		voice.bus = BUS
 		add_child(voice)
 		voices.append(voice)

@@ -1,13 +1,13 @@
 extends RefCounted
 ## Full actions live only for the last batch; the compact statistics history stays bounded separately.
-const STORE := "user://simulations-0.11.json"
-const RULES_VERSION := "0.11.0"
-const GAME_VERSION := "0.13.0"
+const STORE := "user://simulations-0.15.json"
+const RULES_VERSION := "0.15.0"
+const GAME_VERSION := "0.15.0"
 
 static func snapshot(state: Dictionary) -> Dictionary:
 	return {"round": state.round, "phase": state.phase, "winner": state.winner, "random": state.random,
 		"nextActor": state.order[state.cursor] if state.phase == "playing" else null,
-		"units": state.units.map(func(u): return {"id": u.id, "hp": u.hp, "shield": u.shield, "shieldTurns": u.shieldTurns,
+		"units": state.units.map(func(u): return {"id": u.id, "hp": u.hp, "shield": u.shield, "shieldTurns": u.shieldTurns, "shieldLayers": u.shieldLayers.duplicate(true),
 			"energy": u.energy, "statuses": u.statuses.duplicate(true), "cooldowns": u.cooldowns.duplicate(true)})}
 
 static func simulate(engine, sample: Dictionary) -> Dictionary:

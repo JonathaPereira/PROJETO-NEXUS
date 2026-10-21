@@ -79,7 +79,7 @@ function run(args, timeout = 240000, commandEnv = env) {
 }
 console.log("Importando o projeto com Godot…");
 run(["--headless", "--path", "godot", "--editor", "--import", "--quit"]);
-for (const suite of ["damage_receipt", "progression", "polish_012", "polish_014", "two_d", "stage_3d", "vesper"]) {
+for (const suite of ["damage_receipt", "progression", "polish_012", "polish_014", "polish_015", "two_d", "stage_3d", "vesper"]) {
   const suiteEnv={...env,XDG_DATA_HOME:resolve(scratch,suite,"data"),XDG_CONFIG_HOME:resolve(scratch,suite,"config"),XDG_CACHE_HOME:resolve(scratch,suite,"cache")};
   console.log(run(["--headless", "--audio-driver", "Dummy", "--path", "godot", "--script", `res://tests/${suite}.gd`],240000,suiteEnv).trim());
 }
@@ -118,7 +118,7 @@ for (const path of actual.exports) {
       assert.deepEqual(result.events,step.events,'Exported action receipts replay exactly');
       assert.deepEqual(result.turnEvents,step.turnEvents,'Exported periodic damage and healing replay exactly');
       assert.deepEqual(step.after,{round:state.round,phase:state.phase,winner:state.winner,random:state.random,nextActor:state.phase==='playing'?currentUnit(state).id:null,
-        units:state.units.map(u=>({id:u.id,hp:u.hp,shield:u.shield,shieldTurns:u.shieldTurns,energy:u.energy,statuses:u.statuses,cooldowns:u.cooldowns}))});
+        units:state.units.map(u=>({id:u.id,hp:u.hp,shield:u.shield,shieldTurns:u.shieldTurns,shieldLayers:u.shieldLayers,energy:u.energy,statuses:u.statuses,cooldowns:u.cooldowns}))});
       exportedActions++;
     }
     assert.equal(state.phase,'finished');

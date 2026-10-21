@@ -50,6 +50,32 @@ func _ready() -> void:
 	column.add_child(app._label("Vozes sintéticas originais para este protótipo.",12,app.MUTED))
 	column.add_child(HSeparator.new())
 	column.add_child(app._label("EFEITOS E DESEMPENHO",15,app.ACCENT))
+	var effects := CheckButton.new()
+	effects.name="EffectsEnabled"
+	effects.text="Efeitos sonoros"
+	effects.button_pressed=app.audio_enabled
+	effects.toggled.connect(func(value):
+		app.audio_enabled=value
+		app.sound.enabled=value
+		app.sound_button.text="Efeitos: ligados" if value else "Efeitos: desligados"
+		app._save_preferences())
+	column.add_child(effects)
+	column.add_child(app._label("Volume dos efeitos",13,app.MUTED))
+	var effects_volume := HSlider.new()
+	effects_volume.name="EffectsVolume"
+	effects_volume.accessibility_name="Volume dos efeitos sonoros"
+	effects_volume.min_value=0
+	effects_volume.max_value=100
+	effects_volume.step=5
+	effects_volume.value=app.audio_level*100
+	effects_volume.value_changed.connect(func(value):
+		app.audio_level=value/100.0
+		app.sound.set_mix_level(app.audio_level)
+		app._save_preferences())
+	column.add_child(effects_volume)
+	var test_effect: Button=app._button("Ouvir golpe",func():app.sound.play_layer("heavy"))
+	test_effect.name="TestEffect"
+	column.add_child(test_effect)
 	var graphics := OptionButton.new()
 	graphics.accessibility_name="Qualidade dos efeitos gráficos"
 	for value in ["Automático · recomendado","Alta","Equilibrada","Leve"]: graphics.add_item(value)

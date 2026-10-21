@@ -22,6 +22,7 @@ func _ready() -> void:
 		AudioServer.set_bus_name(AudioServer.bus_count-1,BUS)
 		AudioServer.set_bus_send(AudioServer.bus_count-1,"Master")
 	player=AudioStreamPlayer.new()
+	player.playback_type=AudioServer.PLAYBACK_TYPE_STREAM
 	player.bus=BUS
 	add_child(player)
 	player.finished.connect(stop_line)

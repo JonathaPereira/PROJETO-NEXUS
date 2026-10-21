@@ -29,7 +29,7 @@ Valores `Ratio` são frações da quantidade indicada: `0.25` = 25%. Um `Multipl
 | `critical` | `chance: 0.1`, `damageMultiplier: 1.4` | 10% de chance; 140% do dano no crítico |
 | `damage` | `defenseBaseline: 100`, `defenseWeight: 0.5`, `minimumHit: 1` | Curva de mitigação por defesa e piso do golpe |
 | `energy` | `initial: 40`, `maximum: 100`, `basicGain: 24`, `guardGain: 25` | Recursos iniciais, limite e ganhos das ações básicas |
-| `shield` | `maxHpRatio: 0.25`, `durationActions: 2` | Teto de escudo por vida máxima e duração; escudos continuam sem acumular |
+| `shield` | `maxHpRatio: 0.25`, `durationRounds: 2` | Teto total de escudo; camadas somam, expiram separadamente no início da rodada de concessão + 2 e absorvem das mais antigas para as mais novas |
 | `guard` | `shieldMaxHpRatio: 0.06`, `incomingDamageMultiplier: 0.65` | Escudo da defesa e mitigação até o próximo turno |
 | `status` | `durationTurns: 2` | Duração padrão de buffs e debuffs aplicados |
 | `status` | `burnMaxHpRatio: 0.065`, `bleedMaxHpRatio: 0.065`, `regenMaxHpRatio: 0.04` | Dano de queimadura/sangramento e regeneração no início do turno |
@@ -42,7 +42,7 @@ Valores `Ratio` são frações da quantidade indicada: `0.25` = 25%. Um `Multipl
 | `fracture` | `startRound: 12`, `initialMaxHpRatio: 0.04`, `perRoundMaxHpRatio: 0.025`, `maxHpRatioCap: 0.85` | Fratura começa com 4% da vida máxima, cresce 2,5 pontos por rodada e limita em 85% |
 | `fracture` | `healingReductionPerRound: 0.1` | Cura reduzida em mais 10 pontos percentuais por rodada desde a primeira Fratura |
 | `difficulty.enemyStatMultiplier` | `easy: 0.82`, `normal: 1`, `hard: 1.15` | Multiplica vida e ataque da equipe adversária no combate livre |
-| `ai` | `healingHealthThreshold: 0.78`, `shieldRefreshMaxHpRatio: 0.14`, `supportEnergyThreshold: 75` | Quando a IA considera cura, reposição de escudo e entrega de energia |
+| `ai` | `supportPriority: 1.18`, `damagePriority: 1.08`, `killBonus: 700`, `healValue: 1.35`, `shieldValue: 0.8` | Pesos da avaliação de alvos, finalizações, cura efetiva e escudo adicional; não mudam atributos nem consomem RNG |
 
 Os limiares de `ai` mudam a política dos bots, não a força de uma habilidade. Isso pode alterar bastante o resultado das simulações. As constantes do gerador aleatório e a ordenação por velocidade permanecem no motor; não são ajustes de balanceamento.
 
@@ -52,7 +52,7 @@ Em `src/kits.js`, procure `"kira":`. Para reduzir apenas o ataque dela, altere `
 
 Cada ação é um objeto separado em `basic`, `skill` ou `ultimate`, com campos identificados `name`, `kind`, `power` e `description`. Adicionar `"cost": 35` e `"cooldown": 3` dentro dessa habilidade substitui os padrões somente dela. Outros campos já usados no elenco: `effect`, `extraEffect`, `combo`, `secondary`, `pierce`, `shieldScale`, `executeThreshold` e `executeMultiplier`. Preserve os campos existentes quando adicionar uma substituição.
 
-`speed` define a ordem de iniciativa. `defense` entra na curva de mitigação; não corresponde diretamente a uma porcentagem de redução. Um tanque não intercepta ataques automaticamente por ocupar a frente: Provocação e Cobertura são as regras que alteram os alvos/destinatários do dano.
+`speed` define a ordem de iniciativa. `defense` entra na curva de mitigação; não corresponde diretamente a uma porcentagem de redução. O primeiro tanque da formação concede Cobertura aos outros aliados por `tankProtection.openingTurns` (2 turnos pessoais de cada aliado). Não acumula protetores. AoE ignora Cobertura. A posição não impede escolher alvos. Vesper provoca por 2 turnos pessoais e recebe o multiplicador `status.tauntDefenseMultiplier: 0.75` na própria defesa durante a postura. O indicador vermelho `tauntRisk` deriva da provocação; não é um debuff purificável separado.
 
 ## Exemplo: ajustar uma fórmula global
 

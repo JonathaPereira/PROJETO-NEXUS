@@ -7,7 +7,7 @@ const GREEN := Color("8df1b7")
 const RED := Color("ff8b92")
 const ICON_SIZE := 25
 const GAP := 3
-const TYPES := ["guard", "regen", "empower", "fortify", "cover", "mirror", "riposte", "taunt", "emberguard", "sentinel", "elementalWard", "burn", "bleed", "darkmark", "weaken", "expose", "focus", "seed"]
+const TYPES := ["guard", "regen", "empower", "fortify", "cover", "mirror", "riposte", "taunt", "emberguard", "sentinel", "elementalWard", "burn", "bleed", "darkmark", "weaken", "expose", "tauntRisk", "focus", "seed"]
 static var textures: Dictionary = {}
 var entries: Array = []
 var badges: Array[Button] = []
@@ -42,6 +42,7 @@ static func explanation(type: String) -> String:
 		"mirror": "Reflete %s do dano direto sofrido à vida. Não encadeia reações." % RulesText.percent(s.mirrorDamageRatio),
 		"riposte": "Responde ao golpe com %s do ataque. Não encadeia reações." % RulesText.percent(s.riposteAttackRatio),
 		"taunt": "Atrai ataques individuais. Ataques em área continuam atingindo a equipe.",
+		"tauntRisk": "Defesa do provocador reduzida em %s enquanto provoca. Custo da postura; não pode ser purificado separadamente." % RulesText.percent(1-s.tauntDefenseMultiplier),
 		"emberguard": "Aplica queimadura em quem atacar diretamente este personagem.",
 		"sentinel": "Enfraquece o agressor depois de um golpe direto.",
 		"elementalWard": "Recebe %s menos dano direto quando o atacante tem vantagem de afinidade." % RulesText.percent(1-s.elementalWardIncomingMultiplier),
@@ -55,7 +56,9 @@ func configure(statuses: Array, guarding: bool, hero_name: String, defeated := f
 	var next: Array = []
 	if not defeated:
 		if guarding: next.append({"type":"guard","turns":0})
-		for status in statuses: next.append(status.duplicate(true))
+		for status in statuses:
+			next.append(status.duplicate(true))
+			if status.type == "taunt" and not statuses.any(func(s): return s.type == "tauntRisk"): next.append({"type":"tauntRisk","turns":status.turns})
 	var key := JSON.stringify(next) + hero_name
 	if key == revision: return
 	# Do not leave an inspection showing an effect removed by an in-flight action.

@@ -36,11 +36,20 @@ func new_battle(team_a: Array, team_b: Array, difficulty: String = "normal", see
 				"id": "%d-%s" % [side, hero.id], "heroId": hero.id, "side": side, "slot": slot,
 				"hp": rounded(hero.hp * scale_factor), "maxHp": rounded(hero.hp * scale_factor),
 				"attack": rounded(hero.attack * scale_factor), "defense": hero.defense, "speed": hero.speed,
-				"energy": int(rules.energy.initial), "shield": 0, "shieldTurns": 0, "guarding": false, "statuses": [], "cooldowns": {},
+				"energy": int(rules.energy.initial), "shield": 0, "shieldTurns": 0, "shieldLayers": [], "guarding": false, "statuses": [], "cooldowns": {},
 				"stats": {"damage": 0, "healing": 0, "actions": 0, "shieldDamage": 0, "shieldGranted": 0, "protected": 0, "energyGiven": 0, "combos": 0, "shieldAbsorbed": 0},
 			})
 	var state := {"units": units, "order": [], "cursor": 0, "round": 1, "phase": "playing", "winner": null, "log": [], "random": seed_value & 0xffffffff, "turns": 0}
 	state.order = _turn_order(state)
+	for side in range(2):
+		var guardian: Dictionary = {}
+		for candidate in units:
+			if candidate.side == side and catalog.hero_by_id[candidate.heroId].role == "Tanque":
+				guardian = candidate
+				break
+		if not guardian.is_empty():
+			for ally in units:
+				if ally.side == side and ally.id != guardian.id: _status(ally, "cover", guardian.id, int(rules.tankProtection.openingTurns))
 	_begin_turn(state)
 	return state
 
@@ -151,12 +160,18 @@ func _begin_turn(state: Dictionary, turn_events: Array = []) -> void:
 			state.round += 1
 			state.cursor = 0
 			state.order = _turn_order(state)
+			for target in state.units:
+				var before: int = target.shield
+				_normalize_shields(target, state.round - 1)
+				target.shieldLayers = target.shieldLayers.filter(func(layer): return layer.expiresRound > state.round)
+				_sync_shields(target, state.round)
+				if before > target.shield:
+					_turn_event(state, turn_events, target, {"type":"shieldExpired","actor":target.id,"target":target.id,"amount":before-target.shield})
 		var actor := current(state)
 		if actor.is_empty() or actor.hp <= 0:
 			state.cursor += 1
 			continue
 		actor.guarding = false
-		if actor.shield > 0 and actor.shieldTurns > 0: actor.shieldTurns -= 1
 		for id in actor.cooldowns:
 			actor.cooldowns[id] = maxi(0, actor.cooldowns[id] - 1)
 		if state.round >= rules.fracture.startRound:
@@ -193,18 +208,36 @@ func _begin_turn(state: Dictionary, turn_events: Array = []) -> void:
 			continue
 		return
 
-func _shield(target: Dictionary, power: float) -> Dictionary:
+func _normalize_shields(target: Dictionary, round_number: int) -> void:
+	if not target.has("shieldLayers"): target.shieldLayers = []
+	if target.shield == 0: target.shieldLayers = []
+	elif target.shieldLayers.is_empty(): target.shieldLayers.append({"amount":target.shield,"expiresRound":round_number+(target.shieldTurns if target.shieldTurns > 0 else int(rules.shield.durationRounds))})
+
+func _sync_shields(target: Dictionary, round_number: int) -> void:
+	target.shield = 0
+	target.shieldTurns = 0
+	for layer in target.shieldLayers:
+		target.shield += layer.amount
+		target.shieldTurns = maxi(target.shieldTurns, layer.expiresRound-round_number)
+
+func _shield(target: Dictionary, power: float, round_number: int) -> Dictionary:
+	_normalize_shields(target, round_number)
 	var before: int = target.shield
-	var grant: int = mini(rounded(target.maxHp * SHIELD_CAP), rounded(target.maxHp * power))
-	var remaining: int = 0 if target.shieldTurns == 0 else before
-	if grant >= remaining: target.shieldTurns = int(rules.shield.durationActions)
-	target.shield = maxi(remaining, grant)
-	return {"type": "shield", "target": target.id, "amount": target.shield - remaining, "shieldBefore": before, "shieldAfter": target.shield, "shieldTurns": target.shieldTurns}
+	var grant: int = maxi(0,mini(rounded(target.maxHp * SHIELD_CAP)-before,rounded(target.maxHp*power)))
+	if grant > 0: target.shieldLayers.append({"amount":grant,"expiresRound":round_number+int(rules.shield.durationRounds)})
+	_sync_shields(target, round_number)
+	return {"type":"shield","target":target.id,"amount":grant,"shieldBefore":before,"shieldAfter":target.shield,"shieldTurns":target.shieldTurns}
 
 func _hit(target: Dictionary, total: int, pierce: float = 0.0, metadata: Dictionary = {}) -> Dictionary:
 	var before: int = target.shield
 	var absorbed: int = mini(before, total - rounded(total * pierce))
 	target.shield -= absorbed
+	var remaining := absorbed
+	for layer in target.get("shieldLayers", []):
+		var amount: int = mini(layer.amount,remaining)
+		layer.amount -= amount
+		remaining -= amount
+	target.shieldLayers = target.get("shieldLayers", []).filter(func(layer): return layer.amount > 0)
 	if target.shield == 0: target.shieldTurns = 0
 	target.stats.shieldAbsorbed += absorbed
 	var amount: int = mini(target.hp, total - absorbed)
@@ -249,10 +282,11 @@ func act(state: Dictionary, action_id: String, target_id: String, critical_overr
 	if stored_shield > 0:
 		actor.shield = 0
 		actor.shieldTurns = 0
+		actor.shieldLayers = []
 		_emit(state, events, actor, {"type": "converted", "target": actor.id, "shieldSpent": stored_shield})
 	if action.kind == "guard":
 		actor.guarding = true
-		var event := _shield(actor, rules.guard.shieldMaxHpRatio)
+		var event := _shield(actor, rules.guard.shieldMaxHpRatio, state.round)
 		event.type = "guard"
 		_emit(state, events, actor, event)
 		actor.stats.shieldGranted += event.amount
@@ -264,14 +298,14 @@ func act(state: Dictionary, action_id: String, target_id: String, critical_overr
 				event = _heal(state, target, target.maxHp * action.power)
 				actor.stats.healing += event.amount
 			elif action.kind.begins_with("shield"):
-				event = _shield(target, action.power)
+				event = _shield(target, action.power, state.round)
 				actor.stats.shieldGranted += event.amount
 			elif action.kind.begins_with("support"):
 				event = {"type": "support", "target": target.id, "amount": 0}
 			else:
 				var weak: float = rules.status.weakenAttackMultiplier if has_status(actor, "weaken") else 1.0
 				var empowered: float = rules.status.empowerAttackMultiplier if has_status(actor, "empower") else 1.0
-				var defense: float = target.defense * (rules.status.exposeDefenseMultiplier if has_status(target, "expose") else 1.0) * (rules.classPassives.arcanoDefenseMultiplier if hero.classId == "arcano" else 1.0)
+				var defense: float = target.defense * (rules.status.exposeDefenseMultiplier if has_status(target, "expose") else 1.0) * (rules.status.tauntDefenseMultiplier if has_status(target, "taunt") else 1.0) * (rules.classPassives.arcanoDefenseMultiplier if hero.classId == "arcano" else 1.0)
 				var multiplier := advantage(hero.classId, catalog.hero_by_id[target.heroId].classId)
 				var critical: bool = _random(state) < minf(1.0, rules.critical.chance + (rules.classPassives.igneoCriticalChance if hero.classId == "igneo" else 0) + action.get("criticalChance", 0))
 				if critical_override != null: critical = bool(critical_override)
@@ -381,7 +415,7 @@ func act(state: Dictionary, action_id: String, target_id: String, critical_overr
 						actor.stats.healing += receipt.amount
 						_emit(state, events, actor, receipt)
 					"shield":
-						var receipt := _shield(target, power)
+						var receipt := _shield(target, power, state.round)
 						actor.stats.shieldGranted += receipt.amount
 						_emit(state, events, actor, receipt)
 					"energy":
@@ -390,10 +424,6 @@ func act(state: Dictionary, action_id: String, target_id: String, critical_overr
 						actor.stats.energyGiven += amount
 						_emit(state, events, actor, {"type": "energy", "target": target.id, "amount": amount, "energyAfter": target.energy})
 		if action_id == "basic": actor.energy = mini(int(rules.energy.maximum), actor.energy + int(rules.energy.basicGain))
-	if actor.shield > 0 and actor.shieldTurns == 0:
-		var expired: int = actor.shield
-		actor.shield = 0
-		_emit(state, events, actor, {"type": "shieldExpired", "target": actor.id, "amount": expired, "shieldAfter": 0})
 	actor.statuses = actor.statuses.filter(func(s): return s.turns > 0)
 	var impact_units: Array = state.units.duplicate(true)
 	var turn_events: Array = []
@@ -405,48 +435,72 @@ func act(state: Dictionary, action_id: String, target_id: String, critical_overr
 func preview(state: Dictionary, action_id: String, target_id: String) -> Dictionary:
 	return {"normal": act(state.duplicate(true), action_id, target_id, false), "critical": act(state.duplicate(true), action_id, target_id, true)}
 
+func _ai_threat(target: Dictionary) -> float:
+	return 1 + maxf(0,.7-float(target.hp)/target.maxHp)*2
+
+func _ai_effect(state: Dictionary, actor: Dictionary, target: Dictionary, type: String) -> float:
+	if type == "": return 0
+	if type == "cleanse": return target.statuses.filter(func(s): return not s.type in POSITIVE).size()*70
+	if has_status(target,type): return 0
+	if type == "taunt":
+		var value := 0.0
+		for ally in state.units:
+			if ally.side == actor.side and ally.hp > 0 and ally.id != actor.id: value += 55*_ai_threat(ally)
+		return value*float(actor.hp)/actor.maxHp
+	if type == "cover": return 75*_ai_threat(target)
+	return {"burn":90,"bleed":110,"darkmark":85,"weaken":65,"expose":50,"focus":65,"seed":55,"regen":65,"fortify":55,"empower":65,"riposte":40,"mirror":45,"emberguard":45,"sentinel":65,"elementalWard":45}.get(type,0)
+
+func _ai_damage(state: Dictionary, actor: Dictionary, target: Dictionary, action: Dictionary) -> float:
+	var hero: Dictionary = catalog.hero_by_id[actor.heroId]
+	var affinity := advantage(hero.classId,catalog.hero_by_id[target.heroId].classId)
+	var defense: float = target.defense*(rules.status.exposeDefenseMultiplier if has_status(target,"expose") else 1.0)*(rules.status.tauntDefenseMultiplier if has_status(target,"taunt") else 1.0)*(rules.classPassives.arcanoDefenseMultiplier if hero.classId == "arcano" else 1.0)
+	var bonus: float = action.combo.multiplier if action.has("combo") and _matching_status(target,action.combo) != "" else 1.0
+	if has_status(target,"focus"): bonus *= rules.status.focusDamageMultiplier
+	if action.has("executeThreshold") and float(target.hp)/target.maxHp < action.executeThreshold: bonus *= action.executeMultiplier
+	var total: int = maxi(1,rounded((actor.attack*(rules.status.weakenAttackMultiplier if has_status(actor,"weaken") else 1.0)*(rules.status.empowerAttackMultiplier if has_status(actor,"empower") else 1.0)*action.power+actor.shield*action.get("shieldScale",0))*rules.damage.defenseBaseline/(rules.damage.defenseBaseline+defense*rules.damage.defenseWeight)*affinity*(rules.guard.incomingDamageMultiplier if target.guarding else 1.0)*(rules.status.fortifyIncomingDamageMultiplier if has_status(target,"fortify") else 1.0)*(rules.status.elementalWardIncomingMultiplier if has_status(target,"elementalWard") and affinity > 1 else 1.0)*bonus))
+	var covers: Array = target.statuses.filter(func(s): return s.type == "cover")
+	if action.kind == "damage" and not covers.is_empty() and state.units.any(func(u): return u.id == covers[0].owner and u.hp > 0 and u.side == target.side): total -= rounded(total*rules.status.coverRedirectRatio)
+	var absorbed: int = mini(target.shield,total-rounded(total*action.get("pierce",0)))
+	var hp_damage: int = maxi(0,total-absorbed)
+	var role: String = catalog.hero_by_id[target.heroId].role
+	var priority := float(rules.ai.supportPriority) if role == "Suporte" else float(rules.ai.damagePriority) if role == "Dano" else 1.0
+	return mini(target.hp,hp_damage)*priority+absorbed*.6+(rules.ai.killBonus if hp_damage >= target.hp else 0)+(target.maxHp-target.hp)*.08
+
+func _ai_value(state: Dictionary, actor: Dictionary, target: Dictionary, action: Dictionary) -> float:
+	var value := 0.0
+	if action.kind.begins_with("heal"): value = mini(target.maxHp-target.hp,rounded(target.maxHp*action.power*healing_multiplier(state,target)))*rules.ai.healValue*_ai_threat(target)
+	elif action.kind.begins_with("shield"): value = maxi(0,mini(rounded(target.maxHp*rules.shield.maxHpRatio)-target.shield,rounded(target.maxHp*action.power)))*rules.ai.shieldValue*_ai_threat(target)
+	elif not action.kind.begins_with("support"): value = _ai_damage(state,actor,target,action)
+	return value+_ai_effect(state,actor,target,action.get("effect",""))+_ai_effect(state,actor,target,action.get("extraEffect",""))
+
 func choose_ai(state: Dictionary) -> Dictionary:
 	var actor := current(state)
 	if actor.is_empty() or state.phase != "playing": return {}
-	var hero: Dictionary = catalog.hero_by_id[actor.heroId]
-	for id in ["ultimate", "skill", "basic"]:
-		if not can_use(actor, id): continue
-		var action := get_action(actor, id)
-		var targets := legal_targets(state, actor, action)
-		if targets.is_empty(): continue
-		if friendly(action):
-			var target: Dictionary = targets[0]
-			if action.kind.begins_with("heal"):
-				for candidate in targets:
-					if float(candidate.hp) / candidate.maxHp < float(target.hp) / target.maxHp: target = candidate
-				if action.get("effect") == "cleanse" and float(target.hp) / target.maxHp >= rules.ai.healingHealthThreshold:
-					for candidate in targets:
-						if candidate.statuses.any(func(s): return not s.type in POSITIVE):
-							target = candidate
-							break
-				var cleansing: bool = action.get("effect") == "cleanse" and targets.any(func(t): return t.statuses.any(func(s): return not s.type in POSITIVE))
-				if (float(target.hp) / target.maxHp >= rules.ai.healingHealthThreshold or healing_multiplier(state, target) == 0) and not cleansing: continue
-			elif action.kind.begins_with("shield"):
-				target = {}
-				targets.sort_custom(func(a, b): return float(a.hp) / a.maxHp < float(b.hp) / b.maxHp)
-				for candidate in targets:
-					if candidate.shield < candidate.maxHp * rules.ai.shieldRefreshMaxHpRatio or (action.has("effect") and not has_status(candidate, action.effect)):
-						target = candidate
-						break
-				if target.is_empty(): continue
-			else:
-				for candidate in targets:
-					if candidate.energy < target.energy: target = candidate
-				if target.energy > rules.ai.supportEnergyThreshold and not targets.any(func(t): return t.statuses.any(func(s): return not s.type in POSITIVE)): continue
-			return {"actionId": id, "targetId": target.id}
-		var best: Dictionary = targets[0]
-		var best_score := INF
+	var best: Dictionary = {}
+	var best_score := -INF
+	for id in ["basic","skill","ultimate"]:
+		if not can_use(actor,id): continue
+		var action := get_action(actor,id)
+		var targets := legal_targets(state,actor,action)
+		if friendly(action): targets.sort_custom(func(a,b): return a.slot < b.slot if float(a.hp)/a.maxHp == float(b.hp)/b.maxHp else float(a.hp)/a.maxHp < float(b.hp)/b.maxHp)
 		for target in targets:
-			var combo: float = action.combo.multiplier if action.has("combo") and not _matching_status(target, action.combo).is_empty() else 1.0
-			if action.get("spread", false) and target.statuses.any(func(s): return s.type in ["burn", "bleed", "darkmark"] and s.turns > 0): combo *= 1.4
-			var score: float = (target.hp + target.shield) / (advantage(hero.classId, catalog.hero_by_id[target.heroId].classId) * combo)
-			if score < best_score:
+			var recipients: Array = targets if action.kind in ["aoe","healAll","shieldAll","supportAll"] else [target]
+			var score: float = -action.cost*.25
+			for recipient in recipients: score += _ai_value(state,actor,recipient,action)
+			if id == "basic": score += 8
+			if action.get("spread",false) and target.statuses.any(func(s): return s.type in ["burn","bleed","darkmark"]): score += 60
+			var extra: Dictionary = action.get("secondary",{})
+			if not extra.is_empty():
+				var allies: Array = state.units.filter(func(u): return u.side == actor.side and u.hp > 0)
+				var lowest: Array = allies.duplicate()
+				lowest.sort_custom(func(a,b): return float(a.hp)/a.maxHp < float(b.hp)/b.maxHp)
+				var destinations: Array = allies if extra.target == "allies" else [actor] if extra.target == "actor" else [lowest[0]] if extra.target == "lowestAlly" else [target]
+				var boost: float = extra.get("multiplier",1) if recipients.any(func(t): return _matching_status(t,{"statuses":extra.get("whenStatuses",[extra.get("whenStatus","")])}) != "") else 1.0
+				for destination in destinations:
+					if extra.kind == "energy": score += mini(int(rules.energy.maximum)-destination.energy,int(extra.amount))*.8
+					else: score += _ai_value(state,actor,destination,{"kind":extra.kind,"power":extra.get("power",0)*boost})
+			score = floor(score*100+.5)
+			if score > best_score:
 				best_score = score
-				best = target
-		return {"actionId": id, "targetId": best.id}
-	return {"actionId": "guard", "targetId": actor.id}
+				best = {"actionId":id,"targetId":target.id}
+	return best if not best.is_empty() else {"actionId":"guard","targetId":actor.id}

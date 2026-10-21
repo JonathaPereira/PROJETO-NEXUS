@@ -20,7 +20,8 @@
     "build:game": "node scripts/export-game.mjs",
     "test:pvp:godot": "node scripts/test-pvp-godot.mjs",
     "serve:game": "node scripts/serve-game.mjs",
-    "test:pvp:web": "node scripts/test-pvp-web.mjs"
+    "test:pvp:web": "node scripts/test-pvp-web.mjs",
+    "test:audio:web": "node scripts/test-audio-web.mjs"
   },
   "engines": {
     "node": ">=24"

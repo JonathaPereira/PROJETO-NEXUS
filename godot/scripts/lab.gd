@@ -2,7 +2,7 @@ extends AcceptDialog
 ## Two bounded, independent local datasets: played matches and deterministic AI samples.
 const Combat = preload("res://scripts/combat.gd")
 const SimulationLog = preload("res://scripts/simulation_log.gd")
-const STORE := "user://balance-0.11.json"
+const STORE := "user://balance-0.15.json"
 var catalog
 var source: OptionButton
 var summary: Label
@@ -38,7 +38,7 @@ static func record(state: Dictionary, mode: String, difficulty: String) -> void:
 	persist(data)
 
 func _ready() -> void:
-	title = "Laboratório de balanceamento · Alpha 0.11"
+	title = "Laboratório de balanceamento · Alpha 0.15"
 	ok_button_text = "Voltar"
 	var column := VBoxContainer.new()
 	column.custom_minimum_size = Vector2(1060, 530)

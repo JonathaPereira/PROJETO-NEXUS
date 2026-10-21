@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "rulesVersion": "0.11.0",
+  "rulesVersion": "0.15.0",
   "affinity": {
     "advantageMultiplier": 1.25,
     "resistanceMultiplier": 0.85,
@@ -23,7 +23,7 @@
   },
   "shield": {
     "maxHpRatio": 0.25,
-    "durationActions": 2
+    "durationRounds": 2
   },
   "guard": {
     "shieldMaxHpRatio": 0.06,
@@ -46,7 +46,8 @@
     "riposteAttackRatio": 0.3,
     "darkmarkMaxHpRatio": 0.035,
     "darkmarkDrainRatio": 0.6,
-    "elementalWardIncomingMultiplier": 0.8
+    "elementalWardIncomingMultiplier": 0.8,
+    "tauntDefenseMultiplier": 0.75
   },
   "classPassives": {
     "arcanoDefenseMultiplier": 0.75,
@@ -69,8 +70,13 @@
     }
   },
   "ai": {
-    "healingHealthThreshold": 0.78,
-    "shieldRefreshMaxHpRatio": 0.14,
-    "supportEnergyThreshold": 75
+    "supportPriority": 1.18,
+    "damagePriority": 1.08,
+    "killBonus": 700,
+    "healValue": 1.35,
+    "shieldValue": 0.8
+  },
+  "tankProtection": {
+    "openingTurns": 2
   }
 }

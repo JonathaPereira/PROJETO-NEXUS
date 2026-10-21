@@ -648,5 +648,5 @@ export const GUARD = {
   cost: 0,
   cooldown: 0,
   description:
-    `Recebe ${rulePercent(1 - RULES.guard.incomingDamageMultiplier)}% menos dano até seu próximo turno, ganha escudo de ${rulePercent(RULES.guard.shieldMaxHpRatio)}% da vida máxima por ${RULES.shield.durationActions} ações e recupera ${RULES.energy.guardGain} de energia. Escudos não somam.`,
+    `Recebe ${rulePercent(1 - RULES.guard.incomingDamageMultiplier)}% menos dano até seu próximo turno, ganha escudo de ${rulePercent(RULES.guard.shieldMaxHpRatio)}% da vida máxima por ${RULES.shield.durationRounds} rodadas globais e recupera ${RULES.energy.guardGain} de energia. Camadas somam até 25% da vida, com expiração independente.`,
 };

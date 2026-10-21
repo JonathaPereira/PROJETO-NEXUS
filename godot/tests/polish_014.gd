@@ -96,5 +96,6 @@ func run() -> void:
 	check(app.battle_voice_caption.get_global_rect().end.y<=app.field.get_global_rect().position.y,"The subtitle lane stays above the arena and its controls")
 	app.queue_free()
 	await settle()
+	await create_timer(.15).timeout
 	print("PvP, voice cast and rendering budgets: %d checks, %d failures." % [checks,failures])
 	quit(1 if failures else 0)

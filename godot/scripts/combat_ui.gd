@@ -11,11 +11,11 @@ static func build(app) -> void:
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right"]: margin.add_theme_constant_override("margin_" + side, 18)
-	for side in ["top", "bottom"]: margin.add_theme_constant_override("margin_" + side, 12)
+	for side in ["top", "bottom"]: margin.add_theme_constant_override("margin_" + side, 9)
 	app.add_child(margin)
 	app.combat_view = margin
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 9)
+	layout.add_theme_constant_override("separation", 6)
 	margin.add_child(layout)
 	var header := HBoxContainer.new()
 	header.custom_minimum_size.y = 42
@@ -427,8 +427,8 @@ static func event_detail(event: Dictionary) -> String:
 				if event.shieldAfter == 0: detail += "  ·  [color=#83d8ff]ESCUDO QUEBRADO[/color]"
 			if event.get("advantage", 1.0) != 1.0: detail += "  ·  " + RulesText.relationship(float(event.advantage))
 		"heal": detail = "[color=#a1e6b3]+%d VIDA%s[/color]" % [event.amount, (" · REGENERAÇÃO" if event.has("remaining") else " · SEMENTE" if event.get("source", "") == "seed" else " · DRENO DE VIDA") if event.get("passive", false) else ""]
-		"shield", "guard": detail = "[color=#83d8ff]%s · total %d · %dT[/color]" % ["+%d ESCUDO" % event.amount if event.amount > 0 else "ESCUDO MANTIDO/RENOVADO", event.get("shieldAfter", event.amount), event.get("shieldTurns", int(RulesText.rules.shield.durationActions))]
-		"shieldExpired": detail = "ESCUDO EXPIROU · −%d · resta 0" % event.amount
+		"shield", "guard": detail = "[color=#83d8ff]%s · total %d · %dR[/color]" % ["+%d ESCUDO" % event.amount if event.amount > 0 else "LIMITE DE ESCUDO", event.get("shieldAfter", event.amount), event.get("shieldTurns", int(RulesText.rules.shield.durationRounds))]
+		"shieldExpired": detail = "CAMADA EXPIROU · −%d · resta %d" % [event.amount,event.get("shieldAfter",0)]
 		"energy": detail = "+%d ENERGIA · total %d" % [event.amount, event.energyAfter]
 		"converted": detail = "%d ESCUDO CONVERTIDO EM DANO" % event.shieldSpent
 		"support": detail = "SUPORTE"
@@ -440,7 +440,7 @@ static func event_detail(event: Dictionary) -> String:
 	if event.has("extraEffect"): detail += "  ·  %s %dT" % [Fighter.STATUS_NAMES.get(event.extraEffect, event.extraEffect), int(RulesText.rules.status.durationTurns)]
 	if event.has("effect"):
 		if event.effect == "cleanse": detail += "  ·  PURIFICADO (%d efeito(s))" % event.cleansed.size()
-		else: detail += "  ·  [color=#eac4ee]%s %dT[/color]" % [Fighter.STATUS_NAMES.get(event.effect, event.effect).to_upper(), event.effectTurns]
+		else: detail += "  ·  [color=#eac4ee]%s %dR[/color]" % [Fighter.STATUS_NAMES.get(event.effect, event.effect).to_upper(), event.effectTurns]
 	return detail
 
 static func show_report(app, events: Array, title: String) -> void:
