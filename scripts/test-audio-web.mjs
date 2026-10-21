@@ -46,7 +46,7 @@ try {
   const voice=await sample(790,395);await page.waitForTimeout(5000);
   const effect=await sample(790,627);await page.waitForTimeout(2000);
   // Disable the effects path: the same preview must now produce silence.
-  await page.mouse.click(790,521);await page.waitForTimeout(500);await frame.evaluate(()=>window.__audioPeak=0);await page.mouse.click(790,627);await page.waitForTimeout(1800);
+  await page.mouse.click(790,521,{delay:120});await page.waitForTimeout(500);await frame.evaluate(()=>window.__audioPeak=0);await page.mouse.click(790,627,{delay:120});await page.waitForTimeout(1800);
   const muted=await frame.evaluate(()=>__audioPeak);assert(muted<.0001,'Disabled effects must produce no PCM');
   assert.deepEqual(errors,[]);measurements.push({embedded,voice,effect,muted,warnings});
   await mkdir('artifacts/audio-web',{recursive:true});await page.screenshot({path:`artifacts/audio-web/${embedded?'embedded':'direct'}.png`});

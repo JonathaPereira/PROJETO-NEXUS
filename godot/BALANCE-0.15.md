@@ -10,7 +10,9 @@ A IA compara ações disponíveis, finalizações, afinidades, combos, proteçã
 
 ## Áudio e interface
 
-Vozes e efeitos usam explicitamente a reprodução pelo mixer do Godot na exportação Web. Nas configurações **Áudio e vídeo**, há controles separados e os botões **Ouvir Vesper** e **Ouvir golpe**. Os testes de navegador medem PCM real na saída de áudio; o indicador `playing` sozinho não é suficiente para verificar som.
+Vozes e efeitos usam explicitamente a reprodução pelo mixer do Godot na exportação Web. O limitador de efeitos que silenciava esse canal no Web sem threads foi substituído por margem de volume nessa plataforma; o limitador nativo foi preservado. Nas configurações **Áudio e vídeo**, há controles separados e os botões **Ouvir Vesper** e **Ouvir golpe**. Os testes de navegador medem PCM real na saída de áudio; o indicador `playing` sozinho não é suficiente para verificar som.
+
+![Vesper com provocação e custo de defesa separados no HUD](../docs/balance-015/vesper-risk.webp)
 
 O HUD de combate ganhou ajustes de espaçamento para manter o botão de iniciar dentro da janela. Os novos dados do laboratório usam arquivos 0.15; os arquivos antigos ficam preservados. Campanha, inventário, gemas, arte, animações e estudo 3D arquivado continuam presentes.
 
@@ -47,3 +49,12 @@ npm run test:audio:web
 ```
 
 O servidor e os clientes recusam fingerprints diferentes para evitar combates calculados com regras incompatíveis. O relatório registra o fingerprint exato utilizado na simulação.
+
+## Resultados da validação
+
+- 48 testes Node aprovados, incluindo camadas, expiração por rodada, cobertura, provocação com custo, IA e partidas PvP completas.
+- Paridade JavaScript/Godot em 29 partidas e 1.575 ações; 1.269 verificações nativas no teste principal, incluindo 1.242 de interface. As suítes adicionais de campanha, apresentação, gemas e áudio também passaram.
+- 216 simulações locais exportadas e reproduzidas, com 13.397 ações.
+- Dois clientes Godot com servidor real concluíram a mesma partida: 209 verificações e 45 ações. Dois navegadores também criaram sala, confirmaram trios e executaram uma ação online na exportação.
+- Voz e golpe com PCM real nos dois contextos Chromium, direto e em iframe de outra origem; desligar efeitos produziu zero. [Medições e aviso opcional de Service Worker do iframe](../docs/balance-015/audio-measurements.json). Isso não verifica o dispositivo de áudio do jogador nem substitui um teste na publicação final do itch.io.
+- 36.108 combates de balanceamento, com 1.945.010 ações; três danos passaram de 93,5% para 81,9% na fase mista comparável. Continuam fortes; o relatório detalha as respostas e os desequilíbrios restantes.

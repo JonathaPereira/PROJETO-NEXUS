@@ -440,7 +440,7 @@ static func event_detail(event: Dictionary) -> String:
 	if event.has("extraEffect"): detail += "  ·  %s %dT" % [Fighter.STATUS_NAMES.get(event.extraEffect, event.extraEffect), int(RulesText.rules.status.durationTurns)]
 	if event.has("effect"):
 		if event.effect == "cleanse": detail += "  ·  PURIFICADO (%d efeito(s))" % event.cleansed.size()
-		else: detail += "  ·  [color=#eac4ee]%s %dR[/color]" % [Fighter.STATUS_NAMES.get(event.effect, event.effect).to_upper(), event.effectTurns]
+		else: detail += "  ·  [color=#eac4ee]%s %dT[/color]" % [Fighter.STATUS_NAMES.get(event.effect, event.effect).to_upper(), event.effectTurns]
 	return detail
 
 static func show_report(app, events: Array, title: String) -> void:

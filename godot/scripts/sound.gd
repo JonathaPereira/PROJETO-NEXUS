@@ -15,6 +15,7 @@ var sequence := 0
 var variations: Dictionary = {}
 var level := .8
 var played_events: Array = []
+var mix_headroom_db := -10.0 if OS.has_feature("web") else -6.0
 
 func _ready() -> void:
 	if AudioServer.get_bus_index(BUS) < 0:
@@ -22,9 +23,11 @@ func _ready() -> void:
 		var index := AudioServer.bus_count-1
 		AudioServer.set_bus_name(index,BUS)
 		AudioServer.set_bus_send(index,"Master")
-		var limiter := AudioEffectHardLimiter.new()
-		limiter.ceiling_db = -1.2
-		AudioServer.add_bus_effect(index,limiter)
+		# The single-thread Web mixer needs headroom without this native DSP effect.
+		if not OS.has_feature("web"):
+			var limiter := AudioEffectHardLimiter.new()
+			limiter.ceiling_db = -1.2
+			AudioServer.add_bus_effect(index,limiter)
 	for key in BANK_NAMES:
 		bank[key] = [load("res://assets/audio/%s-0.wav" % key),load("res://assets/audio/%s-1.wav" % key)]
 	for key in NAMES: cues.append(bank[key][0])
@@ -45,7 +48,7 @@ func set_mix_level(value: float) -> void:
 	level = clampf(value,0,1)
 	if level == 0: stop_all()
 	else:
-		for voice in voices: voice.volume_db = linear_to_db(level)-6.0+float(voice.get_meta("layer_gain",0.0))
+		for voice in voices: voice.volume_db = linear_to_db(level)+mix_headroom_db+float(voice.get_meta("layer_gain",0.0))
 
 func play_layer(key: String, gain_db := 0.0, pitch := 1.0) -> void:
 	if not enabled or level <= 0 or not bank.has(key) or voices.is_empty(): return
@@ -58,7 +61,7 @@ func play_layer(key: String, gain_db := 0.0, pitch := 1.0) -> void:
 	variations[key] = variant+1
 	voice.stream = bank[key][variant%2]
 	voice.set_meta("layer_gain",gain_db)
-	voice.volume_db = linear_to_db(level)-6.0+gain_db
+	voice.volume_db = linear_to_db(level)+mix_headroom_db+gain_db
 	voice.pitch_scale = pitch * [1.0,.975,1.025,1.012][variant%4]
 	voice.play()
 	sequence += 1
