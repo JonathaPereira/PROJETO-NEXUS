@@ -1,35 +1,34 @@
-# Nexus — versão Web 0.14
+# Nexus — versão Web 0.15
 
-[Baixar nexus-web-0.14.zip](https://github.com/JonathaPereira/PROJETO-NEXUS/raw/refs/heads/downloads/nexus-web-0.14.zip) · aproximadamente 87 MiB
+[Baixar nexus-web-0.15.zip](https://github.com/JonathaPereira/PROJETO-NEXUS/raw/refs/heads/downloads/nexus-web-0.15.zip) · aproximadamente 87,2 MiB
 
-Pacote HTML5 real, exportado do Godot 4.6.3. O index.html está na raiz do ZIP.
+Pacote HTML5 exportado do Godot 4.6.3, com `index.html` na raiz. Código-fonte: [codex/nexus-015](https://github.com/JonathaPereira/PROJETO-NEXUS/tree/codex/nexus-015), revisão `e517fc814541c7c6f1b428e87e1019e0dfbd7a9b`.
 
-- Servidor PvP padrão corrigido: `wss://nexus-pvp.onrender.com/pvp`, com migração do endereço antigo salvo.
-- Funções visíveis nos 20 heróis, habilidades ilustradas e gemas vermelhas (ataque), azuis (energia), verdes (vida).
-- Efeitos e preparação dos 20 personagens refinados; qualidade automática e opções Alta/Equilibrada/Leve.
-- 80 falas sintéticas em português, com legendas e volume próprio. Modelo de síntese não incluído no jogo.
-- Campanha, progressão, engastes e estudo 3D preservados. Sem mudança no balanceamento ou fingerprint do protocolo PvP.
+- Escudos acumulam em camadas independentes de duas rodadas globais, limitadas a 25% da vida.
+- Vesper provoca e contra-ataca por dois turnos pessoais, perdendo 25% da própria defesa enquanto provoca. A penalidade aparece em vermelho e termina junto com a postura.
+- Tanques: aproximadamente +8% de ataque e cobertura inicial dos aliados pelo primeiro tanque da formação. Heróis de dano: aproximadamente −6% de vida, preservando ataque e poderes. Suportes preservados.
+- IA avalia finalizações, suporte inimigo, combos, cura efetiva e proteção.
+- Vozes e efeitos corrigidos no Web e testados com PCM real, diretamente e em iframe. Há testes de voz e golpe nas configurações.
+- Campanha, gemas, animações e estudo 3D preservados. O servidor PvP já vem configurado como `wss://nexus-pvp.onrender.com/pvp`.
 
-[Assistir à prévia real com áudio](https://github.com/JonathaPereira/PROJETO-NEXUS/raw/refs/heads/codex/nexus-2d/docs/polish-014/preview.mp4)
+[Guia completo de atualização](https://github.com/JonathaPereira/PROJETO-NEXUS/blob/codex/nexus-015/godot/BALANCE-0.15.md) · [Relatório de 36.108 combates](https://github.com/JonathaPereira/PROJETO-NEXUS/blob/codex/nexus-015/docs/balance-015/README.md)
 
-## Atualizar o jogo publicado
+## Ativar a versão nova
 
-1. Baixe o ZIP 0.14 inteiro, sem extrair.
-2. No itch.io, abra Dashboard → Nexus → Edit game e substitua o ZIP HTML5 existente.
-3. Preserve This file will be played in the browser e a visibilidade Public; salve.
-4. Feche a janela/aba antiga e abra novamente pelo Trono. O campo de PvP já deve mostrar nexus-pvp.onrender.com.
-5. Em Áudio e vídeo, ajuste vozes, legendas e qualidade. Se o computador precisar, selecione Leve.
+**Atualize o servidor junto com o jogo.** A versão 0.15 usa regras e fingerprint novos.
 
-O jogo continua hospedado no itch.io; não copie o ZIP para o Surge. Se o itch.io gerar outro ID de upload ao substituir o arquivo, atualize o Embed game na integração do Trono.
+1. Render → serviço nexus-pvp → Settings → Branch: **codex/nexus-015**. Root Directory vazio; Build `npm ci --omit=dev`; Start `npm run pvp:server`. Salve e faça Manual Deploy → Deploy latest commit. Preserve as variáveis existentes.
+2. Espere Live e confira [health](https://nexus-pvp.onrender.com/health): `ok: true`, build `24bfd1a18f421ac1558263a19f326a8b818748bb6d0c959afe6027f0f1024866`.
+3. itch.io → Dashboard → Nexus → Edit game → Uploads: envie o ZIP inteiro, sem extrair. Marque **This file will be played in the browser**, mantenha **Public** e salve.
+4. Ambos os jogadores recarregam o jogo. Criem/entrem na mesma sala e confirmem as equipes. Reiniciar o servidor encerra salas em memória.
+5. Se o itch.io gerar outro código `embed-upload`, atualize o Embed game no Trono. O ZIP fica no itch.io; não precisa ser colocado no Surge.
 
-Código-fonte: [codex/nexus-2d](https://github.com/JonathaPereira/PROJETO-NEXUS/tree/codex/nexus-2d), revisão a9c0c3c.
+SHA-256: `2d83c0b0c3b537d3bbd2ecafa2a140711ace7cd79aa9b3a3fd3e11da023fa98f`
 
-[Novidades, medições e guia](https://github.com/JonathaPereira/PROJETO-NEXUS/blob/codex/nexus-2d/godot/POLISH-0.14.md) · [Guia PvP](https://github.com/JonathaPereira/PROJETO-NEXUS/blob/codex/nexus-2d/godot/PVP.md)
+[Tamanho, revisão e fingerprint em JSON](release-0.15.json) · [Checksums](SHA256SUMS.txt)
 
-SHA-256 0.14: `c76fe5b166abaeaca87725e6f57d97b2dc2519ea5d5cdc4ef1960fc59b7f74c3`
+## Arquivos anteriores e capa
 
-## Capa
+As versões 0.13 e 0.14 permanecem arquivadas para preservar os links anteriores; seus clientes não são compatíveis com o servidor atualizado para 0.15.
 
-[Baixar capa PNG — 630 × 500 pixels](https://github.com/JonathaPereira/PROJETO-NEXUS/raw/refs/heads/downloads/nexus-capa-630x500.png)
-
-A versão 0.13 permanece arquivada nesta branch para preservar links anteriores; use 0.14 para obter o servidor corrigido e as melhorias.
+[Capa PNG — 630 × 500](https://github.com/JonathaPereira/PROJETO-NEXUS/raw/refs/heads/downloads/nexus-capa-630x500.png)

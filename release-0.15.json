@@ -1,0 +1,10 @@
+{
+  "gameVersion": "0.15.0",
+  "rulesVersion": "0.15.0",
+  "sourceCommit": "e517fc814541c7c6f1b428e87e1019e0dfbd7a9b",
+  "build": "24bfd1a18f421ac1558263a19f326a8b818748bb6d0c959afe6027f0f1024866",
+  "filename": "nexus-web-0.15.zip",
+  "bytes": 91404897,
+  "sha256": "2d83c0b0c3b537d3bbd2ecafa2a140711ace7cd79aa9b3a3fd3e11da023fa98f",
+  "server": "wss://nexus-pvp.onrender.com/pvp"
+}
