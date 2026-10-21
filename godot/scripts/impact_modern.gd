@@ -1,6 +1,8 @@
 extends Control
 ## Continuous ribbons, turbulent light and rounded particles; entirely 2D.
 const SHADER = preload("res://shaders/modern_impact.gdshader")
+const Quality = preload("res://scripts/presentation_quality.gd")
+const GLOW = preload("res://assets/vfx/soft-glow.svg")
 var origin := Vector2.ZERO
 var destination := Vector2.ZERO
 var tint := Color.WHITE
@@ -34,9 +36,11 @@ func _ready() -> void:
 	fx_material.set_shader_parameter("tint",tint)
 	fx_material.set_shader_parameter("seed",float(signature.hash()%97))
 	fx_material.set_shader_parameter("phase",0 if phase=="charge" else 1 if phase=="travel" else 2)
+	fx_material.set_shader_parameter("noise_map",Quality.noise_texture())
 	quad = ColorRect.new()
 	quad.mouse_filter = MOUSE_FILTER_IGNORE
 	quad.material = fx_material
+	quad.visible = Quality.level>0
 	var extent := 290.0 if ultimate else 224.0 if tier=="skill" else 180.0
 	if phase == "travel": extent *= .56
 	quad.size = Vector2.ONE*extent
@@ -55,17 +59,17 @@ func _process(delta: float) -> void:
 	if elapsed>=duration: queue_free()
 
 func _glow(at: Vector2, radius: float, color: Color, alpha: float) -> void:
-	for layer in range(5,0,-1):
-		draw_circle(at,radius*float(layer)/3.0,Color(color,alpha*.055),true,-1,true)
-	draw_circle(at,radius*.24,Color(color.lightened(.6),alpha*.8),true,-1,true)
+	# One cached radial sprite replaces six tessellated, overlapping circles.
+	draw_texture_rect(GLOW,Rect2(at-Vector2.ONE*radius*1.5,Vector2.ONE*radius*3),false,Color(color.lightened(.15),alpha*.9))
 
 func _ribbon(at: Vector2, p: float, radius: float, angle: float, color: Color, width: float) -> void:
 	var outer := PackedVector2Array()
 	var inner := PackedVector2Array()
 	var edge := PackedVector2Array()
 	var head := -.95+p*1.85
-	for i in range(57):
-		var t := float(i)/56
+	var steps := Quality.particles(44,30,20)
+	for i in range(steps+1):
+		var t := float(i)/steps
 		var a := angle+head-t*1.85
 		var taper := pow(sin(t*PI),.65)
 		var direction := Vector2(cos(a),sin(a)*.55)
@@ -85,7 +89,7 @@ func _draw() -> void:
 	var fade := (1-p)*(1-p)
 	var color := Color("80e6f1") if profile==2 else tint
 	if phase=="charge":
-		for i in range(12):
+		for i in range(Quality.particles(12,8,5)):
 			var angle := float(i)*2.399+p*.9
 			var at := origin+Vector2.from_angle(angle)*(70*(1-p)+12)*strength
 			_glow(at,2.5+float(i%3),color,sin(p*PI)*.5)
@@ -93,7 +97,7 @@ func _draw() -> void:
 	if phase=="travel":
 		var direction := (destination-origin).normalized()
 		var point := origin.lerp(destination,smoothstep(0,1,p))
-		for i in range(3):
+		for i in range(Quality.particles(3,2,1)):
 			var path := PackedVector2Array()
 			for sample in range(22):
 				var t := float(sample)/21
@@ -111,7 +115,7 @@ func _draw() -> void:
 		draw_arc(destination,42+p*35,0,TAU*(1-p),72,Color("8edcff",fade*.7),1.5,true)
 		return
 	# Small physical droplets/embers follow ballistic arcs, with a soft luminous tail.
-	var count := 32 if ultimate else 20 if tier=="skill" else 12
+	var count := Quality.particles(28,16,9) if ultimate else Quality.particles(18,11,7) if tier=="skill" else Quality.particles(12,8,5)
 	for index in range(count):
 		var seed_value := float(index)*2.399+float(signature.length())*.2
 		var direction := Vector2.from_angle(seed_value)

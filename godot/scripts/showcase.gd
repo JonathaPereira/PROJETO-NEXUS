@@ -10,6 +10,7 @@ const REPRESENTATIVES = ["veyra", "sylva", "axion", "astra", "vesper"]
 var hero_picker: OptionButton
 var catalog
 var audio
+var voice
 var director = Director.new()
 var selected_hero := "veyra"
 var playing := false
@@ -34,6 +35,7 @@ func _ready() -> void:
 		if not visible:
 			version += 1
 			director.cancel()
+			if is_instance_valid(voice): voice.stop_line()
 			playing = false)
 	var content := VBoxContainer.new()
 	content.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
@@ -116,6 +118,7 @@ func _ready() -> void:
 	_select_hero(selected_hero)
 
 func _select_hero(id: String) -> void:
+	if is_instance_valid(voice): voice.stop_line()
 	version += 1
 	director.cancel()
 	playing = false
@@ -170,6 +173,7 @@ func _play(action_id: String) -> void:
 	for button in action_buttons: button.disabled = true
 	var hero: Dictionary = catalog.hero_by_id[selected_hero]
 	var action: Dictionary = hero[action_id]
+	if is_instance_valid(voice) and action_id in ["skill","ultimate"]: voice.speak(hero.id,action_id)
 	caption.text = "%s · %s" % [hero.name, action.name]
 	explanation.text = action.description
 	if reduced_motion: explanation.text += " Animações reduzidas estão ativadas."

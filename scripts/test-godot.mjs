@@ -79,7 +79,7 @@ function run(args, timeout = 240000, commandEnv = env) {
 }
 console.log("Importando o projeto com Godot…");
 run(["--headless", "--path", "godot", "--editor", "--import", "--quit"]);
-for (const suite of ["damage_receipt", "progression", "polish_012", "two_d", "stage_3d", "vesper"]) {
+for (const suite of ["damage_receipt", "progression", "polish_012", "polish_014", "two_d", "stage_3d", "vesper"]) {
   const suiteEnv={...env,XDG_DATA_HOME:resolve(scratch,suite,"data"),XDG_CONFIG_HOME:resolve(scratch,suite,"config"),XDG_CACHE_HOME:resolve(scratch,suite,"cache")};
   console.log(run(["--headless", "--audio-driver", "Dummy", "--path", "godot", "--script", `res://tests/${suite}.gd`],240000,suiteEnv).trim());
 }

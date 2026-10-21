@@ -1,3 +1,5 @@
+> **Alpha 0.14:** [PvP com servidor correto, vozes em português e efeitos otimizados](POLISH-0.14.md).
+
 > **Alpha 0.13:** [Como jogar PvP, publicar e integrar](PVP.md).
 
 # NEXUS em Godot — Alpha 0.12 / menu, estados e impacto 2D

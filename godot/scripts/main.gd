@@ -10,6 +10,9 @@ const PvpLobby = preload("res://scripts/pvp_lobby.gd")
 const Hub = preload("res://scripts/hub.gd")
 const UITheme = preload("res://scripts/ui_theme.gd")
 const RulesText = preload("res://scripts/rules_text.gd")
+const Voice = preload("res://scripts/hero_voice.gd")
+const Quality = preload("res://scripts/presentation_quality.gd")
+const PresentationSettings = preload("res://scripts/presentation_settings.gd")
 const ACCENT := UITheme.ACCENT
 const GOLD := ACCENT # Legacy view API; the visual accent is now cyan.
 const MUTED := UITheme.MUTED
@@ -56,6 +59,15 @@ var audio_enabled := true
 var audio_level := .8
 var sound_button: Button
 var sound
+var voice
+var voice_enabled := true
+var voice_subtitles := true
+var voice_level := .75
+var voice_caption: PanelContainer
+var voice_caption_text: Label
+var battle_voice_caption: Label
+var presentation_settings: AcceptDialog
+var presentation_quality
 var restart_button: Button
 var controls_note: Label
 var restart_dialog: ConfirmationDialog
@@ -118,6 +130,7 @@ func _ready() -> void:
 	_load_preferences()
 	_build_theme()
 	_build_interface()
+	_build_presentation()
 	campaign = Campaign.new(catalog)
 	Campaign.register_enemies(catalog)
 	_new_battle()
@@ -164,6 +177,51 @@ func _clear(node: Node) -> void:
 
 func _build_interface() -> void:
 	CombatUI.build(self)
+
+func _build_presentation() -> void:
+	presentation_quality=Quality.new()
+	presentation_quality.app=self
+	add_child(presentation_quality)
+	Quality.noise_texture()
+	voice=Voice.new()
+	add_child(voice)
+	voice.enabled=voice_enabled
+	voice.subtitles=voice_subtitles
+	voice.set_level(voice_level)
+	var layer := CanvasLayer.new()
+	layer.layer=12
+	add_child(layer)
+	voice_caption=PanelContainer.new()
+	voice_caption.name="HeroVoiceSubtitle"
+	voice_caption.set_anchors_and_offsets_preset(PRESET_CENTER_TOP)
+	voice_caption.position=Vector2(-240,9)
+	voice_caption.custom_minimum_size=Vector2(480,44)
+	voice_caption.mouse_filter=MOUSE_FILTER_IGNORE
+	voice_caption.add_theme_stylebox_override("panel",_style(Color("07121def"),Color("4a8aab")))
+	layer.add_child(voice_caption)
+	voice_caption_text=_label("",14)
+	voice_caption_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+	voice_caption_text.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
+	voice_caption_text.mouse_filter=MOUSE_FILTER_IGNORE
+	voice_caption.add_child(voice_caption_text)
+	voice_caption.hide()
+	voice.caption_changed.connect(func(id,text):
+		var line := "%s: %s" % [catalog.hero_by_id[id].name,text]
+		if combat_view.is_visible_in_tree():
+			voice_caption.hide()
+			battle_voice_caption.text=line
+		else:
+			voice_caption_text.text=line
+			voice_caption.show())
+	voice.line_finished.connect(func():
+		if is_instance_valid(voice_caption): voice_caption.hide()
+		if is_instance_valid(battle_voice_caption): battle_voice_caption.text="")
+	presentation_settings=PresentationSettings.new()
+	presentation_settings.app=self
+	add_child(presentation_settings)
+
+func _show_presentation_settings() -> void:
+	presentation_settings.popup_centered(Vector2i(470,mini(540,int(get_viewport_rect().size.y)-60)))
 
 func _open_vesper() -> void:
 	if pvp_active:return
@@ -238,6 +296,7 @@ func _leave_battle(page: String = "menu") -> void:
 	director.cancel()
 	backdrop.cancel()
 	sound.stop_all()
+	if is_instance_valid(voice): voice.stop_line()
 	started = false
 	busy = false
 	ai_pending = false
@@ -264,6 +323,7 @@ func _new_battle() -> void:
 	director.cancel()
 	backdrop.cancel()
 	if is_instance_valid(sound): sound.stop_all()
+	if is_instance_valid(voice): voice.stop_line()
 	started = false
 	busy = false
 	ai_pending = false
@@ -288,6 +348,8 @@ func _rebuild_fighters() -> void:
 	_clear(effects)
 	for data in state.units:
 		var hero: Dictionary = catalog.hero_by_id[data.heroId]
+		voice.prepare(hero.id)
+		Fighter.prepare_poses(str(hero.get("visualHero",hero.id)))
 		var fighter = Fighter.new()
 		fighter.setup(hero, data.id, catalog.affinity_color(hero.classId))
 		if spatial_combat: fighter.use_spatial_presentation()
@@ -376,6 +438,9 @@ func _refresh() -> void:
 	_update_log()
 	if state.phase == "finished" and not result_shown:
 		result_shown = true
+		if state.winner!=null:
+			var survivors: Array=state.units.filter(func(u):return u.side==state.winner and u.hp>0)
+			if not survivors.is_empty(): voice.speak(survivors[0].heroId,"victory",true)
 		if tutorial_index < 0 and campaign_mission < 0 and not pvp_active: Lab.record(state, mode, difficulty)
 		var damage := 0
 		var healing := 0
@@ -451,6 +516,8 @@ func _present_turn(action_id: String, target: String, pending: Dictionary, resul
 	var hero: Dictionary = catalog.hero_by_id[actor.heroId]
 	var action := combat.get_action(actor,action_id)
 	busy = true
+	voice.prepare(hero.id)
+	if action_id in ["skill","ultimate"]: voice.speak(hero.id,action_id)
 	selected_action = action_id
 	target_id = target
 	preview_requested = false
@@ -566,7 +633,7 @@ func _ask_restart() -> void:
 
 func _toggle_sound() -> void:
 	sound.enabled = not sound.enabled
-	sound_button.text = "Som: ligado" if sound.enabled else "Som: desligado"
+	sound_button.text = "Efeitos: ligados" if sound.enabled else "Efeitos: desligados"
 	audio_enabled = sound.enabled
 	_save_preferences()
 	sound.play_layer("ui",-6)
@@ -727,6 +794,10 @@ func _load_preferences() -> void:
 	if saved_audio is bool: audio_enabled = saved_audio
 	var saved_level: Variant = config.get_value("audio","level",.8)
 	if saved_level is float or saved_level is int: audio_level = clampf(float(saved_level),0,1)
+	voice_enabled=bool(config.get_value("voice","enabled",true))
+	voice_subtitles=bool(config.get_value("voice","subtitles",true))
+	voice_level=clampf(float(config.get_value("voice","level",.75)),0,1)
+	Quality.configure(str(config.get_value("video","quality","auto")))
 
 func _save_preferences() -> void:
 	var config := ConfigFile.new()
@@ -737,6 +808,10 @@ func _save_preferences() -> void:
 	config.set_value("game", "reduced_motion", reduced_motion)
 	config.set_value("audio","enabled",audio_enabled)
 	config.set_value("audio","level",audio_level)
+	config.set_value("voice","enabled",voice_enabled)
+	config.set_value("voice","subtitles",voice_subtitles)
+	config.set_value("voice","level",voice_level)
+	config.set_value("video","quality",Quality.mode)
 	config.set_value("display", "mode", display_mode)
 	config.set_value("display", "resolution", display_resolution)
 	var error := config.save("user://preferences.cfg")
@@ -750,6 +825,7 @@ func _open_showcase() -> void:
 		showcase = Showcase.new()
 		showcase.catalog = catalog
 		showcase.audio = sound
+		showcase.voice = voice
 		showcase.reduced_motion = reduced_motion
 		add_child(showcase)
 	else:
@@ -936,6 +1012,7 @@ func _end_pvp() -> void:
 	director.cancel()
 	backdrop.cancel()
 	sound.stop_all()
+	if is_instance_valid(voice): voice.stop_line()
 	busy=false
 	started=false
 	result_shown=false
@@ -970,6 +1047,7 @@ func _pvp_packet(packet: Dictionary) -> void:
 		director.cancel()
 		backdrop.cancel()
 		sound.stop_all()
+		if is_instance_valid(voice): voice.stop_line()
 		pvp_active=true
 		auto_play=false
 		ai_request+=1

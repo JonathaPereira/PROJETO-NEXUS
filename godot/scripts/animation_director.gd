@@ -8,6 +8,8 @@ const ReceiptLink = preload("res://scripts/receipt_link.gd")
 const Bloom = preload("res://scripts/impact_bloom.gd")
 const AreaWave = preload("res://scripts/area_wave.gd")
 const Echo = preload("res://scripts/attack_echo.gd")
+const Signature = preload("res://scripts/hero_signature.gd")
+const Quality = preload("res://scripts/presentation_quality.gd")
 const PROFILES = {"igneo": "flame_dash", "natural": "verdant_bloom", "tecnico": "ion_cannon", "arcano": "astral_rift", "sombrio": "shadow_step", "lumi": "dawn_lance"}
 var generation := 0
 var tweens: Array[Tween] = []
@@ -181,9 +183,10 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 	var heavy: bool = signature in ["crater", "roots", "hex", "eruption", "plates", "claws"]
 	var floating: bool = signature in ["orbit", "runes", "threads", "spiral"]
 	anticipate.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	anticipate.tween_property(actor.visual_root, "rotation", (-0.10 if heavy else -0.055) * direction, timing.charge)
+	var motion: Array = Signature.MOTION.get(signature,[-.055,-3.0])
+	anticipate.tween_property(actor.visual_root, "rotation", float(motion[0]) * direction, timing.charge)
 	anticipate.tween_method(func(v): actor.material_fx.set_shader_parameter("bend", v), 0.0, -6.0 * direction, timing.charge)
-	anticipate.tween_property(actor.visual_root, "position", home + Vector2((-16 if melee else -7) * direction, -17 if floating else 7 if heavy else -3), timing.charge)
+	anticipate.tween_property(actor.visual_root, "position", home + Vector2((-16 if melee else -7) * direction, float(motion[1])), timing.charge)
 	anticipate.tween_property(actor.visual_root, "scale", Vector2(1.025 if heavy else 0.985, 0.97 if heavy else 1.02) * actor.depth, timing.charge)
 	await owner.get_tree().create_timer(timing.charge).timeout
 	if not _valid(version, actor): return false
@@ -214,12 +217,15 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 	else:
 		strike.tween_property(actor.visual_root, "scale", Vector2(1.05, 0.96) * actor.depth, timing.travel)
 		strike.tween_property(actor.visual_root, "position", home + Vector2(7 * direction, 4), timing.travel)
+	var travelling: Dictionary = {}
 	for event in targets:
+		if travelling.has(event.target): continue
+		travelling[event.target]=true
 		_effect(effects, origin, fighters[event.target].hit_position(), art_hero, event.type, "travel", ultimate, timing.travel, tier)
 	for segment in range(3):
 		await owner.get_tree().create_timer(timing.travel / 3.0).timeout
 		if not _valid(version, actor): return false
-		if melee and segment < 2:
+		if melee and segment < (2 if Quality.level==2 else 1):
 			var echo := Echo.new()
 			echo.snapshot(actor, actor.tint)
 			effects.add_child(echo)
@@ -235,6 +241,7 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 		spatial_body_bounds.append(Rect2(fighter.foot_position()-Vector2(fighter.artwork.size.x*fighter.depth*.5,fighter.artwork.size.y*fighter.depth),fighter.artwork.size*fighter.depth))
 	var receivers := {}
 	var reactions := {}
+	var painted: Dictionary = {}
 	for event in result.events:
 		if not fighters.has(event.get("target", "")): continue
 		if not receivers.has(event.target): receivers[event.target] = []
@@ -246,7 +253,17 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 		if not target in posed_fighters: posed_fighters.append(target)
 		var impact_kind: String = event.type
 		if event.get("absorbed", 0) > 0: impact_kind = "shieldBreak" if event.shieldAfter == 0 else "shieldHit"
-		_effect(effects, actor.hit_position(), target.hit_position(), art_hero, impact_kind, "impact", ultimate, 0.94 if ultimate else 0.74, tier)
+		if not painted.has(event.target):
+			painted[event.target]=true
+			_effect(effects, actor.hit_position(), target.hit_position(), art_hero, impact_kind, "impact", ultimate, 0.94 if ultimate else 0.74, tier)
+			var motif := Signature.new()
+			motif.signature=signature
+			motif.tint=actor.tint
+			motif.tier=tier
+			motif.position=target.hit_position()
+			motif.scale.x=direction
+			effects.add_child(motif)
+			transients.append(motif)
 		target.material_fx.set_shader_parameter("flash_color", Color("a5efc2") if event.type == "heal" else Color("a2dcff") if event.get("absorbed", 0) > 0 else Color.WHITE)
 		target.material_fx.set_shader_parameter("flash", 0.88 if event.type == "damage" else 0.55)
 		if (event.type == "damage" or (event.type == "heal" and signature == "runes" and not event.get("passive",false))) and not event.get("reaction",false) and not event.get("intercepted",false):

@@ -80,6 +80,7 @@ func _ready() -> void:
 	var subtitle := _text(masthead, "ECOS DO CREPÚSCULO", 11, CYAN)
 	subtitle.size_flags_vertical = SIZE_SHRINK_CENTER
 	masthead.add_child(app._button("⛶ Tela", app._show_display))
+	masthead.add_child(app._button("Áudio e vídeo",app._show_presentation_settings))
 	masthead.add_child(app._button("Sair", func(): get_tree().quit()))
 	var nav := _row(column, 8)
 	for item in [["Início", "menu"], ["História", "story"], ["Heróis e gemas", "heroes"], ["Batalhas", "play"], ["Extras", "extras"]]:
@@ -605,6 +606,7 @@ func _tab(title: String) -> VBoxContainer:
 	return contents
 
 func _choose_hero(id: String) -> void:
+	app.voice.speak(id,"select")
 	selected_hero = id
 	selected_slot = 0
 	message = ""

@@ -21,6 +21,7 @@ func _ready() -> void:
 	mouse_filter = MOUSE_FILTER_IGNORE
 	custom_minimum_size = Vector2(300,365)
 func _process(delta: float) -> void:
+	if not is_visible_in_tree(): return
 	if motion_enabled:
 		elapsed += delta
 		queue_redraw()

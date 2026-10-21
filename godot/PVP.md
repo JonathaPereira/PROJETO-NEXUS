@@ -1,4 +1,6 @@
-# Alpha 0.13 — PvP experimental e integração
+# PvP experimental e integração
+
+> Alpha 0.14: o servidor público padrão é `wss://nexus-pvp.onrender.com/pvp`. [Vozes, interface e desempenho](POLISH-0.14.md).
 
 O PvP online já está implementado para **duas pessoas por sala**, com convidados por código. O jogo e o servidor precisam ser publicados separadamente. Este repositório não cria contas no itch.io, Render ou Supabase, nem publica nesses serviços automaticamente.
 

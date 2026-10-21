@@ -1,3 +1,5 @@
+> **Alpha 0.14:** [PvP com servidor correto, vozes em português e efeitos otimizados](godot/POLISH-0.14.md).
+
 > **Alpha 0.13:** [PvP online, publicação e integração ao A Lei do Trono](godot/PVP.md).
 
 # NEXUS — Ecos do Crepúsculo
@@ -22,9 +24,9 @@ A base visual da **Alpha 0.8** foi preservada e aprimorada: o menu e o combate u
 
 Cada herói pode carregar **três engastes**, inclusive gemas repetidas. Você começa com **três cópias de cada tipo**: ataque +4%, vida +5% ou energia inicial +8 por cópia. Bônus iguais somam: três dão +12% ataque, +15% vida ou energia inicial de 40 para 64. Trocas são gratuitas; primeiras vitórias concedem uma cópia extra da gema da missão. Trio, engastes e avanço ficam salvos localmente, com leitura automática do progresso anterior. [Como jogar a campanha](godot/CAMPAIGN.md).
 
-O combate livre mantém **20 kits distintos, com tanque, suporte e dano em cada uma das cinco classes**, composição livre, três treinos guiados, laboratório e exportação de logs JSON/CSV. A apresentação tem cards de habilidades maiores, impactos com pausa, rastros e recibos separados de dano à vida, escudo, escudo restante, crítico e estados. As regras de classe e proteção passam à versão 0.11; a tela cheia Full HD usa **F11**. **Gemas são exclusivas da história**, e suas partidas não entram nos dados de balanço. [Resultados e interpretação das simulações](godot/SIMULATIONS.md). Treinamento de habilidades e integração com A Lei do Trono continuam no [roteiro](godot/ROADMAP.md).
+O combate livre mantém **20 kits distintos, com tanque, suporte e dano em cada uma das cinco classes**, composição livre, três treinos guiados, laboratório e exportação de logs JSON/CSV. A apresentação tem cards de habilidades maiores, impactos com pausa, rastros e recibos separados de dano à vida, escudo, escudo restante, crítico e estados. As regras de classe e proteção passam à versão 0.11; a tela cheia Full HD usa **F11**. **A campanha tem seu próprio inventário de gemas**; o PvP usa engastes e estoque experimental separados, com registros exclusivos de balanceamento. [Resultados e interpretação das simulações](godot/SIMULATIONS.md). Treinamento de habilidades e integração com A Lei do Trono continuam no [roteiro](godot/ROADMAP.md).
 
-O endereço atual do GitHub Pages continua executando o protótipo JavaScript. A versão Godot é aberta pelo editor nesta etapa; sua exportação para navegador será uma entrega separada. Veja [godot/README.md](godot/README.md) para instruções, estrutura e testes.
+O GitHub Pages continua executando o protótipo JavaScript. O jogo Godot 2D está publicado em [Nexus no itch.io](https://semchakra10.itch.io/nexus-mn), com acesso pelo Trono. A [branch downloads](https://github.com/JonathaPereira/PROJETO-NEXUS/tree/downloads) contém o ZIP HTML5 preparado. Veja [godot/README.md](godot/README.md) para instruções, estrutura e testes.
 
 ### Protótipo web existente
 

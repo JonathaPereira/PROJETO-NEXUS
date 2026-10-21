@@ -4,9 +4,9 @@ const STORE := "user://campaign-0.7.json"
 const SLOT_COUNT := 3
 const STARTING_COPIES := 3
 const GEMS := [
-	{"id": "ember", "name": "Brasa lapidada", "effect": "+4% ATQ", "detail": "Cada cópia soma 4% do ataque base na campanha; três somam 12%. Não altera recargas, críticos ou duração dos efeitos.", "color": "f49b70", "stat": "attack", "bonus": 0.04},
-	{"id": "sap", "name": "Seiva cristalizada", "effect": "+5% VIDA", "detail": "Cada cópia soma 5% da vida base na campanha; três somam 15%. O limite de escudo continua sendo 25% da vida máxima.", "color": "8bd5a4", "stat": "maxHp", "bonus": 0.05},
-	{"id": "pulse", "name": "Pulso de éter", "effect": "+8 EN inicial", "detail": "Cada cópia soma 8 de energia no início da missão: 48, 56 ou 64. Não aumenta a energia gerada durante o combate.", "color": "a9a0f6", "stat": "energy", "bonus": 8},
+	{"id": "ember", "name": "Brasa lapidada", "effect": "+4% ATQ", "detail": "Cada cópia soma 4% do ataque base na campanha; três somam 12%. Não altera recargas, críticos ou duração dos efeitos.", "color": "ff5369", "stat": "attack", "bonus": 0.04},
+	{"id": "sap", "name": "Seiva cristalizada", "effect": "+5% VIDA", "detail": "Cada cópia soma 5% da vida base na campanha; três somam 15%. O limite de escudo continua sendo 25% da vida máxima.", "color": "47dda1", "stat": "maxHp", "bonus": 0.05},
+	{"id": "pulse", "name": "Pulso de éter", "effect": "+8 EN inicial", "detail": "Cada cópia soma 8 de energia no início da missão: 48, 56 ou 64. Não aumenta a energia gerada durante o combate.", "color": "4cbaff", "stat": "energy", "bonus": 8},
 ]
 const CHAPTERS := [
 	{"id": "beacon", "name": "O Farol Partido", "eyebrow": "CAPÍTULO I", "theme": "sanctum", "color": "79ceef", "summary": "A cidade perdeu seu pulso. Atravesse os portões, liberte o pátio e rompa a âncora que aprisiona Vesper.", "lesson": "Aprenda a escolher alvos, lidar com estados e quebrar escudos."},

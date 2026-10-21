@@ -2,6 +2,7 @@ extends Control
 const Profile = preload("res://scripts/pvp_profile.gd")
 const Fighter = preload("res://scripts/fighter.gd")
 const GemIcon = preload("res://scripts/gem_icon.gd")
+const AbilityArt = preload("res://scripts/ability_art.gd")
 const Backdrop = preload("res://scripts/hub_backdrop.gd")
 var app
 var profile
@@ -55,6 +56,7 @@ func _ready() -> void:
 	title.size_flags_horizontal=SIZE_EXPAND_FILL
 	header.add_child(title)
 	header.add_child(app._label("EXPERIMENTAL · GEMAS LIVRES",12,Color("9bf0c3")))
+	header.add_child(app._button("Áudio e vídeo",app._show_presentation_settings))
 	label(body,"Monte seu trio. Combine classes, ajuste os engastes e enfrente outro jogador.",16)
 	var server_panel := panel(body)
 	var connection := HBoxContainer.new()
@@ -184,20 +186,50 @@ func _refresh_roster() -> void:
 	for hero in app.catalog.heroes:
 		if class_filter!="" and hero.classId!=class_filter:continue
 		var id: String=hero.id
-		var button: Button=app._button(hero.name,func():
+		var button: Button=app._button("",func():
 			if locked():return
 			profile.set_member(selected_slot,id)
+			app.voice.speak(id,"select")
 			_changed())
-		button.icon=Fighter.portrait(int(hero.index))
-		button.expand_icon=true
-		button.add_theme_constant_override("icon_max_width",34)
-		button.custom_minimum_size=Vector2(102,55)
+		button.name="Hero_"+id
+		button.accessibility_name=hero.name+", "+hero.role
+		button.custom_minimum_size=Vector2(120,58)
 		button.size_flags_horizontal=SIZE_EXPAND_FILL
 		button.toggle_mode=true
 		button.set_pressed_no_signal(id in profile.team)
 		button.tooltip_text="%s · %s\n%s" % [app.catalog.class_by_id[hero.classId].name,hero.role,hero.get("specialty",hero.role)]
 		button.disabled=locked()
 		roster.add_child(button)
+		var inset := MarginContainer.new()
+		inset.set_anchors_and_offsets_preset(PRESET_FULL_RECT)
+		for side in ["left","right"]: inset.add_theme_constant_override("margin_"+side,7)
+		for side in ["top","bottom"]: inset.add_theme_constant_override("margin_"+side,5)
+		inset.mouse_filter=MOUSE_FILTER_IGNORE
+		button.add_child(inset)
+		var identity := HBoxContainer.new()
+		identity.add_theme_constant_override("separation",7)
+		identity.mouse_filter=MOUSE_FILTER_IGNORE
+		inset.add_child(identity)
+		var portrait := TextureRect.new()
+		portrait.texture=Fighter.portrait(int(hero.index))
+		portrait.custom_minimum_size=Vector2(32,44)
+		portrait.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
+		portrait.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		portrait.mouse_filter=MOUSE_FILTER_IGNORE
+		identity.add_child(portrait)
+		var words := VBoxContainer.new()
+		words.size_flags_horizontal=SIZE_EXPAND_FILL
+		words.size_flags_vertical=SIZE_SHRINK_CENTER
+		words.add_theme_constant_override("separation",2)
+		words.mouse_filter=MOUSE_FILTER_IGNORE
+		identity.add_child(words)
+		var hero_name := label(words,hero.name,14)
+		hero_name.text_overrun_behavior=TextServer.OVERRUN_TRIM_ELLIPSIS
+		hero_name.autowrap_mode=TextServer.AUTOWRAP_OFF
+		var role := label(words,hero.role,11,app.catalog.affinity_color(hero.classId).lightened(.2))
+		role.name="HeroRole"
+		role.autowrap_mode=TextServer.AUTOWRAP_OFF
+		for text in [hero_name,role]: text.mouse_filter=MOUSE_FILTER_IGNORE
 		hero_buttons[id]=button
 func _changed() -> void:
 	if not client.room.is_empty():client.send({"type":"loadout","loadout":profile.payload()})
@@ -229,6 +261,9 @@ func refresh() -> void:
 		var button: Button=app._button("%d · %s" % [slot+1,app.catalog.hero_by_id[id].name],func():
 			selected_slot=index
 			refresh())
+		button.text+="\n"+str(app.catalog.hero_by_id[id].role)
+		button.add_theme_font_size_override("font_size",13)
+		button.custom_minimum_size.y=52
 		button.size_flags_horizontal=SIZE_EXPAND_FILL
 		button.toggle_mode=true
 		button.set_pressed_no_signal(slot==selected_slot)
@@ -259,7 +294,9 @@ func refresh() -> void:
 		picker.custom_minimum_size.y=40
 		picker.size_flags_vertical=SIZE_SHRINK_CENTER
 		picker.add_item("Vazio · remover")
-		for gem in profile.rules.gems:picker.add_item(str(gem.name).split(" ")[0]+" · "+gem.effect+" · ∞")
+		for gem in profile.rules.gems:picker.add_icon_item(GemIcon.texture_for(gem.id),str(gem.name).split(" ")[0]+" · "+gem.effect+" · ∞")
+		picker.add_theme_constant_override("icon_max_width",26)
+		picker.get_popup().add_theme_constant_override("icon_max_width",26)
 		var chosen := 0
 		for index in range(profile.rules.gems.size()):
 			if profile.rules.gems[index].id==slots[slot]:chosen=index+1
@@ -274,8 +311,23 @@ func refresh() -> void:
 		gem_pickers.append(picker)
 	label(details,"HABILIDADES",12,app.ACCENT)
 	for key in ["basic","skill","ultimate"]:
-		label(details,str(hero[key].name),14)
-		label(details,str(hero[key].description),12,app.MUTED)
+		var banner := panel(details)
+		var line := HBoxContainer.new()
+		line.add_theme_constant_override("separation",10)
+		banner.add_child(line)
+		var art := TextureRect.new()
+		art.name="Ability_"+key
+		art.texture=AbilityArt.icon(int(hero.index),key)
+		art.custom_minimum_size=Vector2(46,46)
+		art.expand_mode=TextureRect.EXPAND_IGNORE_SIZE
+		art.stretch_mode=TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		line.add_child(art)
+		var words := VBoxContainer.new()
+		words.size_flags_horizontal=SIZE_EXPAND_FILL
+		line.add_child(words)
+		label(words,{"basic":"ATAQUE","skill":"TÉCNICA","ultimate":"SUPREMO"}[key],10,app.ACCENT)
+		label(words,str(hero[key].name),14)
+		label(banner,str(hero[key].description),12,app.MUTED)
 func _ready_team() -> void:
 	client.send({"type":"ready","ready":not client.own_player().get("ready",false)})
 func _back() -> void:

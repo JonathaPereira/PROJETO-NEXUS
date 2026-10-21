@@ -11,6 +11,7 @@ static var STATUS_NAMES: Dictionary = RulesText.status_names()
 static var texture_cache: Dictionary = {}
 static var region_cache: Dictionary = {}
 static var pose_regions: Dictionary = {}
+static var art_cache: Dictionary = {}
 var unit_id := ""
 var hero_id := ""
 var tint := Color.WHITE
@@ -50,7 +51,14 @@ var affinity_label: Label
 var relationship: Label
 var plate: Panel
 
+static func prepare_poses(id: String) -> void:
+	var key := id+"-poses"
+	if not texture_cache.has(key) and ResourceLoader.exists("res://assets/poses/%s.png" % id):
+		texture_cache[key]=load("res://assets/poses/%s.png" % id)
+
 static func portrait(index: int, full_body: bool = false) -> Texture2D:
+	var key := "%d-%s" % [index,full_body]
+	if art_cache.has(key): return art_cache[key]
 	var texture := AtlasTexture.new()
 	texture.filter_clip = true
 	if region_cache.is_empty(): region_cache = JSON.parse_string(FileAccess.get_file_as_string("res://data/art-regions.json"))
@@ -71,6 +79,7 @@ static func portrait(index: int, full_body: bool = false) -> Texture2D:
 		var bounds: Array = region_cache._legacy[str(index)]
 		var region := Rect2(bounds[0], bounds[1], bounds[2], bounds[3])
 		texture.region = region if full_body else Rect2(region.position + Vector2(region.size.x * 0.15, 0), Vector2(region.size.x * 0.7, region.size.y * 0.6))
+	art_cache[key]=texture
 	return texture
 
 func setup(hero: Dictionary, id: String, color: Color) -> void:
@@ -304,6 +313,7 @@ func _has_point(point: Vector2) -> bool:
 	return Rect2(Vector2(93 - 90 * depth, 257 - 200 * depth), Vector2(180 * depth, 200 * depth)).has_point(point) or in_plate
 
 func _process(delta: float) -> void:
+	if not is_visible_in_tree(): return
 	if spatial_presentation: return
 	if not is_instance_valid(visual_root): return
 	elapsed += delta

@@ -5,15 +5,14 @@ uniform int profile=0;
 uniform int phase=2;
 uniform float seed=0.0;
 uniform vec4 tint : source_color=vec4(0.5,0.8,1.0,1.0);
-float hash(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
-float noise(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(hash(i),hash(i+vec2(1,0)),f.x),mix(hash(i+vec2(0,1)),hash(i+vec2(1,1)),f.x),f.y);}
-float fbm(vec2 p){return noise(p)*0.57+noise(p*2.03)*0.28+noise(p*4.1)*0.15;}
+uniform sampler2D noise_map : repeat_enable,filter_linear;
 void fragment(){
     vec2 q=(UV-0.5)*2.0;
     float p=progress;
     float radius=length(q);
     float angle=atan(q.y,q.x);
-    float n=fbm(q*4.0+vec2(seed, -p*3.3));
+    vec2 drift=q*.64+vec2(seed*.173,-p*.22);
+    float n=texture(noise_map,drift).r*.7+texture(noise_map,drift*2.03).r*.3;
     float fade=(1.0-smoothstep(0.45,1.0,p))*smoothstep(0.0,0.045,p);
     float spread=0.18+p*0.66;
     float ring=exp(-pow((radius-spread)*22.0,2.0));

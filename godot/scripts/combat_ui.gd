@@ -60,8 +60,10 @@ static func build(app) -> void:
 	app.log_dialog.add_child(app.log_view)
 	app.log_button = app._button("Registro", func(): app.log_dialog.popup_centered())
 	header.add_child(app.log_button)
-	app.sound_button = app._button("Som: ligado" if app.audio_enabled else "Som: desligado", app._toggle_sound)
+	app.sound_button = app._button("Efeitos: ligados" if app.audio_enabled else "Efeitos: desligados", app._toggle_sound)
+	app.sound_button.tooltip_text="Ativa os efeitos sonoros. As vozes têm controles próprios em Áudio e vídeo."
 	header.add_child(app.sound_button)
+	header.add_child(app._button("Voz e vídeo",app._show_presentation_settings))
 	app.screen_button = app._button("⛶ Tela", app._show_display)
 	tools.add_child(app.screen_button)
 	app.sound = Sound.new()
@@ -119,6 +121,13 @@ static func build(app) -> void:
 	app.mission_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	app.mission_label.visible = false
 	brief_row.add_child(app.mission_label)
+	# A stable caption lane preserves access to the menu, timeline and action buttons.
+	app.battle_voice_caption=app._label("",14,Color("d5f4ff"))
+	app.battle_voice_caption.custom_minimum_size.y=20
+	app.battle_voice_caption.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+	app.battle_voice_caption.text_overrun_behavior=TextServer.OVERRUN_TRIM_ELLIPSIS
+	app.battle_voice_caption.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	layout.add_child(app.battle_voice_caption)
 	var arena := PanelContainer.new()
 	arena.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	arena.add_theme_stylebox_override("panel", app._style(Color("0a1422"), Color("293b50")))
