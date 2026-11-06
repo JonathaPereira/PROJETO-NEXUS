@@ -10,19 +10,19 @@ function scene(id='veyra') {
  return {s,a,t:s.units[3]};
 }
 const damage=r=>r.events.find(e=>e.type==='damage'&&!e.reaction&&!e.intercepted);
-test('five affinities each have a distinct tank, support and damage kit; four archived heroes retain art indices',()=>{
- assert.equal(HEROES.length,20);assert.equal(ARCHIVED_HEROES.length,4);assert.equal(CLASSES.length,5);
+test('six affinities each have a distinct tank, support and damage kit with stable art indices',()=>{
+ assert.equal(HEROES.length,24);assert.equal(ARCHIVED_HEROES.length,0);assert.equal(CLASSES.length,6);
  assert.equal(new Set([...HEROES,...ARCHIVED_HEROES].map(h=>h.index)).size,24);
  for(const c of CLASSES) assert.deepEqual([...new Set(HEROES.filter(h=>h.classId===c.id).map(h=>h.role))].sort(),['Dano','Suporte','Tanque']);
  for(const h of HEROES) {assert(h.identity&&h.synergy);for(const k of ['basic','skill','ultimate'])assert(h[k].description&&h[k].name);}
- assert(!HERO_BY_ID.auren);
+ assert.equal(HERO_BY_ID.auren.index,20);
 });
-test('five-class cycle closes with Sombrio over Ígneo and reversed resistance',()=>{
+test('six-class cycle closes with Lumi over Ígneo and reversed resistance',()=>{
  for(const c of CLASSES){assert.equal(advantage(c.id,CLASS_BY_ID[c.id].strongAgainst),1.25);assert.equal(advantage(CLASS_BY_ID[c.id].strongAgainst,c.id),.85);}
- assert.equal(advantage('sombrio','igneo'),1.25);assert.equal(advantage('arcano','igneo'),1);
+ assert.equal(advantage('sombrio','lumi'),1.25);assert.equal(advantage('arcano','igneo'),1);
 });
-test('invalid or archived teams, illegal targets and unavailable actions do not mutate a battle',()=>{
- assert(!validateTeam(['auren','veyra','astra']));assert(!validateTeam(['veyra','veyra','astra']));
+test('invalid teams, illegal targets and unavailable actions do not mutate a battle',()=>{
+ assert(!validateTeam(['missing','veyra','astra']));assert(!validateTeam(['veyra','veyra','astra']));
  const s=createBattle(...DEFAULT_TEAMS),before=structuredClone(s);
  assert.throws(()=>act(s,'ultimate',s.units[3].id));assert.throws(()=>act(s,'basic',currentUnit(s).id));assert.deepEqual(s,before);
 });
@@ -96,7 +96,7 @@ test('Fracture starts at round 12 with 4% max HP, bypasses barriers and ends def
  const {s,a}=scene();s.round=11;s.order=[a.id];a.speed=999;const hp=a.hp;act(s,'guard',a.id);assert.equal(s.round,12);assert.equal(a.hp,hp-Math.ceil(a.maxHp*.04));assert(a.shield>0);
  const q=createBattle(...DEFAULT_TEAMS);while(q.phase==='playing'&&q.turns<400)act(q,'guard',currentUnit(q).id);assert.equal(q.phase,'finished');
 });
-test('deterministic AI exercises all twenty kits and keeps resources bounded through complete matches',()=>{
+test('deterministic AI exercises all twenty-four kits and keeps resources bounded through complete matches',()=>{
  for(let i=0;i<HEROES.length;i++){
  const teams=[0,5].map(offset=>[0,1,2].map(j=>HEROES[(i+offset+j)%HEROES.length].id));const s=createBattle(...teams,{seed:i+1});
  while(s.phase==='playing'&&s.turns<400){const m=chooseAI(s);assert(m);assert(canUse(currentUnit(s),m.actionId));act(s,m.actionId,m.targetId);for(const u of s.units){assert(u.hp>=0&&u.hp<=u.maxHp);assert(u.shield>=0&&u.shield<=Math.round(u.maxHp*.25));assert(u.energy>=0&&u.energy<=100);}}
@@ -189,7 +189,7 @@ test('one archived hero per affinity returns with a distinct specialty and stabl
  assert.deepEqual(returned.map(h=>h.index),[3,7,10,15,18]);
  assert.equal(new Set(returned.map(h=>h.classId)).size,5);
  assert.equal(new Set(returned.map(h=>h.specialty)).size,5);
- assert(ARCHIVED_HEROES.every(h=>h.classId==='lumi'));
+ assert.equal(ARCHIVED_HEROES.length,0);
  for(const c of CLASSES)assert.equal(HEROES.filter(h=>h.classId===c.id).length,4);
 });
 test('dark marks tick actual HP through shields, heal only their living author and record correct off-turn endpoints',()=>{

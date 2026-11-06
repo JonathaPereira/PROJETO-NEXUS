@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "rulesVersion": "0.15.0",
+  "rulesVersion": "0.16.0",
   "affinity": {
     "advantageMultiplier": 1.25,
     "resistanceMultiplier": 0.85,

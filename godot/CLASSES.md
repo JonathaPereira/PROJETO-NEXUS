@@ -1,6 +1,6 @@
-# Classes, retornos e oficina — Alpha 0.11
+# Classes, retornos e oficina — Renascimento em desenvolvimento
 
-A batalha principal continua em 2D. Esta revisão aplica as identidades de classe, melhora habilidades antigas e reabre cinco personagens, com vinte heróis disponíveis desde a seleção. Formação, campanha, animações anteriores, efeitos modernos, automático e o estudo 3D do Vesper foram preservados.
+A batalha principal continua em 2D. Esta revisão aplica as identidades de classe, melhora habilidades antigas e reabre os quatro Lumi, com 24 heróis disponíveis desde a seleção. Formação, campanha, animações anteriores, efeitos modernos, automático e o estudo 3D do Vesper foram preservados.
 
 ## Identidade e sinergias
 
@@ -10,9 +10,10 @@ A batalha principal continua em 2D. Esta revisão aplica as identidades de class
 | Natural | Cura, Semente, sangramento, regeneração e purificação | Sangramento prepara Noct, Riven e Maura; Semente cura o próximo atacante de qualquer classe |
 | Técnico | Escudos, ataque fortalecido e defesa fortificada | Energia de Vektor antecipa técnicas e supremos; Sentinela de Axion enfraquece agressores de aliados |
 | Arcano | Área, manipulação de aflições e escudos elementais; golpes consideram 75% da defesa | Ivo copia uma aflição existente; Égide de Elun e Saira reduz em 20% o dano direto com vantagem de afinidade |
+| Lumi | Proteção, purificação e renovação, sem passiva oculta | Auren protege um aliado; Elyra cura e cria uma barreira; Solen consome enfraquecimento; Zaya entrega energia à equipe |
 | Sombrio | Drena 15% do dano direto real à vida; marcas e explosão individual | Marca obscura ou sangramento fortalece Noct e a cura de Maura; Ivo pode transportar a marca sem trocar seu autor |
 
-As cinco afinidades mantêm o ciclo anterior. As três funções gerais continuam **Dano, Suporte e Tanque**; cada personagem também tem uma especialidade. A montagem é livre e não exige repetir classe ou função.
+Regras **0.16.0**: seis afinidades no ciclo Ígneo → Natural → Técnico → Arcano → Sombrio → Lumi → Ígneo. Sombrio/Ígneo agora é neutro; as cinco classes anteriores conservam seus kits. As três funções gerais continuam **Dano, Suporte e Tanque**; cada personagem também tem uma especialidade. A montagem é livre e não exige repetir classe ou função.
 
 **Marca obscura:** 3,5% da vida máxima no início de dois turnos pessoais, atravessando escudos; seu autor vivo recupera 60% do dano periódico efetivo, respeitando sangramento, Fratura e limite de vida. Não revive nem acumula consigo mesma. Purificação a remove. Ivo copia no máximo uma aflição por técnica, mantendo duração restante e autor; não inventa aflições quando o alvo está limpo.
 
@@ -39,7 +40,7 @@ Um protetor só intercepta o que consegue absorver ou perder de vida: o excedent
 | Ivo | Arcano | Manipulador de aflições | Transmite uma aflição existente para outro adversário |
 | Noct | Sombrio | Executor de marcas | Concentra dano numa presa marcada ou sangrando |
 
-Todos têm três habilidades ilustradas, descrição, especialidade, sinergia, biografia e arte transparente. Os índices originais foram preservados; os quatro Lumi continuam arquivados. [Números completos dos vinte kits](KITS.md).
+Todos têm três habilidades ilustradas, descrição, especialidade, sinergia, biografia e arte transparente. Os índices originais foram preservados; os quatro Lumi também estão ativos. [Números completos dos 24 kits](KITS.md).
 
 ## Oficina com personagem e inventário
 
@@ -62,7 +63,7 @@ npm run test:godot
 node scripts/simulate-classes.mjs
 ```
 
-O laboratório oferece **216 partidas**: sessenta de formações variadas, noventa e seis casos de sustentação e sessenta com os cinco retornos em trios mistos e lados invertidos. Os resultados 0.11 usam arquivos próprios para preservar as estatísticas antigas.
+O laboratório oferece **282 partidas**: 72 de formações variadas, 102 casos de sustentação e 108 com os nove retornos em trios mistos e lados invertidos. Os resultados 0.16 usam arquivos próprios para preservar as estatísticas antigas.
 
 O teste ampliado reproduz **900 partidas**, com 150 pares de trios mistos e 300 pares dirigidos aos retornos, sempre com lados invertidos e gemas desativadas. [Método e resultados desta revisão](SIMULATIONS-0.11.md). É um balanceamento inicial sujeito a testes de jogadores; as taxas pertencem à equipe e dependem dos adversários escolhidos.
 

@@ -1,4 +1,4 @@
-// BALANCEAMENTO DOS 20 HERÓIS — edite os objetos abaixo.
+// BALANCEAMENTO DOS 24 HERÓIS — edite os objetos abaixo.
 // stats: hp = vida, attack = ataque, defense = defesa, speed = iniciativa.
 // basic / skill / ultimate: nome, tipo, poder, descrição e efeitos de cada golpe.
 // power em dano: 1.55 = 155% do ataque; em cura/escudo: 0.20 = 20% da vida.
@@ -792,6 +792,168 @@ export const KITS = {
       "executeMultiplier": 1.2
     },
     "specialty": "Executor de marcas"
+  },
+  "auren": {
+    "role": "Tanque",
+    "identity": "Juramento que protege e purifica um aliado",
+    "synergy": "Remove aflições de quem precisa continuar agindo; sua égide resiste à vantagem de afinidade. Solen aproveita o enfraquecimento do julgamento.",
+    "specialty": "Juramento purificador",
+    "stats": {
+      "hp": 1410,
+      "attack": 180,
+      "defense": 120,
+      "speed": 78
+    },
+    "basic": {
+      "name": "Lança radiante",
+      "kind": "damage",
+      "power": 0.75,
+      "description": "75% do ataque e escudo próprio de 2% da vida máxima. Recupera 24 de energia.",
+      "secondary": {
+        "kind": "shield",
+        "target": "actor",
+        "power": 0.02
+      }
+    },
+    "skill": {
+      "name": "Aurora protetora",
+      "kind": "shield",
+      "power": 0.18,
+      "effect": "cleanse",
+      "extraEffect": "elementalWard",
+      "description": "Escudo de 18% da vida máxima em um aliado, purifica efeitos negativos e concede Égide elemental por 2 turnos: −20% do dano direto com vantagem de afinidade."
+    },
+    "ultimate": {
+      "name": "Julgamento da aurora",
+      "kind": "aoe",
+      "power": 1.05,
+      "effect": "weaken",
+      "description": "105% do ataque em todos os rivais e ataque inimigo −20% por 2 turnos. Concede escudo de 6% da vida máxima a cada aliado.",
+      "secondary": {
+        "kind": "shield",
+        "target": "allies",
+        "power": 0.06
+      }
+    }
+  },
+  "elyra": {
+    "role": "Suporte",
+    "identity": "Faroleira que acolhe feridas antes da próxima travessia",
+    "synergy": "Cura antes de purificar, preservando a regra do sangramento. Barreiras pequenas dão tempo para aliados frágeis responderem.",
+    "specialty": "Renovação protegida",
+    "stats": {
+      "hp": 1100,
+      "attack": 159,
+      "defense": 100,
+      "speed": 98
+    },
+    "basic": {
+      "name": "Raio de alvorada",
+      "kind": "damage",
+      "power": 0.65,
+      "description": "65% do ataque. Recupera 24 de energia."
+    },
+    "skill": {
+      "name": "Luz que acolhe",
+      "kind": "heal",
+      "power": 0.2,
+      "effect": "cleanse",
+      "description": "Cura 20% da vida máxima de um aliado, depois purifica efeitos negativos e concede escudo de 4%.",
+      "secondary": {
+        "kind": "shield",
+        "target": "target",
+        "power": 0.04
+      }
+    },
+    "ultimate": {
+      "name": "Segundo amanhecer",
+      "kind": "healAll",
+      "power": 0.16,
+      "effect": "cleanse",
+      "description": "Cura 16% da vida máxima da equipe, depois purifica efeitos negativos e concede escudo de 6% a cada aliado vivo.",
+      "secondary": {
+        "kind": "shield",
+        "target": "allies",
+        "power": 0.06
+      }
+    }
+  },
+  "solen": {
+    "role": "Dano",
+    "identity": "Monge que abre e consome janelas de enfraquecimento",
+    "synergy": "Seu selo reduz o ataque rival. Mil sóis consome essa abertura, inclusive quando criada por Oren, Saira ou Auren.",
+    "specialty": "Horizonte vulnerável",
+    "stats": {
+      "hp": 1040,
+      "attack": 249,
+      "defense": 84,
+      "speed": 106
+    },
+    "basic": {
+      "name": "Palma luminosa",
+      "kind": "damage",
+      "power": 1,
+      "description": "100% do ataque. Recupera 24 de energia."
+    },
+    "skill": {
+      "name": "Selo do horizonte",
+      "kind": "aoe",
+      "power": 0.9,
+      "effect": "weaken",
+      "description": "90% do ataque em todos os rivais e ataque inimigo −20% por 2 turnos."
+    },
+    "ultimate": {
+      "name": "Mil sóis",
+      "kind": "aoe",
+      "power": 1.65,
+      "description": "165% do ataque em todos os rivais. Contra enfraquecimento: +20% e consome apenas esse efeito.",
+      "combo": {
+        "status": "weaken",
+        "multiplier": 1.2,
+        "consume": true
+      }
+    }
+  },
+  "zaya": {
+    "role": "Suporte",
+    "identity": "Mensageira que devolve o ritmo à equipe",
+    "synergy": "Pequenas curas e energia distribuída ajudam aliados de qualquer afinidade a alcançar suas técnicas; a renovação continua limitada pela Fratura.",
+    "specialty": "Mensageira de energia",
+    "stats": {
+      "hp": 1010,
+      "attack": 182,
+      "defense": 78,
+      "speed": 113
+    },
+    "basic": {
+      "name": "Flecha do poente",
+      "kind": "damage",
+      "power": 0.7,
+      "description": "70% do ataque. Recupera 24 de energia."
+    },
+    "skill": {
+      "name": "Bênção do crepúsculo",
+      "kind": "healAll",
+      "power": 0.1,
+      "description": "Cura 10% da vida máxima da equipe e entrega até 6 de energia por aliado vivo.",
+      "secondary": {
+        "kind": "energy",
+        "target": "allies",
+        "amount": 6
+      }
+    },
+    "ultimate": {
+      "name": "Asas da eternidade",
+      "kind": "healAll",
+      "power": 0.18,
+      "effect": "cleanse",
+      "description": "Cura 18% da vida máxima da equipe, depois purifica efeitos negativos e entrega até 10 de energia por aliado vivo. Não ressuscita.",
+      "secondary": {
+        "kind": "energy",
+        "target": "allies",
+        "amount": 10
+      }
+    }
   }
 };
 

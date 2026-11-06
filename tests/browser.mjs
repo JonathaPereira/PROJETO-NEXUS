@@ -101,7 +101,7 @@ test(
     const { page, context } = await fresh();
     try {
       await page.locator('.nav-link[data-act="roster"]').click();
-      await expect(page.locator(".hero-card")).toHaveCount(20);
+      await expect(page.locator(".hero-card")).toHaveCount(24);
       await expect(page.locator(".hero-card.chosen")).toHaveCount(3);
       for (const id of [
         "igneo",
@@ -109,6 +109,7 @@ test(
         "tecnico",
         "arcano",
         "sombrio",
+        "lumi",
               ]) {
         await page.locator(`[data-filter="${id}"]`).click();
         await expect(page.locator(".hero-card")).toHaveCount(4);
@@ -116,7 +117,7 @@ test(
       await page.locator('[data-filter="all"]').click();
       await page.locator('[data-remove="veyra"]').click();
       await expect(page.locator('[data-act="save-team"]')).toBeDisabled();
-      await page.locator('[data-hero="sylva"]').click();
+      await page.locator('[data-hero="elyra"]').click();
       await expect(page.locator('[data-act="save-team"]')).toBeEnabled();
       await page.locator('[data-roster-side="1"]').click();
       await page.locator('[data-remove="kira"]').click();
@@ -127,7 +128,7 @@ test(
       const prefs = await page.evaluate(() =>
         JSON.parse(localStorage.getItem("nexus-v1")),
       );
-      assert.deepEqual(prefs.teams[0], ["axion", "astra", "sylva"]);
+      assert.deepEqual(prefs.teams[0], ["axion", "astra", "elyra"]);
       assert.deepEqual(prefs.teams[1], ["vesper", "oren", "saira"]);
       // Remove only the test initializer so reload actually exercises the saved data.
       const persistedContext = await browser.newContext();
@@ -137,7 +138,7 @@ test(
       );
       const reloaded = await persistedContext.newPage();
       await reloaded.goto(origin);
-      await expect(reloaded.locator(".team-list")).toContainText("Sylva");
+      await expect(reloaded.locator(".team-list")).toContainText("Elyra");
       await expect(reloaded.locator('[data-unit="1-saira"]')).toBeVisible();
       await persistedContext.close();
     } finally {
@@ -152,7 +153,7 @@ test(
     const { page, context } = await fresh();
     try {
       await page.locator('.nav-link[data-act="classes"]').click();
-      await expect(page.locator(".class-guide-grid article")).toHaveCount(5);
+      await expect(page.locator(".class-guide-grid article")).toHaveCount(6);
       await expect(page.locator(".class-guide-grid")).toContainText("Ígneo");
       await page.keyboard.press("Escape");
       await expect(page.locator("#overlay")).not.toBeVisible();
@@ -309,7 +310,7 @@ test(
         fullPage: true,
       });
       await page.locator('.nav-link[data-act="roster"]').click();
-      await expect(page.locator(".hero-card")).toHaveCount(20);
+      await expect(page.locator(".hero-card")).toHaveCount(24);
       await page.locator('[data-filter="arcano"]').click();
       await expect(page.locator(".hero-card")).toHaveCount(4);
       await page.locator(".mobile-detail-open").click();

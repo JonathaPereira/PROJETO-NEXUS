@@ -642,6 +642,134 @@
       "seconds": 1.295,
       "bytes": 10720,
       "sha256": "8de222a232352e79f3a4d366db439d4fd0a1b873e5e463a15b9a57c879f73908"
+    },
+    "auren-select.ogg": {
+      "hero": "auren",
+      "event": "select",
+      "text": "Meu juramento continua aceso.",
+      "seconds": 2.125,
+      "bytes": 15945,
+      "sha256": "bce4a969a136334a042e7e526cdb67aa9e0c326b78582ec03aaea66183f806b4"
+    },
+    "auren-skill.ogg": {
+      "hero": "auren",
+      "event": "skill",
+      "text": "A aurora protege você.",
+      "seconds": 1.675,
+      "bytes": 13024,
+      "sha256": "f52520d368a2ffa638ecf582c8e1e432dc80a110b4ded7ad36622ad774f0e986"
+    },
+    "auren-ultimate.ogg": {
+      "hero": "auren",
+      "event": "ultimate",
+      "text": "Que a luz sustente nosso caminho!",
+      "seconds": 2.147,
+      "bytes": 15875,
+      "sha256": "8b3b7d702de3cfc0dbbcbdbe80b3589373696049a0391c4e419f264c1bbbc4fa"
+    },
+    "auren-victory.ogg": {
+      "hero": "auren",
+      "event": "victory",
+      "text": "Guardamos mais um amanhecer.",
+      "seconds": 2.039,
+      "bytes": 15291,
+      "sha256": "91532a45a81582625643ed60175a2f4cb4238af5ea7340abbe6e4be656b772bb"
+    },
+    "elyra-select.ogg": {
+      "hero": "elyra",
+      "event": "select",
+      "text": "Há lugar para você na luz.",
+      "seconds": 1.631,
+      "bytes": 12727,
+      "sha256": "8172f812ff6b64f25c4a2e6b589bc53bb39e5411d0004088de7ba01d89293c8e"
+    },
+    "elyra-skill.ogg": {
+      "hero": "elyra",
+      "event": "skill",
+      "text": "Respire. Eu estou aqui.",
+      "seconds": 1.348,
+      "bytes": 11179,
+      "sha256": "ef4ccf01a7fb095ff348e12f5a6b62e76c12ae4168f061058e41602ab3b5c1a2"
+    },
+    "elyra-ultimate.ogg": {
+      "hero": "elyra",
+      "event": "ultimate",
+      "text": "Um novo amanhecer para todos!",
+      "seconds": 1.931,
+      "bytes": 14357,
+      "sha256": "0e8e12d741ccd17b3f834d215e656142f0c23b598a219783b2ffa755ebd1ed22"
+    },
+    "elyra-victory.ogg": {
+      "hero": "elyra",
+      "event": "victory",
+      "text": "Ninguém atravessa sozinho.",
+      "seconds": 1.781,
+      "bytes": 13498,
+      "sha256": "10a81d18ee19662db057badc4047566f599213e3c4d49ff00a3225b178a5f9e6"
+    },
+    "solen-select.ogg": {
+      "hero": "solen",
+      "event": "select",
+      "text": "O horizonte ainda nos espera.",
+      "seconds": 1.866,
+      "bytes": 14132,
+      "sha256": "88d7252b4791526cd78c0bdef99eaf95589bdef065ec768f2414b43ae6e959d4"
+    },
+    "solen-skill.ogg": {
+      "hero": "solen",
+      "event": "skill",
+      "text": "Deixe sua força se dispersar.",
+      "seconds": 1.949,
+      "bytes": 14787,
+      "sha256": "fe906a80cf6c9bc2bea6abb0b00964317d6fc8100b882b5c4976e3c6aa68ddc5"
+    },
+    "solen-ultimate.ogg": {
+      "hero": "solen",
+      "event": "ultimate",
+      "text": "Mil sóis, um só instante!",
+      "seconds": 1.611,
+      "bytes": 12839,
+      "sha256": "d0751066f7fdc1617c3b0914af0de8cd9a1a626b71e9cc8363031e241d828c7e"
+    },
+    "solen-victory.ogg": {
+      "hero": "solen",
+      "event": "victory",
+      "text": "Mais um passo além da noite.",
+      "seconds": 1.866,
+      "bytes": 14033,
+      "sha256": "59baa7ff915412d3a87442d56b07d975ff4ed635c84ff9891f1965887e500f91"
+    },
+    "zaya-select.ogg": {
+      "hero": "zaya",
+      "event": "select",
+      "text": "Trago notícias de outra aurora.",
+      "seconds": 1.977,
+      "bytes": 14357,
+      "sha256": "d1bc0f561ac71b61d430ec25a0879779e23fc77ed1b55fae665c2bcd59402bc5"
+    },
+    "zaya-skill.ogg": {
+      "hero": "zaya",
+      "event": "skill",
+      "text": "O próximo passo é de vocês.",
+      "seconds": 1.781,
+      "bytes": 13990,
+      "sha256": "9db355c866e3037c662e4864def153afddd3c5da3b48d9a81bf9ffb61b62d6c1"
+    },
+    "zaya-ultimate.ogg": {
+      "hero": "zaya",
+      "event": "ultimate",
+      "text": "Abram as asas do amanhã!",
+      "seconds": 1.607,
+      "bytes": 12589,
+      "sha256": "c96738187c6dc5ec6cf3e0ff990a35bc701b50dd982f430727d3d9c616d76f27"
+    },
+    "zaya-victory.ogg": {
+      "hero": "zaya",
+      "event": "victory",
+      "text": "Esta mensagem merece chegar.",
+      "seconds": 1.971,
+      "bytes": 15182,
+      "sha256": "c9b6733b2c71de355bf900393253b1a70b7b079140b9a0b322201b36bcb60bfa"
     }
   }
 }

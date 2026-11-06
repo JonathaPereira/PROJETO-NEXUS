@@ -121,13 +121,24 @@ static func build(app) -> void:
 	app.mission_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	app.mission_label.visible = false
 	brief_row.add_child(app.mission_label)
+	var caption_row := HBoxContainer.new()
+	caption_row.add_theme_constant_override("separation",12)
+	layout.add_child(caption_row)
+	app.objective_label = app._label("", 13, Color("97e7de"))
+	app.objective_label.name = "MissionObjective"
+	app.objective_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	app.objective_label.size_flags_stretch_ratio = 2
+	app.objective_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	app.objective_label.visible = false
+	caption_row.add_child(app.objective_label)
 	# A stable caption lane preserves access to the menu, timeline and action buttons.
 	app.battle_voice_caption=app._label("",14,Color("d5f4ff"))
 	app.battle_voice_caption.custom_minimum_size.y=20
+	app.battle_voice_caption.size_flags_horizontal=Control.SIZE_EXPAND_FILL
 	app.battle_voice_caption.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
 	app.battle_voice_caption.text_overrun_behavior=TextServer.OVERRUN_TRIM_ELLIPSIS
 	app.battle_voice_caption.mouse_filter=Control.MOUSE_FILTER_IGNORE
-	layout.add_child(app.battle_voice_caption)
+	caption_row.add_child(app.battle_voice_caption)
 	var arena := PanelContainer.new()
 	arena.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	arena.add_theme_stylebox_override("panel", app._style(Color("0a1422"), Color("293b50")))
@@ -310,9 +321,14 @@ static func refresh(app) -> void:
 	app.mode_picker.visible = app.campaign_mission < 0 and not app.pvp_active
 	app.difficulty_picker.visible = app.campaign_mission < 0 and not app.pvp_active
 	app.mission_label.visible = app.campaign_mission >= 0 or app.pvp_active
+	app.objective_label.visible = app.campaign_mission >= 0
+	app.field.custom_minimum_size.y = 395 if app.campaign_mission >= 0 else 410
 	if app.campaign_mission >= 0:
-		app.mission_label.text = "HISTÓRIA\n" + app.Campaign.MISSIONS[app.campaign_mission].name
-		app.mission_label.tooltip_text = app.Campaign.MISSIONS[app.campaign_mission].tip
+		app.objective_label.text = "OBJETIVO  /  " + app.Campaign.Objectives.describe(app.state)
+		app.objective_label.tooltip_text = app.Campaign.Objectives.brief(app.campaign.missions[app.campaign_mission])
+	if app.campaign_mission >= 0:
+		app.mission_label.text = "HISTÓRIA · EQUIPE NV %d\n%s" % [app.state.get("teamLevel",1),app.campaign.missions[app.campaign_mission].name]
+		app.mission_label.tooltip_text = app.campaign.missions[app.campaign_mission].tip
 	app.start_button.text = "INICIAR MISSÃO" if app.campaign_mission >= 0 else "INICIAR COMBATE"
 	app.mode_picker.disabled = app.tutorial_index >= 0 or (app.started and app.state.phase == "playing")
 	app.difficulty_picker.disabled = (app.started and app.state.phase == "playing") or app.mode == "local" or app.tutorial_index >= 0
@@ -339,7 +355,7 @@ static func refresh(app) -> void:
 		var id: String = app.ACTIONS[index]
 		var card = app.action_buttons[id]
 		var presented_action: Dictionary = app.combat.get_action(actor, id).duplicate()
-		if id in ["basic", "guard"]: presented_action.energyGain = app.combat.rules.energy.basicGain if id == "basic" else app.combat.rules.energy.guardGain
+		if id in ["basic", "guard"]: presented_action.energyGain = presented_action.get("energyGain",app.combat.rules.energy.basicGain) if id == "basic" else app.combat.rules.energy.guardGain
 		card.configure(presented_action, id, index + 1, app.catalog.affinity_color(hero.classId), int(actor.energy), int(actor.cooldowns.get(id, 0)), app._can_inspect(), int(hero.index))
 		if app.combat.legal_targets(app.state, actor, presented_action).is_empty():
 			card.disabled = true

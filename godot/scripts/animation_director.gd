@@ -137,7 +137,7 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 	var signature: String = hero.animation
 	var ultimate: bool = tier == "ultimate"
 	var support: bool = action.kind.begins_with("heal") or action.kind.begins_with("shield") or action.kind == "guard" or action.kind.begins_with("support")
-	var melee: bool = not support and signature in ["sweep", "crater", "roots", "prism", "crescent", "daggers", "eruption", "plates", "rift", "claws"]
+	var melee: bool = not support and signature in ["sweep", "crater", "roots", "prism", "crescent", "daggers", "eruption", "plates", "rift", "claws", "lance", "rays"]
 	actor.posing = true
 	posed_fighters.append(actor)
 	actor.visual_root.z_index = 30

@@ -1,5 +1,5 @@
 extends Node2D
-## Twenty readable weapon/element signatures. Decorative beats never apply damage.
+## Twenty-four readable weapon/element signatures. Decorative beats never apply damage.
 const Quality = preload("res://scripts/presentation_quality.gd")
 const GLOW = preload("res://assets/vfx/soft-glow.svg")
 const MOTION := {
@@ -8,6 +8,7 @@ const MOTION := {
 	"hex":[-.055,4.0],"rail":[-.07,1.0],"plates":[-.11,8.0],"drones":[-.025,-13.0],
 	"orbit":[-.045,-20.0],"prism":[-.08,-2.0],"runes":[-.035,-14.0],"rift":[-.095,-7.0],
 	"crescent":[-.10,1.0],"threads":[-.02,-11.0],"claws":[-.12,6.0],"daggers":[-.11,-4.0],
+	"lance":[-.075,1.5],"halo":[-.02,-10.0],"rays":[-.09,-4.0],"wings":[-.035,-8.0],
 }
 var signature := "sweep"
 var tint := Color.WHITE
@@ -125,3 +126,21 @@ func _draw() -> void:
 				var axis := Vector2(.4 if i%2==0 else -.4,1).normalized()
 				line(PackedVector2Array([offset-axis*extent*.8,offset+axis*extent*.8]),light,2.5)
 				if signature=="daggers": diamond(offset,extent*.25,color,.4 if i%2==0 else -.4)
+
+		"lance":
+			line(PackedVector2Array([Vector2(-extent,0),Vector2(extent*.8,0)]),light,2.4)
+			diamond(Vector2(extent*.65,0),extent*.25,color,PI*.5)
+			for side in [-1,1]: line(PackedVector2Array([Vector2(-extent*.4,side*extent*.22),Vector2(extent*.5,0)]),color,1.3)
+		"halo":
+			for ring in range(2): draw_arc(Vector2(0,-extent*.18),extent*(.45+ring*.3),p*.6,p*.6+TAU*.92,40,light if ring==0 else color,1.6,true)
+			diamond(Vector2.ZERO,extent*.2,light)
+		"rays":
+			for i in range(detail+1):
+				var axis := Vector2.from_angle(TAU*i/(detail+1)+p*.25)
+				line(PackedVector2Array([axis*extent*.23,axis*extent]),light if i%2==0 else color,2)
+			draw_arc(Vector2.ZERO,extent*.3,0,TAU,32,color,1.4,true)
+		"wings":
+			for side in [-1,1]:
+				for feather in range(4):
+					var tip := Vector2(side*extent*(1-feather*.13),extent*(-.65+feather*.3))
+					line(PackedVector2Array([Vector2(0,extent*.35),tip,tip+Vector2(-side*extent*.18,extent*.28)]),light if feather==0 else color,1.8)

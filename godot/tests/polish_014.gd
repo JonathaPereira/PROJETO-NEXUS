@@ -41,7 +41,7 @@ func run() -> void:
 	app._open_pvp()
 	await settle()
 	var lobby=app.pvp_lobby
-	check(lobby.hero_buttons.size()==20,"All active heroes remain selectable")
+	check(lobby.hero_buttons.size()==24,"All active heroes remain selectable")
 	for hero in app.catalog.heroes:
 		var roles: Array=lobby.hero_buttons[hero.id].find_children("HeroRole","Label",true,false)
 		check(roles.size()==1 and roles[0].text==hero.role,"The visible roster role belongs to "+hero.name)

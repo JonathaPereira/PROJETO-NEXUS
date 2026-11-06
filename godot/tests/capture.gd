@@ -264,7 +264,7 @@ func campaign_review(app) -> void:
 	await shot("godot-minion-hit")
 	await wait_done(app)
 	app._leave_battle("story")
-	app.campaign.cleared = 2
+	app.campaign.completed = app.campaign._legacy_completed(2)
 	app._begin_mission(2)
 	app.combat.current(app.state).energy = 100
 	app._start()

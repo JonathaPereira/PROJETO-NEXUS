@@ -18,7 +18,7 @@ func settle() -> void:
 	await process_frame
 	await process_frame
 func clean() -> void:
-	for suffix in ["",".tmp",".v2.bak"]: DirAccess.remove_absolute(ProjectSettings.globalize_path(PATH+suffix))
+	for suffix in ["",".tmp",".bak",".bak.tmp",".v2.bak"]: DirAccess.remove_absolute(ProjectSettings.globalize_path(PATH+suffix))
 func player_turn(app) -> void:
 	app.state.order.erase("0-astra")
 	app.state.order.push_front("0-astra")
@@ -34,8 +34,8 @@ func _run() -> void:
 		check(story.can_play(index) and (index==8 or not story.can_play(index+1)),"Story locks enforce the next mission at step %d"%index)
 		var state := story.battle(engine,index)
 		while state.phase=="playing" and state.turns<400:
-			var choice := engine.choose_ai(state)
-			var result := engine.act(state,choice.actionId,choice.targetId)
+			var choice: Dictionary = story.choose_ai(engine,state)
+			var result: Dictionary = story.act(engine,state,choice.actionId,choice.targetId)
 			if result.has("error"):
 				check(false,"Story AI action is legal")
 				break
@@ -52,7 +52,7 @@ func _run() -> void:
 	file.close()
 	var migrated := Campaign.new(engine.catalog,PATH)
 	check(migrated.cleared==3 and migrated.can_play(3) and not migrated.can_play(4) and migrated.slots("veyra")==["ember","ember",""],"A completed old chapter unlocks chapter two and preserves all sockets")
-	check(migrated.save_progress() and FileAccess.get_file_as_string(PATH+".v2.bak")==source and JSON.parse_string(FileAccess.get_file_as_string(PATH)).schemaVersion==3,"The exact version-two save is backed up before migration")
+	check(migrated.save_progress() and FileAccess.get_file_as_string(PATH+".v2.bak")==source and JSON.parse_string(FileAccess.get_file_as_string(PATH)).schemaVersion==8,"The exact version-two save is backed up before migration")
 	clean()
 	var app = Main.instantiate()
 	root.add_child(app)
@@ -71,7 +71,7 @@ func _run() -> void:
 	check(app.hub.selected_chapter==1 and app.hub.mission_slots.has(3) and app.hub.mission_buttons.all(func(b):return b.disabled),"A locked chapter can be read without launching its missions")
 	check(app.hub.scroll.follow_focus and app.get_viewport().gui_get_focus_owner()==app.hub.chapter_buttons[1],"Story navigation follows keyboard focus and retains it after changing chapters")
 	app.hub.open("gems")
-	check(app.hub.subnav.visible and app.hub.subnav.get_child_count()==2,"Heroes and gems are grouped under Collection submenus")
+	check(app.hub.subnav.visible and app.hub.subnav.get_child_count()==4,"Heroes, gems and equipment are grouped under Collection submenus")
 	var escape := InputEventKey.new()
 	escape.keycode=KEY_ESCAPE
 	escape.pressed=true

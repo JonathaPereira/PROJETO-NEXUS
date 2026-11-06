@@ -60,13 +60,13 @@ func _run() -> void:
 	await settle()
 	root.size=Vector2i(1600,900)
 	app.campaign=app.Campaign.new(app.catalog,"user://capture-2d.json")
-	app.campaign.cleared=0
+	app.campaign.completed = app.campaign._legacy_completed(0)
 	app.auto_play=false
 	app.reduced_motion=false
 	app.hub.open("menu")
 	await shot("menu")
 	for chapter in range(3):
-		app.campaign.cleared=chapter*3
+		app.campaign.completed = app.campaign._legacy_completed(chapter*3)
 		app.hub.selected_chapter=chapter
 		app.hub.open("story")
 		await shot("story-%d"%(chapter+1))

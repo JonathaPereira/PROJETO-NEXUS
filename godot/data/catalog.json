@@ -1084,9 +1084,7 @@
       "identity": "Executor que prepara a própria oportunidade",
       "synergy": "Sangramento aliado habilita seu combo. Alvos abaixo de 35% da vida ficam mais expostos à finalização.",
       "specialty": "Duelista de feridas"
-    }
-  ],
-  "archivedHeroes": [
+    },
     {
       "id": "auren",
       "index": 20,
@@ -1094,42 +1092,56 @@
       "classId": "lumi",
       "title": "Juramento solar",
       "lore": "Mantém um juramento feito ao sol, mesmo durante a noite.",
-      "hp": 1320,
-      "attack": 174,
-      "defense": 118,
-      "speed": 82,
+      "hp": 1410,
+      "attack": 180,
+      "defense": 120,
+      "speed": 78,
       "weapon": "spear",
       "animation": "lance",
-      "role": "Atacante",
+      "role": "Tanque",
       "basic": {
         "id": "basic",
         "name": "Lança radiante",
         "kind": "damage",
-        "power": 1,
+        "power": 0.75,
         "cost": 0,
         "cooldown": 0,
-        "description": "Causa dano a um rival e recupera 24 de energia."
+        "description": "75% do ataque e escudo próprio de 2% da vida máxima. Recupera 24 de energia. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.",
+        "secondary": {
+          "kind": "shield",
+          "target": "actor",
+          "power": 0.02
+        }
       },
       "skill": {
         "id": "skill",
         "name": "Aurora protetora",
-        "kind": "damage",
-        "power": 1.65,
-        "effect": "weaken",
+        "kind": "shield",
+        "power": 0.18,
+        "effect": "cleanse",
         "cost": 30,
         "cooldown": 2,
-        "description": "Causa 165% do ataque a um rival. Reduz o ataque do alvo em 20% por 2 turnos."
+        "description": "Escudo de 18% da vida máxima em um aliado, purifica efeitos negativos e concede Égide elemental por 2 turnos: −20% do dano direto com vantagem de afinidade. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.",
+        "extraEffect": "elementalWard"
       },
       "ultimate": {
         "id": "ultimate",
         "name": "Julgamento da aurora",
         "kind": "aoe",
-        "power": 2.05,
+        "power": 1.05,
         "effect": "weaken",
         "cost": 80,
         "cooldown": 0,
-        "description": "Causa 205% do ataque a todos os rivais. Reduz o ataque do alvo em 20% por 2 turnos."
-      }
+        "description": "105% do ataque em todos os rivais e ataque inimigo −20% por 2 turnos. Concede escudo de 6% da vida máxima a cada aliado. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.",
+        "secondary": {
+          "kind": "shield",
+          "target": "allies",
+          "power": 0.06
+        }
+      },
+      "identity": "Juramento que protege e purifica um aliado",
+      "synergy": "Remove aflições de quem precisa continuar agindo; sua égide resiste à vantagem de afinidade. Solen aproveita o enfraquecimento do julgamento.",
+      "specialty": "Juramento purificador"
     },
     {
       "id": "elyra",
@@ -1138,8 +1150,8 @@
       "classId": "lumi",
       "title": "Faroleira das almas",
       "lore": "Seu farol guia as almas que se perderam entre duas auroras.",
-      "hp": 1110,
-      "attack": 156,
+      "hp": 1100,
+      "attack": 159,
       "defense": 100,
       "speed": 98,
       "weapon": "staff",
@@ -1149,31 +1161,44 @@
         "id": "basic",
         "name": "Raio de alvorada",
         "kind": "damage",
-        "power": 1,
+        "power": 0.65,
         "cost": 0,
         "cooldown": 0,
-        "description": "Causa dano a um rival e recupera 24 de energia."
+        "description": "65% do ataque. Recupera 24 de energia."
       },
       "skill": {
         "id": "skill",
         "name": "Luz que acolhe",
         "kind": "heal",
-        "power": 0.36,
+        "power": 0.2,
         "effect": "cleanse",
         "cost": 30,
         "cooldown": 2,
-        "description": "Recupera 36% da vida máxima de um aliado. Remove efeitos negativos."
+        "description": "Cura 20% da vida máxima de um aliado, depois purifica efeitos negativos e concede escudo de 4%. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.",
+        "secondary": {
+          "kind": "shield",
+          "target": "target",
+          "power": 0.04
+        }
       },
       "ultimate": {
         "id": "ultimate",
         "name": "Segundo amanhecer",
         "kind": "healAll",
-        "power": 0.42,
+        "power": 0.16,
         "effect": "cleanse",
         "cost": 80,
         "cooldown": 0,
-        "description": "Recupera 42% da vida máxima de toda a equipe e purifica efeitos negativos."
-      }
+        "description": "Cura 16% da vida máxima da equipe, depois purifica efeitos negativos e concede escudo de 6% a cada aliado vivo. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.",
+        "secondary": {
+          "kind": "shield",
+          "target": "allies",
+          "power": 0.06
+        }
+      },
+      "identity": "Faroleira que acolhe feridas antes da próxima travessia",
+      "synergy": "Cura antes de purificar, preservando a regra do sangramento. Barreiras pequenas dão tempo para aliados frágeis responderem.",
+      "specialty": "Renovação protegida"
     },
     {
       "id": "solen",
@@ -1182,13 +1207,13 @@
       "classId": "lumi",
       "title": "Monge do horizonte",
       "lore": "Treina para alcançar um horizonte que se afasta a cada passo.",
-      "hp": 1200,
-      "attack": 185,
-      "defense": 103,
-      "speed": 91,
+      "hp": 1040,
+      "attack": 249,
+      "defense": 84,
+      "speed": 106,
       "weapon": "gauntlet",
       "animation": "rays",
-      "role": "Controlador",
+      "role": "Dano",
       "basic": {
         "id": "basic",
         "name": "Palma luminosa",
@@ -1196,28 +1221,35 @@
         "power": 1,
         "cost": 0,
         "cooldown": 0,
-        "description": "Causa dano a um rival e recupera 24 de energia."
+        "description": "100% do ataque. Recupera 24 de energia."
       },
       "skill": {
         "id": "skill",
         "name": "Selo do horizonte",
         "kind": "aoe",
-        "power": 1.05,
+        "power": 0.9,
         "effect": "weaken",
         "cost": 30,
         "cooldown": 2,
-        "description": "Causa 105% do ataque a todos os rivais. Reduz o ataque do alvo em 20% por 2 turnos."
+        "description": "90% do ataque em todos os rivais e ataque inimigo −20% por 2 turnos."
       },
       "ultimate": {
         "id": "ultimate",
         "name": "Mil sóis",
         "kind": "aoe",
-        "power": 2.05,
-        "effect": "weaken",
+        "power": 1.65,
         "cost": 80,
         "cooldown": 0,
-        "description": "Causa 205% do ataque a todos os rivais. Reduz o ataque do alvo em 20% por 2 turnos."
-      }
+        "description": "165% do ataque em todos os rivais. Contra enfraquecimento: +20% e consome apenas esse efeito.",
+        "combo": {
+          "status": "weaken",
+          "multiplier": 1.2,
+          "consume": true
+        }
+      },
+      "identity": "Monge que abre e consome janelas de enfraquecimento",
+      "synergy": "Seu selo reduz o ataque rival. Mil sóis consome essa abertura, inclusive quando criada por Oren, Saira ou Auren.",
+      "specialty": "Horizonte vulnerável"
     },
     {
       "id": "zaya",
@@ -1226,9 +1258,9 @@
       "classId": "lumi",
       "title": "Mensageira dourada",
       "lore": "Leva mensagens de uma era que ainda não começou.",
-      "hp": 1050,
-      "attack": 178,
-      "defense": 80,
+      "hp": 1010,
+      "attack": 182,
+      "defense": 78,
       "speed": 113,
       "weapon": "bow",
       "animation": "wings",
@@ -1237,33 +1269,46 @@
         "id": "basic",
         "name": "Flecha do poente",
         "kind": "damage",
-        "power": 1,
+        "power": 0.7,
         "cost": 0,
         "cooldown": 0,
-        "description": "Causa dano a um rival e recupera 24 de energia."
+        "description": "70% do ataque. Recupera 24 de energia."
       },
       "skill": {
         "id": "skill",
         "name": "Bênção do crepúsculo",
         "kind": "healAll",
-        "power": 0.22,
-        "effect": "cleanse",
+        "power": 0.1,
         "cost": 30,
         "cooldown": 2,
-        "description": "Recupera 22% da vida máxima da equipe. Remove efeitos negativos."
+        "description": "Cura 10% da vida máxima da equipe e entrega até 6 de energia por aliado vivo.",
+        "secondary": {
+          "kind": "energy",
+          "target": "allies",
+          "amount": 6
+        }
       },
       "ultimate": {
         "id": "ultimate",
         "name": "Asas da eternidade",
         "kind": "healAll",
-        "power": 0.42,
+        "power": 0.18,
         "effect": "cleanse",
         "cost": 80,
         "cooldown": 0,
-        "description": "Recupera 42% da vida máxima de toda a equipe e purifica efeitos negativos."
-      }
+        "description": "Cura 18% da vida máxima da equipe, depois purifica efeitos negativos e entrega até 10 de energia por aliado vivo. Não ressuscita.",
+        "secondary": {
+          "kind": "energy",
+          "target": "allies",
+          "amount": 10
+        }
+      },
+      "identity": "Mensageira que devolve o ritmo à equipe",
+      "synergy": "Pequenas curas e energia distribuída ajudam aliados de qualquer afinidade a alcançar suas técnicas; a renovação continua limitada pela Fratura.",
+      "specialty": "Mensageira de energia"
     }
   ],
+  "archivedHeroes": [],
   "classes": [
     {
       "id": "igneo",
@@ -1275,7 +1320,7 @@
       "description": "Queimadura e crítico (+5 pontos de chance). Tanques e suportes refletem 10% do dano direto à vida.",
       "index": 0,
       "strongAgainst": "natural",
-      "weakAgainst": "sombrio"
+      "weakAgainst": "lumi"
     },
     {
       "id": "natural",
@@ -1322,8 +1367,20 @@
       "verb": "Drena",
       "description": "Roubo de vida (15% do dano direto à vida), marcas que drenam e explosão em um alvo.",
       "index": 4,
-      "strongAgainst": "igneo",
+      "strongAgainst": "lumi",
       "weakAgainst": "arcano"
+    },
+    {
+      "id": "lumi",
+      "name": "Lumi",
+      "color": "#e5c77c",
+      "soft": "#322d1d",
+      "icon": "sun",
+      "verb": "Purifica",
+      "description": "Proteção e renovação. Dissipa efeitos negativos e cura a equipe.",
+      "index": 5,
+      "strongAgainst": "igneo",
+      "weakAgainst": "sombrio"
     }
   ],
   "defaultTeams": [

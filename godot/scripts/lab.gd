@@ -2,7 +2,7 @@ extends AcceptDialog
 ## Two bounded, independent local datasets: played matches and deterministic AI samples.
 const Combat = preload("res://scripts/combat.gd")
 const SimulationLog = preload("res://scripts/simulation_log.gd")
-const STORE := "user://balance-0.15.json"
+const STORE := "user://balance-0.16.json"
 var catalog
 var source: OptionButton
 var summary: Label
@@ -190,19 +190,20 @@ func _open_export(format_id: String) -> void:
 func _sample_teams(pair: int) -> Array:
 	var teams: Array = [[], []]
 	var roles := ["Tanque", "Suporte", "Dano"]
+	var affinities: int = catalog.classes.size()
 	for side in range(2):
 		for role in range(3):
-			var group: int = pair / 5
-			var base: int = pair % 5
+			var group: int = pair / affinities
+			var base: int = pair % affinities
 			var offsets: Array = [side * 2, group + side, group * 2 + side * 3]
-			var class_index: int = (base + side) % 5 if pair < 5 else (base + offsets[role]) % 5
+			var class_index: int = (base + side) % affinities if pair < affinities else (base + offsets[role]) % affinities
 			var affinity: String = catalog.classes[class_index].id
 			teams[side].append(catalog.heroes.filter(func(h): return h.classId == affinity and h.role == roles[role])[0].id)
 	return teams
 
 func _samples() -> Array:
 	var samples: Array = []
-	for pair in range(30):
+	for pair in range(catalog.classes.size() * 6):
 		var teams := _sample_teams(pair)
 		for swap in range(2): samples.append({"teams": [teams[swap], teams[1 - swap]], "seed": 73 + pair * 113, "group": "simulation"})
 	var healers := ["saira", "maura", "sylva"]
@@ -213,13 +214,13 @@ func _samples() -> Array:
 			for swap in range(2): samples.append({"teams": [team, foe] if swap == 0 else [foe, team], "seed": (137 + pair * 139) if index == 0 else (229 + pair * 173), "group": "stress-shields" if index == 0 else "stress-healers"})
 	for role in ["Suporte", "Tanque", "Dano"]:
 		var ids: Array = catalog.heroes.filter(func(h): return h.role == role).map(func(h): return h.id)
-		for pair in range(5):
-			var foe: Array = [0, 1, 3].map(func(i): return ids[(pair + i) % 5])
+		for pair in range(catalog.classes.size()):
+			var foe: Array = [0, 1, 3].map(func(i): return ids[(pair + i) % ids.size()])
 			var team: Array = ["vesper", "oren", "elun"] if role == "Tanque" else healers
 			for swap in range(2): samples.append({"teams": [team, foe] if swap == 0 else [foe, team], "seed": 331 + pair * 181, "group": "stress-" + role})
 	for seed_value in range(1, 7): samples.append({"teams": [healers, healers], "seed": seed_value * 197, "group": "stress-healing-only", "defensive": true})
 	# Each returning hero is exercised in six mixed trios, with identical seeds on both sides.
-	var returned := ["torv", "brin", "bast", "ivo", "noct"]
+	var returned := ["torv", "brin", "bast", "ivo", "noct", "auren", "elyra", "solen", "zaya"]
 	var partners := [["sylva", "axion"], ["kira", "vesper"], ["astra", "oren"], ["maura", "rhazen"], ["vektor", "nima"], ["saira", "riven"]]
 	for index in range(returned.size()):
 		for pair in range(partners.size()):

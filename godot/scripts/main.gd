@@ -119,6 +119,7 @@ var pvp_seq := -1
 var campaign_mission := -1
 var roster_campaign := false
 var mission_label: Label
+var objective_label: Label
 var menu_dialog: ConfirmationDialog
 var vesper_atelier: Control
 const Lessons = preload("res://scripts/lessons.gd")
@@ -312,7 +313,7 @@ func _result_confirmed() -> void:
 		_open_pvp()
 		return
 	if campaign_mission >= 0 and state.winner == 0:
-		hub.selected_chapter = mini(2,int(mini(campaign.cleared,8)/3.0))
+		hub.selected_chapter = campaign.next_chapter()
 		_leave_battle("story")
 	else: _new_battle()
 
@@ -453,16 +454,27 @@ func _refresh() -> void:
 			result_dialog.dialog_text += "\n\n" + Lessons.hint(tutorial_index, tutorial_progress)
 		result_dialog.ok_button_text = "Jogar novamente"
 		if campaign_mission >= 0:
-			var mission: Dictionary = Campaign.MISSIONS[campaign_mission]
+			var mission: Dictionary = campaign.missions[campaign_mission]
 			result_dialog.ok_button_text = "Voltar às missões" if state.winner == 0 else "Tentar novamente"
 			result_dialog.dialog_text = ("VITÓRIA · " if state.winner == 0 else "DERROTA · ") + mission.name + "\n\n"
 			if state.winner == 0:
-				var reward: Dictionary = campaign.complete(campaign_mission)
-				result_dialog.dialog_text += mission.ending + "\n\n" + ("Primeira vitória: +1 " + reward.gem if reward.get("first", false) else "Missão repetida: sem recompensa adicional.")
-				if not reward.get("saved", false): result_dialog.dialog_text += "\n\nATENÇÃO: " + campaign.error_text
+				var reward: Dictionary = campaign.claim_victory(state)
+				result_dialog.dialog_text += mission.ending + "\n\n"
+				if reward.has("error"): result_dialog.dialog_text += reward.error
+				else:
+					result_dialog.dialog_text += ("Primeira vitória: +1 " + reward.gem + "\n" if reward.get("first", false) else "Nova vitória nesta missão: ") + "+%d fragmentos para a oficina." % reward.materials
+					result_dialog.dialog_text += "\n+%d EXP de equipe · Nível %d" % [reward.teamExperience,reward.levelAfter]
+					var mastery_awards: PackedStringArray = []
+					for hero_id in reward.mastery:
+						mastery_awards.append("%s +%d" % [catalog.hero_by_id[hero_id].name,reward.mastery[hero_id]] if reward.mastery[hero_id] > 0 else catalog.hero_by_id[hero_id].name+" (máxima)")
+					result_dialog.dialog_text += "\nMaestria: " + ", ".join(mastery_awards)
+					if not reward.get("saved", false): result_dialog.dialog_text += "\n\nATENÇÃO: " + campaign.error_text
 			else:
 				result_dialog.dialog_text += "Seu progresso e suas gemas foram preservados. Ajuste o trio ou os engastes no menu e tente de novo.\n\n" + mission.tip
-			result_dialog.dialog_text += "\n\n%d rodadas · %d ações" % [state.round, state.turns]
+			result_dialog.dialog_text += "\n\n" + Campaign.Objectives.result_text(state)
+			var objective_result: Dictionary = state.get("missionResult",{})
+			var boundary: bool = objective_result.get("reason") in ["deadline","survived"]
+			result_dialog.dialog_text += "\n\n%d %s · %d ações" % [objective_result.get("completedRounds",state.round),"rodadas completas" if boundary else "rodadas",state.turns]
 		if pvp_active:
 			var own_side: int=int(pvp_client.own_player().get("side",-1))
 			var outcome := "VITÓRIA" if state.winner==own_side else "EMPATE" if state.winner==null else "DERROTA"
@@ -504,7 +516,7 @@ func _play_turn(action_id: String, target: String) -> void:
 	if busy or not started or state.phase != "playing": return
 	# Compute separately: the displayed actor stays stable until the strike lands.
 	var pending := state.duplicate(true)
-	var result := combat.act(pending, action_id, target)
+	var result: Dictionary = campaign.act(combat,pending,action_id,target) if campaign_mission >= 0 else combat.act(pending, action_id, target)
 	if result.has("error"):
 		description.text = result.error
 		return
@@ -588,7 +600,7 @@ func _schedule_ai() -> void:
 		if version != battle_version or request != ai_request: return
 	ai_pending = false
 	if not _wants_ai() or not started or state.phase != "playing" or not combat_view.visible: return
-	var choice := combat.choose_ai(state)
+	var choice: Dictionary = campaign.choose_ai(combat,state) if campaign_mission >= 0 else combat.choose_ai(state)
 	if not choice.is_empty(): _play_turn(choice.actionId, choice.targetId)
 
 func _wants_ai() -> bool:
@@ -613,6 +625,7 @@ func _update_log() -> void:
 		var target := _unit_name(entry.get("target", ""))
 		var message := ""
 		match entry.type:
+			"objective": message = entry.text
 			"action": message = "%s usou %s." % [actor, entry.name]
 			"damage", "heal", "shield", "guard", "burn", "bleed", "darkmark", "fracture", "energy", "status", "support", "converted", "shieldExpired": message = "%s: %s" % [target, CombatUI._plain(CombatUI.event_detail(entry))]
 			"defeated": message = "%s foi derrotado." % target
@@ -644,7 +657,7 @@ func _show_classes() -> void:
 	var text := "Cada personagem possui uma afinidade permanente.\n\n"
 	for affinity in catalog.classes:
 		text += "%s → %s  (+%s de dano)\n%s\n\n" % [affinity.name, catalog.class_by_id[affinity.strongAgainst].name, RulesText.percent(combat.rules.affinity.advantageMultiplier - 1), affinity.description]
-	text += "Classe define afinidade; tanque, suporte e dano são funções dos kits. Cada classe tem as três funções. Lumi e nove personagens estão arquivados para esta fase de testes.\n\nAtacar quem supera sua classe causa %s menos dano.\nAs demais relações são neutras." % RulesText.percent(1 - combat.rules.affinity.resistanceMultiplier)
+	text += "Classe define afinidade; tanque, suporte e dano são funções dos kits. Cada classe tem as três funções. Os 24 heróis estão ativos nas seis afinidades, incluindo Lumi.\n\nAtacar quem supera sua classe causa %s menos dano.\nAs demais relações são neutras." % RulesText.percent(1 - combat.rules.affinity.resistanceMultiplier)
 	dialog.dialog_text = text
 	add_child(dialog)
 	var help_text: String = dialog.dialog_text
@@ -674,7 +687,7 @@ func _show_help() -> void:
 
 func _build_roster() -> void:
 	roster_dialog = AcceptDialog.new()
-	roster_dialog.title = "15 ativos · tanque, suporte e dano em cada classe · 9 arquivados"
+	roster_dialog.title = "%d heróis · %d afinidades · trios livres" % [catalog.heroes.size(), catalog.classes.size()]
 	roster_dialog.ok_button_text = "Usar equipes"
 	roster_dialog.confirmed.connect(_save_roster)
 	add_child(roster_dialog)

@@ -488,7 +488,7 @@ function rosterDialog() {
     dialogHeader(
       "O PODER ESTÁ NA COMBINAÇÃO",
       "Encontre a sua formação.",
-      "20 kits ativos. Cinco afinidades. Escolha os três heróis da sua próxima batalha.",
+      "24 kits ativos. Seis afinidades. Escolha os três heróis da sua próxima batalha.",
     ) +
     `
  <div class="formation-bar"><div class="formation-tabs"><button data-roster-side="0" class="${rosterSide === 0 ? "active" : ""}">${smallLabel(0)}</button><button data-roster-side="1" class="${rosterSide === 1 ? "active" : ""}">${smallLabel(1)}</button></div><div class="formation-slots">${Array.from(

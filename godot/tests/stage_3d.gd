@@ -92,7 +92,7 @@ func geometry(app) -> void:
 
 func roster(app) -> void:
 	var seen := {}
-	for group in range(7):
+	for group in range(ceili(app.catalog.heroes.size() / 3.0)):
 		var own: Array = []
 		var rival: Array = []
 		for slot in range(3):
@@ -103,11 +103,11 @@ func roster(app) -> void:
 		await settle()
 		geometry(app)
 		for id in own: seen[id] = true
-	check(seen.size() == 20, "Every active hero can be constructed in the playable 3D battlefield")
+	check(seen.size() == 24, "Every active hero can be constructed in the playable 3D battlefield")
 	# Campaign enemies have visual aliases and boss-specific data; they must also
 	# build without requiring active-roster IDs or changing their combat stats.
 	var original_cleared: int = app.campaign.cleared
-	app.campaign.cleared = 3
+	app.campaign.completed = app.campaign._legacy_completed(3)
 	for mission in range(3):
 		var battle: Dictionary = app.campaign.battle(app.combat, mission)
 		check(not battle.has("error"), "Story mission %d supplies a valid scene fixture" % mission)
@@ -118,7 +118,7 @@ func roster(app) -> void:
 		await settle()
 		check(battle == before, "Building story arena %d does not mutate campaign combat data" % mission)
 		check(app.backdrop.find_children("*", "MeshInstance3D", true, false).size() >= 50, "Story arena %d builds all heroes and enemies as meshes" % mission)
-	app.campaign.cleared = original_cleared
+	app.campaign.completed = app.campaign._legacy_completed(original_cleared)
 
 func direct_hit(app) -> void:
 	await reset(app, false)

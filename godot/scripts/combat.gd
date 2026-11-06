@@ -73,7 +73,7 @@ func current(state: Dictionary) -> Dictionary:
 	return unit(state, state.order[state.cursor])
 
 func get_action(actor: Dictionary, id: String) -> Dictionary:
-	return catalog.guard if id == "guard" else catalog.hero_by_id[actor.heroId].get(id, {})
+	return catalog.guard if id == "guard" else actor.get("campaignActions",{}).get(id,catalog.hero_by_id[actor.heroId].get(id, {}))
 
 func can_use(actor: Dictionary, id: String) -> bool:
 	var action := get_action(actor, id)
@@ -154,12 +154,19 @@ func _turn_event(state: Dictionary, events: Array, actor: Dictionary, event: Dic
 	_log(state, event)
 	events.append(event)
 
-func _begin_turn(state: Dictionary, turn_events: Array = []) -> void:
+func _begin_turn(state: Dictionary, turn_events: Array = [], round_checkpoint: Callable = Callable(), turn_checkpoint: Callable = Callable()) -> void:
 	while state.phase == "playing":
 		if state.cursor >= state.order.size():
 			state.round += 1
 			state.cursor = 0
 			state.order = _turn_order(state)
+			var restart_round := false
+			if round_checkpoint.is_valid(): restart_round = round_checkpoint.call(state) == true
+			if state.phase != "playing": return
+			if restart_round:
+				state.order = []
+				state.cursor = 0
+				continue
 			for target in state.units:
 				var before: int = target.shield
 				_normalize_shields(target, state.round - 1)
@@ -202,6 +209,14 @@ func _begin_turn(state: Dictionary, turn_events: Array = []) -> void:
 				_turn_event(state, turn_events, actor, receipt)
 			status.turns -= 1
 		actor.statuses = actor.statuses.filter(func(s): return s.turns > 0 or (s.turns == 0 and not s.type in ["burn", "bleed", "darkmark", "regen"]))
+		var restart_round := false
+		if turn_checkpoint.is_valid(): restart_round = turn_checkpoint.call(state) == true
+		if state.phase != "playing": return
+		# A checkpoint may replace a defeated group and request fresh scheduling.
+		if restart_round:
+			state.order = []
+			state.cursor = 0
+			continue
 		if _victory(state): return
 		if actor.hp <= 0:
 			state.cursor += 1
@@ -252,7 +267,9 @@ func _emit(state: Dictionary, events: Array, actor: Dictionary, event: Dictionar
 	entry.actor = actor.id
 	_log(state, entry)
 
-func act(state: Dictionary, action_id: String, target_id: String, critical_override: Variant = null) -> Dictionary:
+# Optional encounter checkpoints may end combat at safe resolution boundaries.
+# Empty defaults preserve the shared free-combat/PvP behavior and result protocol.
+func act(state: Dictionary, action_id: String, target_id: String, critical_override: Variant = null, impact_checkpoint: Callable = Callable(), round_checkpoint: Callable = Callable()) -> Dictionary:
 	if state.phase != "playing": return {"error": "A batalha terminou."}
 	var actor := current(state)
 	if not can_use(actor, action_id): return {"error": "Ação indisponível: energia ou recarga."}
@@ -423,13 +440,17 @@ func act(state: Dictionary, action_id: String, target_id: String, critical_overr
 						target.energy += amount
 						actor.stats.energyGiven += amount
 						_emit(state, events, actor, {"type": "energy", "target": target.id, "amount": amount, "energyAfter": target.energy})
-		if action_id == "basic": actor.energy = mini(int(rules.energy.maximum), actor.energy + int(rules.energy.basicGain))
+		if action_id == "basic": actor.energy = mini(int(rules.energy.maximum), actor.energy + int(action.get("energyGain",rules.energy.basicGain)))
 	actor.statuses = actor.statuses.filter(func(s): return s.turns > 0)
 	var impact_units: Array = state.units.duplicate(true)
 	var turn_events: Array = []
-	if not _victory(state):
+	var restart_round := false
+	if impact_checkpoint.is_valid(): restart_round = impact_checkpoint.call(state) == true
+	if restart_round and state.phase == "playing":
+		state.order = [];state.cursor = -1
+	if state.phase == "playing" and not _victory(state):
 		state.cursor += 1
-		_begin_turn(state, turn_events)
+		_begin_turn(state, turn_events, round_checkpoint, impact_checkpoint)
 	return {"actor": actor.id, "heroId": actor.heroId, "actionId": action_id, "animation": hero.animation, "events": events, "impactUnits": impact_units, "turnEvents": turn_events}
 
 func preview(state: Dictionary, action_id: String, target_id: String) -> Dictionary:

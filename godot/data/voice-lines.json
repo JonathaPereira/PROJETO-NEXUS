@@ -222,6 +222,50 @@
         "ultimate": "Lembre-se deste instante!",
         "victory": "Uma dívida a menos."
       }
+    },
+    "auren": {
+      "voice": "pm_santa",
+      "speed": 0.96,
+      "pitch": 1.02,
+      "lines": {
+        "select": "Meu juramento continua aceso.",
+        "skill": "A aurora protege você.",
+        "ultimate": "Que a luz sustente nosso caminho!",
+        "victory": "Guardamos mais um amanhecer."
+      }
+    },
+    "elyra": {
+      "voice": "pf_dora",
+      "speed": 0.985,
+      "pitch": 1.015,
+      "lines": {
+        "select": "Há lugar para você na luz.",
+        "skill": "Respire. Eu estou aqui.",
+        "ultimate": "Um novo amanhecer para todos!",
+        "victory": "Ninguém atravessa sozinho."
+      }
+    },
+    "solen": {
+      "voice": "pm_alex",
+      "speed": 1.035,
+      "pitch": 1.045,
+      "lines": {
+        "select": "O horizonte ainda nos espera.",
+        "skill": "Deixe sua força se dispersar.",
+        "ultimate": "Mil sóis, um só instante!",
+        "victory": "Mais um passo além da noite."
+      }
+    },
+    "zaya": {
+      "voice": "pf_dora",
+      "speed": 1.095,
+      "pitch": 1.085,
+      "lines": {
+        "select": "Trago notícias de outra aurora.",
+        "skill": "O próximo passo é de vocês.",
+        "ultimate": "Abram as asas do amanhã!",
+        "victory": "Esta mensagem merece chegar."
+      }
     }
   }
 }

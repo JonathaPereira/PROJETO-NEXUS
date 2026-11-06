@@ -6,7 +6,7 @@ import {HEROES} from '../src/data.js';
 const root=new URL('../godot/assets/voices/',import.meta.url);
 const manifest=JSON.parse(readFileSync(new URL('manifest.json',root),'utf8'));
 const dialogue=JSON.parse(readFileSync(new URL('../godot/data/voice-lines.json',import.meta.url),'utf8'));
-test('the pt-BR cast contains 80 original real clips for every active hero, independent of browser speech services',()=>{
+test('the pt-BR cast contains 96 original real clips for every active hero, independent of browser speech services',()=>{
  assert.equal(dialogue.synthetic,true);
  assert.deepEqual(Object.keys(dialogue.heroes).sort(),HEROES.map(h=>h.id).sort());
  assert.equal(Object.keys(manifest.clips).length,HEROES.length*4);
