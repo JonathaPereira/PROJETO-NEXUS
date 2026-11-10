@@ -45,7 +45,7 @@ static func build(app) -> void:
 	tools_popup.add_child(tools)
 	var tools_button: Button = app._button("Opções  ···", func(): tools_popup.popup_centered())
 	header.add_child(tools_button)
-	for item in [["Afinidades", app._show_classes], ["Ajuda", app._show_help], ["Galeria 2D", app._open_showcase], ["Aprender", app._show_lessons], ["Balanço", app._show_lab]]:
+	for item in [["Teclado", app._show_keyboard_settings], ["Afinidades", app._show_classes], ["Ajuda", app._show_help], ["Galeria 2D", app._open_showcase], ["Aprender", app._show_lessons], ["Balanço", app._show_lab]]:
 		var callback: Callable = item[1]
 		tools.add_child(app._button(item[0], func():
 			tools_popup.hide()
@@ -280,6 +280,9 @@ static func build(app) -> void:
 	reduce.button_pressed = app.reduced_motion
 	reduce.toggled.connect(app._set_reduced)
 	footer.add_child(reduce)
+	app.skip_button=app._button("Pular animação",app._skip_animation)
+	app.skip_button.tooltip_text="Mostra o resultado da ação em andamento, incluindo os efeitos de turno. Não passa outro turno."
+	footer.add_child(app.skip_button)
 	app.restart_button=app._button("Reiniciar", app._ask_restart)
 	footer.add_child(app.restart_button)
 	app.start_button = app._button("INICIAR COMBATE", app._start)
@@ -304,6 +307,8 @@ static func build(app) -> void:
 	app._build_roster()
 
 static func refresh(app) -> void:
+	app.skip_button.visible=app.busy and not app.pvp_active
+	app.skip_button.disabled=not app.busy or app.pvp_active
 	app.log_button.text="Registro PvP" if app.pvp_active else "Registro"
 	app.log_dialog.title="Registro desta partida PvP" if app.pvp_active else "Registro da batalha"
 	var own_side: int=int(app.pvp_client.own_player().get("side",-1)) if app.pvp_active else 0
@@ -338,7 +343,9 @@ static func refresh(app) -> void:
 	app.auto_button.disabled = app.tutorial_index >= 0 or app.pvp_active
 	app.auto_button.visible=not app.pvp_active
 	app.restart_button.text=("Desistir" if app.state.phase=="playing" else "Preparação PvP") if app.pvp_active else "Reiniciar"
-	app.controls_note.text="1–4  Habilidades    ← →  Alvo    Enter  Confirmar    Esc  Sair" if app.pvp_active else "1–4  Habilidades    ← →  Alvo    Enter  Confirmar    A  Automático    Esc  Menu"
+	app.controls_note.text="%s/%s/%s/%s  Habilidades   %s/%s  Alvo   %s  Usar   Esc  %s" % [app.keyboard.key_name("basic"),app.keyboard.key_name("skill"),app.keyboard.key_name("ultimate"),app.keyboard.key_name("guard"),app.keyboard.key_name("target_previous"),app.keyboard.key_name("target_next"),app.keyboard.key_name("execute"),"Sair" if app.pvp_active else "Menu"]
+	app.auto_button.text="Automático · "+app.keyboard.key_name("auto")
+	app.skip_button.tooltip_text="%s: mostra o resultado da ação em andamento, incluindo efeitos de turno. Não passa outro turno."%app.keyboard.key_name("skip")
 	if app.started and app.auto_play and actor.side == 0 and app.state.phase == "playing": app.phase_label.text = "%s · automático" % hero.name
 	var fracture: Dictionary = app.combat.rules.fracture
 	app.round_label.text = "RODADA %02d  ·  FRATURA EM %d RODADAS" % [app.state.round, int(fracture.startRound) - app.state.round]
@@ -356,7 +363,7 @@ static func refresh(app) -> void:
 		var card = app.action_buttons[id]
 		var presented_action: Dictionary = app.combat.get_action(actor, id).duplicate()
 		if id in ["basic", "guard"]: presented_action.energyGain = presented_action.get("energyGain",app.combat.rules.energy.basicGain) if id == "basic" else app.combat.rules.energy.guardGain
-		card.configure(presented_action, id, index + 1, app.catalog.affinity_color(hero.classId), int(actor.energy), int(actor.cooldowns.get(id, 0)), app._can_inspect(), int(hero.index))
+		card.configure(presented_action, id, app.keyboard.key_name(id), app.catalog.affinity_color(hero.classId), int(actor.energy), int(actor.cooldowns.get(id, 0)), app._can_inspect(), int(hero.index))
 		if app.combat.legal_targets(app.state, actor, presented_action).is_empty():
 			card.disabled = true
 			card.available = false

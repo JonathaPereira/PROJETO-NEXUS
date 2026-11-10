@@ -6,9 +6,10 @@ const Quality = preload("res://scripts/presentation_quality.gd")
 const GLOW = preload("res://assets/vfx/soft-glow.svg")
 var elapsed := 0.0
 var motion_enabled := true
-var encounter_kind := 0:
+const ENVIRONMENTS := ["sanctum","tides","forge"]
+var environment := "sanctum":
 	set(value):
-		encounter_kind = value
+		environment = value
 		if is_node_ready(): _set_environment()
 var painting: TextureRect
 var atmosphere: ShaderMaterial
@@ -55,7 +56,7 @@ func _ready() -> void:
 	_set_environment()
 
 func _set_environment() -> void:
-	theme_kind = clampi(int(encounter_kind/3.0),0,2)
+	theme_kind = maxi(0,ENVIRONMENTS.find(environment))
 	accent = [Color("79ceef"),Color("70dfd7"),Color("f7ae79")][theme_kind]
 	var paths := ["res://assets/nexus-sanctum.png","res://assets/environments/tidal-observatory.png","res://assets/environments/last-foundry.png"]
 	painting.texture = load(paths[theme_kind]) if ResourceLoader.exists(paths[theme_kind]) else preload("res://assets/arena.png")

@@ -254,6 +254,7 @@ func campaign_review(app) -> void:
 	await shot("godot-gems")
 	app.hub.open("story")
 	app.hub.mission_buttons[0].pressed.emit()
+	app.hub.preparation_button.pressed.emit()
 	await shot("godot-minions")
 	app.reduced_motion = false
 	app._start()

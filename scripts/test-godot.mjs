@@ -79,9 +79,19 @@ function run(args, timeout = 240000, commandEnv = env) {
 }
 console.log("Importando o projeto com Godot…");
 run(["--headless", "--path", "godot", "--editor", "--import", "--quit"]);
-for (const suite of ["mission_field", "mission_waves", "escort", "lumi", "ability_training", "mastery", "gem_forge", "equipment", "mission_objectives", "mission_progress", "save_recovery", "damage_receipt", "progression", "polish_012", "polish_014", "polish_015", "two_d", "stage_3d", "vesper"]) {
+for (const suite of ["collection_navigation", "advanced_lessons", "showcase_framing", "pose_transition", "hero_choreography", "defeat_presentation", "keyboard_controls", "animation_skip", "campaign_playthrough", "mission_support_ai", "achievements", "pact_abilities", "bonds", "hero_journeys", "boss_phases", "boss_patterns", "campaign_collapse", "campaign_finale", "mission_field", "mission_waves", "escort", "lumi", "ability_training", "mastery", "gem_forge", "equipment", "mission_objectives", "mission_progress", "save_recovery", "damage_receipt", "progression", "polish_012", "polish_014", "polish_015", "two_d", "stage_3d", "vesper"]) {
   const suiteEnv={...env,XDG_DATA_HOME:resolve(scratch,suite,"data"),XDG_CONFIG_HOME:resolve(scratch,suite,"config"),XDG_CACHE_HOME:resolve(scratch,suite,"cache")};
-  console.log(run(["--headless", "--audio-driver", "Dummy", "--path", "godot", "--script", `res://tests/${suite}.gd`],240000,suiteEnv).trim());
+  const suiteLog=run(["--headless", "--audio-driver", "Dummy", "--path", "godot", "--script", `res://tests/${suite}.gd`],suite==="hero_choreography"?600000:240000,suiteEnv);
+  if(suite==="collection_navigation")assert.match(suiteLog,/Collection navigation: \d+ checks, 0 failures/);
+  if(suite==="advanced_lessons")assert.match(suiteLog,/Advanced lessons: \d+ checks, 0 failures/);
+  if(suite==="animation_skip")assert.match(suiteLog,/Animation skip: \d+ checks, 0 failures/);
+  if(suite==="keyboard_controls")assert.match(suiteLog,/Keyboard controls: \d+ checks, 0 failures/);
+  if(suite==="defeat_presentation")assert.match(suiteLog,/Defeat presentation: \d+ checks, 0 failures/);
+  if(suite==="boss_patterns")assert.match(suiteLog,/Boss patterns: \d+ checks, 0 failures/);
+  if(suite==="showcase_framing")assert.match(suiteLog,/Showcase framing: \d+ checks, 0 failures/);
+  if(suite==="pose_transition")assert.match(suiteLog,/Pose transitions: \d+ checks, 0 failures/);
+  if(suite==="hero_choreography")assert.match(suiteLog,/Hero choreography: \d+ checks, 0 failures/);
+  console.log(suiteLog.trim());
 }
 console.log("Executando paridade do motor e teste de interface…");
 const log = run(["--headless", "--audio-driver", "Dummy", "--path", "godot", "--script", "res://tests/run.gd", "--", fixturePath, outputPath]);

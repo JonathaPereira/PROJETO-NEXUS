@@ -35,7 +35,7 @@ func _run() -> void:
 	if not story.gem("ember:2").is_empty():
 		var stats: Dictionary = story.loadout_stats("astra")
 		check(stats.attack == engine.rounded(engine.catalog.hero_by_id.astra.attack*1.07), "The next mission uses a fused gem's bonus exactly once")
-	check(story.save_progress() and FileAccess.get_file_as_string(PATH+".v5.bak") == old and JSON.parse_string(FileAccess.get_file_as_string(PATH)).schemaVersion == 8, "Version five is preserved byte-for-byte before the gem schema is written")
+	check(story.save_progress() and FileAccess.get_file_as_string(PATH+".v5.bak") == old and JSON.parse_string(FileAccess.get_file_as_string(PATH)).schemaVersion == Campaign.SAVE_SCHEMA, "Version five is preserved byte-for-byte before the gem schema is written")
 	var reopened := Campaign.new(engine.catalog,PATH)
 	check(reopened.slots("astra")[0] == "ember:2" and reopened.copies("ember:2") == 2 and reopened.materials() == 20, "Fused stock, owners, equipment and material spending survive reopening together")
 	check(not story.craft_gem("ember:2") and not story.fuse_gem("ember:3") and not story.fuse_gem("unknown"), "Fabrication cannot mint high-level or unknown gems and fusion stops at level three")
@@ -90,7 +90,7 @@ func _run() -> void:
 	malformed.erase("gemFusions")
 	invalid.append(malformed)
 	malformed = document.duplicate(true)
-	malformed.schemaVersion = 9
+	malformed.schemaVersion = Campaign.SAVE_SCHEMA + 1
 	invalid.append(malformed)
 	for data in invalid:
 		var original := JSON.stringify(data)

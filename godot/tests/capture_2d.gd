@@ -27,7 +27,7 @@ func fixture(hero: String, encounter: int) -> void:
 	app.mode_picker.select(1)
 	app.teams=[["veyra","saira","astra"],["rhazen","vesper","oren"]]
 	app._new_battle()
-	app.backdrop.encounter_kind=encounter
+	app.backdrop.environment = app.backdrop.ENVIRONMENTS[clampi(int(encounter/3.0),0,2)]
 	var id := "0-"+hero
 	app.state.order.erase(id)
 	app.state.order.push_front(id)

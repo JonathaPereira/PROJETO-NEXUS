@@ -41,7 +41,7 @@ static func model(check: Callable) -> void:
 	check.call(is_equal_approx(progress.bonuses("veyra").attack, 0.12) and is_equal_approx(progress.bonuses("axion").health, 0.15) and progress.bonuses("astra").energy == 24, "Repeated gem bonuses add to 12 percent attack, 15 percent health and 24 energy")
 	var restored = Campaign.new(engine.catalog, PATH)
 	check.call(restored.team == progress.team and restored.equipped == progress.equipped, "Equipped gems and campaign team survive reopening")
-	check.call(JSON.parse_string(FileAccess.get_file_as_string(PATH)).schemaVersion == 8, "New equipment writes the three-chapter schema at the compatible save path")
+	check.call(JSON.parse_string(FileAccess.get_file_as_string(PATH)).schemaVersion == Campaign.SAVE_SCHEMA, "New equipment writes the three-chapter schema at the compatible save path")
 	var baseline: Dictionary = engine.new_battle(progress.team, engine.catalog.default_teams[1])
 	var mission: Dictionary = progress.battle(engine, 0)
 	for pair in [["0-axion", "maxHp", 1.15], ["0-veyra", "attack", 1.12]]:
@@ -63,7 +63,7 @@ static func model(check: Callable) -> void:
 	check.call(FileAccess.get_file_as_string(PATH) == legacy and not FileAccess.file_exists(PATH + ".v1.bak"), "Loading an old save does not replace the source file")
 	check.call(migrated.available("ember") == 3 and migrated.available("sap") == 2, "Migrated saves receive the new three-copy starter inventory plus earned rewards")
 	check.call(migrated.equip("veyra", "ember", 1) and FileAccess.get_file_as_string(PATH + ".v1.bak") == legacy, "The exact old save is backed up before its first version-two replacement")
-	check.call(JSON.parse_string(FileAccess.get_file_as_string(PATH)).schemaVersion == 8 and Campaign.new(engine.catalog, PATH).slots("veyra") == ["ember", "ember", ""], "Migrated three-slot equipment survives reopening")
+	check.call(JSON.parse_string(FileAccess.get_file_as_string(PATH)).schemaVersion == Campaign.SAVE_SCHEMA and Campaign.new(engine.catalog, PATH).slots("veyra") == ["ember", "ember", ""], "Migrated three-slot equipment survives reopening")
 	check.call(migrated.equip("veyra", "pulse", 2) and FileAccess.get_file_as_string(PATH + ".v1.bak") == legacy, "Later saves preserve the original migration backup")
 	var other_legacy: String = legacy.replace('"cleared":1', '"cleared":2')
 	_write(other_legacy)
@@ -135,6 +135,7 @@ static func run(tree: SceneTree, scene: PackedScene, check: Callable) -> void:
 	for index in range(3):
 		app.hub.open("story")
 		app.hub.mission_buttons[index].pressed.emit()
+		app.hub.preparation_button.pressed.emit()
 		await tree.process_frame
 		check.call(app.campaign_mission == index and app.combat_view.visible and not app.hub.visible, "Mission button enters the campaign battlefield")
 		check.call(app.state.units.filter(func(u): return u.side == 1).size() == 3 and app.fighters.size() == 6, "Mission spawns three real enemies and three heroes")

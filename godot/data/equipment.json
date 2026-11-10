@@ -3,7 +3,7 @@
   "firstClearMaterials": 6,
   "chapterBonusMaterials": 6,
   "replayMaterials": 2,
-  "chapterEnds": ["eclipse", "tidal-heart", "forge-heart"],
+  "chapterEnds": ["eclipse", "tidal-heart", "forge-heart", "collapse-anchor", "truths-archive", "nexus-heart"],
   "upgradeCosts": [0, 3, 5],
   "tierUnlocks": ["", "eclipse", "tidal-heart"],
   "variantUnlock": "eclipse",

@@ -7,6 +7,7 @@ const AbilityArt = preload("res://scripts/ability_art.gd")
 const Backdrop = preload("res://scripts/hub_backdrop.gd")
 const HomeTeam = preload("res://scripts/home_team.gd")
 const RulesText = preload("res://scripts/rules_text.gd")
+const Achievements = preload("res://scripts/achievements.gd")
 const SURFACE := Color("0c1729f5")
 const CYAN := Color("66dcff")
 const VIOLET := Color("a598ff")
@@ -33,6 +34,9 @@ var remove_button: Button
 var play_button: Button
 var story_button: Button
 var next_mission_button: Button
+var preparation_button: Button
+var preparing_mission := -1
+var preparation_origin := "story"
 var team_button: Button
 var notice: Label
 var hero_details: TabContainer
@@ -103,6 +107,7 @@ func _ready() -> void:
 	subtitle.size_flags_vertical = SIZE_SHRINK_CENTER
 	masthead.add_child(app._button("⛶ Tela", app._show_display))
 	masthead.add_child(app._button("Áudio e vídeo",app._show_presentation_settings))
+	masthead.add_child(app._button("Teclado",app._show_keyboard_settings))
 	masthead.add_child(app._button("Sair", func(): get_tree().quit()))
 	var nav := _row(column, 8)
 	for item in [["Início", "menu"], ["História", "story"], ["Coleção", "heroes"], ["Batalhas", "play"], ["Extras", "extras"]]:
@@ -182,17 +187,19 @@ func open(target: String = "menu") -> void:
 	selected_slot = clampi(selected_slot, 0, 2)
 	if selected_hero == "" or not app.campaign.active_hero(selected_hero): selected_hero = app.campaign.team[0]
 	for id in nav_buttons:
-		var active: bool = id == page or id == "heroes" and page in ["gems", "equipment", "progress"]
+		var active: bool = id == page or page == "preparation" and id == preparation_origin or id == "heroes" and page in ["gems", "equipment", "progress"] or id == "extras" and page == "credits"
 		nav_buttons[id].add_theme_stylebox_override("normal", _surface(Color("14344a") if active else Color("0b1527b8"), CYAN if active else Color("223448"), 10))
 		nav_buttons[id].add_theme_color_override("font_color", CYAN if active else app.MUTED)
 	match page:
 		"story": _story()
+		"preparation": _mission_preparation()
 		"gems": _gems()
 		"equipment": _equipment()
 		"progress": _progress()
 		"heroes": _heroes()
 		"play": _play_menu()
 		"extras": _extras()
+		"credits": _credits()
 		_: _menu()
 	footer.text = app.campaign.error_text if app.campaign.error_text != "" else message if message != "" else "Progresso salvo neste dispositivo  ·  Prepare sua equipe em Coleção  ·  Tab para navegar, Enter para selecionar"
 	footer.add_theme_color_override("font_color", Color("ffb8a8") if app.campaign.error_text != "" else app.MUTED)
@@ -251,6 +258,8 @@ func _menu() -> void:
 	var chapter: int = app.campaign.next_chapter()
 	var record: Dictionary = Campaign.CHAPTERS[chapter]
 	var next_mission: int = app.campaign.next_mission()
+	var route: Array = app.campaign.main_missions()
+	var cleared: int = app.campaign.main_cleared
 	var row := _row(body,26,true)
 	var left := VBoxContainer.new()
 	left.size_flags_horizontal = SIZE_EXPAND_FILL
@@ -276,19 +285,19 @@ func _menu() -> void:
 	var words := VBoxContainer.new()
 	words.size_flags_horizontal = SIZE_EXPAND_FILL
 	chapter_line.add_child(words)
-	_text(words,record.eyebrow + (" · CONCLUÍDO" if app.campaign.cleared>=app.campaign.missions.size() else " · EM ANDAMENTO"),10,Color(record.color))
+	_text(words,record.eyebrow + (" · CONCLUÍDO" if cleared == route.size() else " · EM ANDAMENTO"),10,Color(record.color))
 	_heading(words,record.name,23)
-	_text(journey,"Sua próxima missão\n"+app.campaign.missions[next_mission].name if app.campaign.cleared<app.campaign.missions.size() else "Jornada concluída. Revisite as missões e experimente novos trios.",14)
-	var progress_line := _row(journey,8)
-	for index in range(app.campaign.missions.size()):
+	_text(journey,"Sua próxima missão\n"+app.campaign.missions[next_mission].name if cleared < route.size() else "Você concluiu a campanha principal. Revisite os encontros ou procure as missões secundárias.",14)
+	var progress_line := _row(journey,3)
+	for index in route:
 		var segment := ColorRect.new()
-		segment.custom_minimum_size = Vector2(8,4)
+		segment.custom_minimum_size.y = 4
 		segment.size_flags_horizontal = SIZE_EXPAND_FILL
 		segment.color = CYAN if app.campaign.is_complete(index) else Color("2b425a")
 		segment.mouse_filter = MOUSE_FILTER_IGNORE
 		progress_line.add_child(segment)
-	_text(journey,"%d de %d missões concluídas · 3 capítulos" % [app.campaign.cleared,app.campaign.missions.size()],11,app.MUTED)
-	story_button = app._button("Começar história  →" if app.campaign.cleared==0 else "Continuar história  →" if app.campaign.cleared<app.campaign.missions.size() else "Revisitar história  →",_continue_story)
+	_text(journey,"%d de %d missões concluídas · %d capítulos" % [cleared,route.size(),Campaign.CHAPTERS.size()],11,app.MUTED)
+	story_button = app._button("Começar história  →" if cleared == 0 else "Continuar história  →" if cleared < route.size() else "Revisitar história  →",_continue_story)
 	story_button.custom_minimum_size.y = 48
 	story_button.add_theme_font_size_override("font_size",16)
 	story_button.add_theme_stylebox_override("normal",_surface(Color("4ed8ef"),Color("9cecff"),10))
@@ -380,9 +389,9 @@ func _continue_story() -> void:
 	open("story")
 	next_mission_button.grab_focus()
 
-func _chapter_art(index: int) -> Texture2D:
-	if index == 1 and ResourceLoader.exists("res://assets/environments/tidal-observatory.png"): return load("res://assets/environments/tidal-observatory.png")
-	return preload("res://assets/arena.png") if index == 2 else preload("res://assets/nexus-sanctum.png")
+func _chapter_art(theme: String) -> Texture2D:
+	if theme == "tides" and ResourceLoader.exists("res://assets/environments/tidal-observatory.png"): return load("res://assets/environments/tidal-observatory.png")
+	return preload("res://assets/arena.png") if theme == "forge" else preload("res://assets/nexus-sanctum.png")
 
 func _play_menu() -> void:
 	_text(body, "BATALHAS  /  ESCOLHA SEU MODO", 11, CYAN)
@@ -419,6 +428,49 @@ func _extras() -> void:
 		_heading(card,item[0],23)
 		_text(card,item[1],14,app.MUTED)
 		card.add_child(app._button("Abrir  →",item[2]))
+	var credits:=_panel(grid)
+	_heading(credits,"Créditos e licenças",23)
+	_text(credits,"Recursos originais, fontes, motor e elenco sintético.",14,app.MUTED)
+	credits.add_child(app._button("Ver créditos",open.bind("credits")))
+	var milestones: Array=Achievements.entries(app.campaign)
+	var achievements:=_panel(body)
+	achievements.name="LocalAchievements"
+	_heading(achievements,"Conquistas locais · %d/%d"%[milestones.filter(func(entry):return entry.unlocked).size(),milestones.size()],24)
+	_text(achievements,"Seus feitos na jornada do Farol. Complete as condições abaixo para registrar cada conquista neste dispositivo.",13,app.MUTED)
+	var badges:=GridContainer.new()
+	badges.columns=2 if wide else 1
+	badges.add_theme_constant_override("h_separation",12)
+	badges.add_theme_constant_override("v_separation",12)
+	achievements.add_child(badges)
+	for entry in milestones:
+		var badge:=_panel(badges,CYAN if entry.unlocked else Color("263b54"))
+		badge.name=entry.id
+		_heading(badge,entry.title,18,CYAN if entry.unlocked else WHITE)
+		_text(badge,entry.hint,12,app.MUTED)
+		var status: String=("CONQUISTADA" if entry.unlocked else "EM ANDAMENTO")+" · %d/%d"%[entry.current,entry.goal] if entry.goal>0 else "FORA DESTE CATÁLOGO"
+		_text(badge,status,12,CYAN if entry.unlocked else app.MUTED)
+
+func _credits() -> void:
+	_text(body,"EXTRAS  /  CRÉDITOS",11,CYAN)
+	_heading(body,"Nexus: Ecos do Crepúsculo",32)
+	_text(body,"Universo, elenco, regras e recursos do projeto original preservados na expansão Renascimento. Ilustrações de personagens e cenários produzidas para este jogo com geração de imagem e edição.",16)
+	_text(body,"Vozes sintéticas em português: 96 falas originais para 24 heróis, geradas com Kokoro-82M e kokoro-onnx; não são gravações de atores profissionais. O jogo usa os áudios prontos, sem serviço de síntese durante a partida.",15,app.MUTED)
+	var tabs:=TabContainer.new()
+	tabs.custom_minimum_size.y=300
+	tabs.size_flags_horizontal=SIZE_EXPAND_FILL
+	body.add_child(tabs)
+	var fonts:=""
+	for family in ["SpaceGrotesk","Manrope","Cinzel"]:
+		fonts+=family+" · SIL Open Font License 1.1\n\n"+FileAccess.get_file_as_string("res://assets/%s-LICENSE.txt"%family)+"\n\n"
+	var synthesis:="Kokoro-82M · Apache 2.0\n\n"+FileAccess.get_file_as_string("res://assets/voices/Kokoro-APACHE-2.0.txt")+"\n\nkokoro-onnx · MIT\n\n"+FileAccess.get_file_as_string("res://assets/voices/kokoro-onnx-MIT.txt")
+	for entry in [["Fontes",fonts],["Motor",Engine.get_license_text()],["Síntese",synthesis]]:
+		var text:=RichTextLabel.new()
+		text.name=entry[0]
+		text.text=entry[1]
+		text.selection_enabled=true
+		text.add_theme_font_size_override("normal_font_size",14)
+		tabs.add_child(text)
+	body.add_child(app._button("Voltar aos Extras",open.bind("extras")))
 
 func _team_row(parent: Node) -> void:
 	var row := _row(parent)
@@ -450,13 +502,20 @@ func _story() -> void:
 	var top := _row(body,18,true)
 	_heading(top,"Sua jornada",36)
 	var next_mission: int = app.campaign.next_mission()
-	next_mission_button = app._button("Continuar · " + app.campaign.missions[next_mission].name + "  →" if app.campaign.cleared < app.campaign.missions.size() else "Revisitar o desfecho  →",app._begin_mission.bind(next_mission))
+	var route: Array = app.campaign.main_missions()
+	var cleared: int = app.campaign.main_cleared
+	next_mission_button = app._button("Continuar · " + app.campaign.missions[next_mission].name + "  →" if cleared < route.size() else "Revisitar o desfecho  →",open_preparation.bind(next_mission))
 	next_mission_button.custom_minimum_size = Vector2(285,48)
 	next_mission_button.disabled = not app.campaign.can_play(next_mission)
 	next_mission_button.add_theme_color_override("font_color",CYAN)
 	top.add_child(next_mission_button)
-	_text(body,"%d/%d missões concluídas · Primeira vitória: gema e fragmentos. Novas vitórias na mesma missão: 2 fragmentos." % [app.campaign.cleared,app.campaign.missions.size()],13,app.MUTED)
-	var chapters := _row(body,12,true)
+	_text(body,"%d/%d missões principais concluídas · Primeira vitória: gema e fragmentos. Novas vitórias na mesma missão: 2 fragmentos." % [cleared,route.size()],13,app.MUTED)
+	var chapters := GridContainer.new()
+	chapters.columns = 3 if wide else 1
+	chapters.size_flags_horizontal = SIZE_EXPAND_FILL
+	chapters.add_theme_constant_override("h_separation",12)
+	chapters.add_theme_constant_override("v_separation",12)
+	body.add_child(chapters)
 	for index in range(Campaign.CHAPTERS.size()):
 		var chapter: Dictionary = Campaign.CHAPTERS[index]
 		var unlocked: bool = app.campaign.chapter_available(index)
@@ -473,7 +532,7 @@ func _story() -> void:
 	var overview := _panel(body,Color(chapter.color).darkened(.5))
 	var chapter_row := _row(overview,20,true)
 	var art := TextureRect.new()
-	art.texture = _chapter_art(selected_chapter)
+	art.texture = _chapter_art(chapter.theme)
 	art.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	art.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_COVERED
 	art.custom_minimum_size = Vector2(270,140)
@@ -486,14 +545,75 @@ func _story() -> void:
 	_text(words,chapter.summary,15)
 	_text(words,chapter.lesson,13,app.MUTED)
 	_team_row(body)
-	var missions := _row(body,14,true)
-	for index in app.campaign.chapter_missions(selected_chapter):
+	var primary: Array = app.campaign.chapter_missions(selected_chapter)
+	var return_arc: Array = primary.filter(func(index): return app.campaign.missions[index].get("returnArc",false))
+	_mission_cards(primary.filter(func(index): return not index in return_arc))
+	var finale: int = app.campaign.chapter_final(selected_chapter)
+	if app.campaign.is_complete(finale):
+		var ending := _panel(body,Color(chapter.color).darkened(.4))
+		_heading(ending,"Capítulo concluído" if return_arc.is_empty() else "Desfecho do arco original",25,Color(chapter.color))
+		_text(ending,app.campaign.missions[finale].ending,15)
+	if not return_arc.is_empty():
+		_heading(body,"Contraprovas da audiência",24,Color(chapter.color))
+		_text(body,"Volte após o sexto depoimento para reunir um anexo da ata.",14,app.MUTED)
+		_mission_cards(return_arc)
+	var secondary: Array = app.campaign.chapter_missions(selected_chapter,"side")
+	if not secondary.is_empty():
+		_heading(body,"Missões secundárias",24,Color(chapter.color))
+		_mission_cards(secondary,false)
+	var challenges: Array = app.campaign.chapter_missions(selected_chapter,"challenge")
+	if not challenges.is_empty():
+		_heading(body,"Desafios do capítulo",24,Color(chapter.color))
+		_text(body,"Provas opcionais liberadas após o confronto culminante.",14,app.MUTED)
+		_mission_cards(challenges,false)
+
+func open_preparation(index: int) -> void:
+	if not app.campaign.can_prepare(index): return
+	preparing_mission = index
+	preparation_origin = "heroes" if page == "heroes" else "story"
+	open("preparation")
+
+func _mission_preparation() -> void:
+	var mission: Dictionary = app.campaign.missions[preparing_mission]
+	var intel: Dictionary = Codex.mission_record(mission)
+	var actions := _row(body,12,true)
+	actions.add_child(app._button("← Voltar",open.bind(preparation_origin)))
+	_heading(actions,mission.name,28)
+	preparation_button = app._button("Abrir arena  →",app._begin_mission.bind(preparing_mission))
+	preparation_button.disabled = not app.campaign.can_play(preparing_mission)
+	actions.add_child(preparation_button)
+	_text(body,mission.location,12,CYAN)
+	var briefing := _panel(body)
+	_text(briefing,intel.before,16)
+	if mission.has("dialogue"): _text(briefing,"VOZES NO BRIEFING",11,CYAN)
+	for line in mission.get("dialogue",[]):
+		_text(briefing,"%s · %s" % [app.catalog.hero_by_id[line[0]].name,line[1]],14,VIOLET)
+	_text(briefing,"OBJETIVO  /  " + Campaign.Objectives.brief(mission),15,CYAN)
+	_text(briefing,mission.tip,14,app.MUTED)
+	if mission.has("requiredHero") and mission.requiredHero not in app.campaign.team:
+		_text(briefing,"Inclua %s no trio para iniciar esta jornada." % app.catalog.hero_by_id[mission.requiredHero].name,14,VIOLET)
+	var reward: Dictionary = app.campaign.mission_reward(preparing_mission)
+	var prize := "+2 fragmentos por nova vitória" if app.campaign.is_complete(preparing_mission) else "%s + %d fragmentos" % [reward.name,Campaign.Equipment.first_reward(mission.id)]
+	_text(briefing,"RECOMPENSA  /  " + prize,14,Color(reward.color))
+	_heading(body,"Trio de campanha",22)
+	_team_row(body)
+	if not preparation_button.disabled: preparation_button.grab_focus()
+	else: team_button.grab_focus()
+
+func _mission_cards(indices: Array, main: bool = true) -> void:
+	var missions := GridContainer.new()
+	missions.columns = 3 if wide else 1
+	missions.size_flags_horizontal = SIZE_EXPAND_FILL
+	missions.add_theme_constant_override("h_separation",14)
+	missions.add_theme_constant_override("v_separation",14)
+	body.add_child(missions)
+	for index in indices:
 		var mission: Dictionary = app.campaign.missions[index]
 		var intel: Dictionary = Codex.mission_record(mission)
 		var unlocked: bool = app.campaign.can_play(index)
 		var complete: bool = app.campaign.is_complete(index)
 		var card := _panel(missions,Color("447080") if unlocked else Color("253348"))
-		_text(card,"CONCLUÍDA" if complete else "DISPONÍVEL" if unlocked else "BLOQUEADA · CONCLUA A ANTERIOR",11,CYAN if unlocked else app.MUTED)
+		_text(card,"CONCLUÍDA" if complete else "DISPONÍVEL" if unlocked else "BLOQUEADA",11,CYAN if unlocked else app.MUTED)
 		_heading(card,mission.name,21)
 		_text(card,mission.location,10,app.MUTED)
 		var enemies := _row(card,8)
@@ -505,28 +625,29 @@ func _story() -> void:
 		var reward: Dictionary = app.campaign.mission_reward(index)
 		_text(card,("RECEBIDA  /  " if complete else "PRIMEIRA VITÓRIA  /  ")+reward.name,12,Color(reward.color))
 		_text(card,"Nova vitória: +2 fragmentos" if complete else "+%d fragmentos" % Campaign.Equipment.first_reward(mission.id),12,CYAN)
-		var launch: Button = app._button("Rejogar missão" if complete else "Jogar missão  →" if unlocked else "Missão bloqueada",app._begin_mission.bind(index))
+		var launch: Button = app._button("Preparar repetição" if complete else "Preparar missão  →" if unlocked else "Missão bloqueada",open_preparation.bind(index))
 		launch.disabled = not unlocked
-		launch.tooltip_text = mission.name + "\n" + (mission.tip if unlocked else "Conclua a missão anterior para desbloquear.")
+		var requirements: PackedStringArray = app.campaign.remaining_requirements(index)
+		launch.tooltip_text = mission.name + "\n" + (mission.tip if unlocked else "Conclua: " + ", ".join(requirements))
+		if not unlocked and not requirements.is_empty():
+			_text(card,"FALTA CONCLUIR  /  " + ", ".join(requirements),12,app.MUTED)
 		launch.custom_minimum_size.y = 46
 		card.add_child(launch)
-		mission_buttons.append(launch)
+		if main: mission_buttons.append(launch)
 		mission_slots[index] = launch
 		if complete:
 			var archive := _panel(card,Color("263b4a"))
 			_text(archive,"REGISTRO RECUPERADO",10,CYAN)
 			_text(archive,intel.after,12,app.MUTED)
-	if app.campaign.chapter_cleared(selected_chapter) == app.campaign.chapter_missions(selected_chapter).size():
-		var ending := _panel(body,Color(chapter.color).darkened(.4))
-		_heading(ending,"Capítulo concluído",25,Color(chapter.color))
-		_text(ending,app.campaign.missions[app.campaign.chapter_final(selected_chapter)].ending,15)
 
 func _heroes() -> void:
 	var introduction := VBoxContainer.new()
 	introduction.add_theme_constant_override("separation", 5)
 	body.add_child(introduction)
-	_text(introduction, "ARQUIVO DE RESSONÂNCIA  /  20 HERÓIS", 11, CYAN)
+	_text(introduction, "ARQUIVO DE RESSONÂNCIA  /  %d HERÓIS" % app.catalog.heroes.size(), 11, CYAN)
 	_heading(introduction, "Cada herói, uma razão para lutar.", 30)
+	var acquired: int=app.catalog.heroes.filter(func(hero):return app.campaign.is_complete(app.campaign.journey_index(hero.id))).size()
+	_text(introduction,"%d/%d pactos adquiridos · Cada jornada libera uma técnica pessoal em Evolução." % [acquired,app.catalog.heroes.size()],13,CYAN)
 	_text(introduction, "Afinidade define vantagens. Função define o estilo. Você escolhe livremente os três integrantes da equipe.", 13, app.MUTED)
 	introduction.add_child(app._button("Nível da equipe e maestria →",open.bind("progress")))
 	var split := _row(body, 20, true)
@@ -631,6 +752,23 @@ func _heroes() -> void:
 	hero_lore = _text(story, record.story, 16)
 	_text(story, "MOTIVAÇÃO  /  " + record.calling, 14, tint)
 	_text(story, "NO FAROL  /  " + record.connection, 14, app.MUTED)
+	var index: int = app.campaign.journey_index(selected_hero)
+	if index >= 0:
+		var mission: Dictionary = app.campaign.missions[index]
+		_heading(story,"Jornada pessoal · " + mission.name,21,tint)
+		_text(story,mission.story,14)
+		_text(story,Campaign.Objectives.brief(mission),13,CYAN)
+		_text(story,("Pacto firmado · " if app.campaign.is_complete(index) else "Recompensa do pacto · ") + app.campaign.pact_description(selected_hero),13,tint)
+		var personal: Dictionary=Campaign.AbilityTraining.Pacts.recipes[selected_hero]
+		_text(story,"TÉCNICA DO PACTO  /  "+personal.name,13,CYAN)
+		_text(story,personal.description,12,app.MUTED)
+		if app.campaign.is_complete(index): _text(story,mission.ending,13,app.MUTED)
+		var requirements: PackedStringArray = app.campaign.remaining_requirements(index)
+		if not requirements.is_empty(): _text(story,"Disponível após " + ", ".join(requirements) + ".",12,app.MUTED)
+		if selected_hero not in app.campaign.team: _text(story,"Coloque %s no trio pela preparação. Os outros dois espaços são livres." % selected.name,12,app.MUTED)
+		var launch: Button = app._button("Preparar jornada pessoal  →",open_preparation.bind(index))
+		launch.disabled = not app.campaign.can_prepare(index)
+		story.add_child(launch)
 	var gems := _tab("Engastes")
 	_gem_loadout(gems, true)
 	hero_details.current_tab = clampi(hero_tab, 0, 2)
@@ -653,7 +791,7 @@ func _choose_hero(id: String) -> void:
 	selected_slot = 0
 	selected_training_tab = 0
 	message = ""
-	open(page)
+	_refresh_collection(func(): return hero_buttons[selected_hero] if page == "heroes" else hero_picker)
 
 func _stats_line(values: Dictionary) -> String:
 	return "%d VIDA · %d ATQ · %d DEF · %d EN" % [values.maxHp,values.attack,values.defense,values.energy]
@@ -696,6 +834,12 @@ func _progress() -> void:
 	_heading(character,selected.name.to_upper(),24)
 	_text(character,_stats_line(model.loadout_stats(selected_hero)),13,CYAN)
 	_text(character,"Atributos da próxima missão, incluindo nível, maestria, peças e gemas. Combate livre/PvP usa a referência normalizada.",12,app.MUTED)
+	_heading(character,"Vínculos com o trio",17,CYAN)
+	_text(character,"Três vitórias em dupla liberam +2 EN inicial para cada parceiro quando voltam a lutar juntos.",12,app.MUTED)
+	for partner in model.team:
+		if partner == selected_hero: continue
+		var victories: int = Campaign.Bonds.wins(model.bonds,selected_hero,partner)
+		_text(character,"%s · %d/%d vitórias%s" % [app.catalog.hero_by_id[partner].name,victories,Campaign.Bonds.REQUIRED_VICTORIES," · vínculo ativo" if victories >= Campaign.Bonds.REQUIRED_VICTORIES and selected_hero in model.team else ""],12,CYAN)
 	var training := _panel(layout,Color("524774"))
 	var points: int = model.mastery_experience(selected_hero)
 	var rank: int = model.mastery_rank(selected_hero)
@@ -727,7 +871,15 @@ func _progress() -> void:
 		picker.add_item(recipe.name + (" · Maestria %s necessária" % milestone if rank < index else " · liberada"))
 		picker.set_item_metadata(1,recipe.id)
 		picker.set_item_disabled(1,rank < index)
-		picker.select(0 if model.ability_choices.get(selected_hero,{}).get(action_id,"") == "" else 1)
+		var pact: Dictionary=Campaign.AbilityTraining.Pacts.recipe(selected_hero,action_id)
+		if not pact.is_empty():
+			var acquired: bool=Campaign.AbilityTraining.available(selected_hero,action_id,"pact",points,model.completed)
+			picker.add_item(pact.name+(" · pacto adquirido" if acquired else " · conclua a jornada pessoal"))
+			picker.set_item_metadata(2,"pact")
+			picker.set_item_disabled(2,not acquired)
+		var chosen: String=model.ability_choices.get(selected_hero,{}).get(action_id,"")
+		for option in range(picker.item_count):
+			if picker.get_item_metadata(option)==chosen:picker.select(option)
 		card.add_child(picker)
 		training_pickers[action_id] = picker
 		training_preview_labels[action_id] = _text(card,"",12,app.MUTED)
@@ -750,15 +902,18 @@ func _preview_training(action_id: String) -> void:
 	var energy: String = "%d EN" % action.cost
 	if action_id == "basic": energy += " · recupera %d EN" % int(action.get("energyGain",app.combat.rules.energy.basicGain))
 	training_preview_labels[action_id].text = "PRÉVIA BASE · " + action.name + " · " + energy + "\n" + action.description
-	training_apply_buttons[action_id].disabled = app.campaign.ability_choices.get(selected_hero,{}).get(action_id,"") == choice or choice != "" and not Campaign.AbilityTraining.unlocked(action_id,app.campaign.mastery_experience(selected_hero))
+	training_apply_buttons[action_id].disabled = app.campaign.ability_choices.get(selected_hero,{}).get(action_id,"") == choice or not Campaign.AbilityTraining.available(selected_hero,action_id,choice,app.campaign.mastery_experience(selected_hero),app.campaign.completed)
 
 func _apply_training(action_id: String) -> void:
 	var picker: OptionButton = training_pickers[action_id]
-	if app.campaign.set_ability(selected_hero,action_id,picker.get_item_metadata(picker.selected)):
+	var choice: String = picker.get_item_metadata(picker.selected)
+	if app.campaign.set_ability(selected_hero,action_id,choice):
 		message = "Habilidade preparada. A próxima missão usará esta variante; nenhuma moeda foi consumida."
-	var position := scroll.scroll_vertical
-	open("progress")
-	scroll.set_deferred("scroll_vertical",position)
+	_refresh_collection(func():
+		var renewed: OptionButton = training_pickers[action_id]
+		_select_option(renewed,choice)
+		_preview_training(action_id)
+		return renewed if training_apply_buttons[action_id].disabled else training_apply_buttons[action_id])
 
 func _equipment() -> void:
 	var model = app.campaign
@@ -863,19 +1018,54 @@ func _preview_exchange(slot: int) -> void:
 	gear_exchange_labels[slot].text = preview
 	gear_transfer_buttons[slot].disabled = model.piece(target,slot) == model.piece(selected_hero,slot)
 
+func _select_option(picker: OptionButton, choice: String) -> void:
+	for index in range(picker.item_count):
+		if picker.get_item_metadata(index) == choice:
+			picker.select(index)
+			return
+
+func _refresh_collection(focus_target: Callable) -> void:
+	var position := scroll.scroll_vertical
+	open(page)
+	_restore_collection_focus(focus_target.call(),position)
+
+func _restore_collection_focus(target: Variant, position: int) -> void:
+	# Containers finish their minimum-size passes before focus can scroll reliably.
+	await get_tree().process_frame
+	await get_tree().process_frame
+	# A later navigation can discard this page before the deferred layout settles.
+	if not is_instance_valid(target) or not body.is_ancestor_of(target) or not target.is_visible_in_tree(): return
+	if get_viewport().gui_get_focus_owner() != null: return
+	var restored_rect: Rect2 = target.get_global_rect()
+	restored_rect.position.y -= position-scroll.scroll_vertical
+	var already_visible: bool = scroll.get_global_rect().encloses(restored_rect)
+	scroll.scroll_vertical = position
+	target.grab_focus()
+	if already_visible: scroll.set_deferred("scroll_vertical",position)
+
 func _upgrade_piece(slot: int) -> void:
 	if app.campaign.upgrade_piece(selected_hero,slot): message = "Peça melhorada. A gema foi mantida; atributos valem na próxima missão."
-	open(page)
+	_refresh_collection(func(): return gear_variant_pickers[slot] if gear_upgrade_buttons[slot].disabled else gear_upgrade_buttons[slot])
 
 func _change_piece(slot: int) -> void:
 	var picker := gear_variant_pickers[slot]
-	if app.campaign.change_piece(selected_hero,slot,picker.get_item_metadata(picker.selected)): message = "Especialização aplicada. A gema voltou ao inventário."
-	open(page)
+	var variant: String = picker.get_item_metadata(picker.selected)
+	if app.campaign.change_piece(selected_hero,slot,variant): message = "Especialização aplicada. A gema voltou ao inventário."
+	_refresh_collection(func():
+		var renewed: OptionButton = gear_variant_pickers[slot]
+		_select_option(renewed,variant)
+		_preview_piece(slot)
+		return renewed if gear_apply_buttons[slot].disabled else gear_apply_buttons[slot])
 
 func _exchange_piece(slot: int) -> void:
 	var picker := gear_transfer_pickers[slot]
-	if app.campaign.transfer_piece(selected_hero,picker.get_item_metadata(picker.selected),slot): message = "Peças trocadas com seus patamares. Gemas devolvidas ao inventário."
-	open(page)
+	var recipient: String = picker.get_item_metadata(picker.selected)
+	if app.campaign.transfer_piece(selected_hero,recipient,slot): message = "Peças trocadas com seus patamares. Gemas devolvidas ao inventário."
+	_refresh_collection(func():
+		var renewed: OptionButton = gear_transfer_pickers[slot]
+		_select_option(renewed,recipient)
+		_preview_exchange(slot)
+		return renewed if gear_transfer_buttons[slot].disabled else gear_transfer_buttons[slot])
 
 func _gems() -> void:
 	var hero: Dictionary = app.catalog.hero_by_id[selected_hero]

@@ -1,385 +1,4170 @@
 {
   "astra": {
-    "scale": 0.431034,
+    "file": "astra-renascimento-v1.png",
+    "scale": 0.6134969325153374,
     "frames": [
       {
         "rect": [
-          135,
-          32,
-          436,
-          464
+          0,
+          0,
+          443,
+          443
         ],
         "foot": [
-          314.035,
-          461
-        ],
-        "exclude": []
-      },
-      {
-        "rect": [
-          912,
-          54,
-          466,
-          431
-        ],
-        "foot": [
-          326.004,
-          428
-        ],
-        "exclude": []
-      },
-      {
-        "rect": [
-          112,
-          593,
-          709,
-          392
-        ],
-        "foot": [
-          326.093,
+          265.5,
           389
         ],
         "exclude": []
       },
       {
         "rect": [
-          933,
-          492,
-          467,
-          515
+          443,
+          0,
+          444,
+          443
         ],
         "foot": [
-          311.586,
-          512
-        ],
-        "exclude": []
-      }
-    ]
-  },
-  "auren": {
-    "scale": 0.392157,
-    "frames": [
-      {
-        "rect": [
-          176,
-          8,
-          338,
-          510
-        ],
-        "foot": [
-          112.567,
-          507
+          268,
+          389
         ],
         "exclude": []
       },
       {
         "rect": [
-          825,
-          44,
-          564,
-          468
+          887,
+          0,
+          443,
+          443
         ],
         "foot": [
-          183.332,
-          465
+          268,
+          389
         ],
         "exclude": []
       },
       {
         "rect": [
-          22,
-          634,
-          877,
-          346
+          1330,
+          0,
+          444,
+          443
         ],
         "foot": [
-          156.403,
-          343
+          259,
+          390
         ],
-        "exclude": []
-      },
-      {
-        "rect": [
-          972,
-          492,
-          551,
-          522
-        ],
-        "foot": [
-          151.194,
-          519
-        ],
-        "exclude": [
-          [
-            987,
-            490,
-            44,
-            21
-          ]
+        "exclude": [],
+        "projectileOrigin": [
+          363,
+          112
         ]
-      }
-    ]
-  },
-  "axion": {
-    "scale": 0.422833,
-    "frames": [
-      {
-        "rect": [
-          152,
-          28,
-          478,
-          473
-        ],
-        "foot": [
-          208.157,
-          470
-        ],
-        "exclude": []
       },
       {
         "rect": [
-          868,
-          11,
-          497,
-          489
+          0,
+          443,
+          443,
+          444
         ],
         "foot": [
-          144.521,
-          486
-        ],
-        "exclude": []
-      },
-      {
-        "rect": [
-          86,
-          603,
-          805,
-          389
-        ],
-        "foot": [
-          134.186,
+          273,
           386
         ],
         "exclude": []
       },
       {
         "rect": [
-          937,
-          495,
-          482,
-          518
+          443,
+          443,
+          444,
+          444
         ],
         "foot": [
-          184.074,
-          515
+          287,
+          387
         ],
-        "exclude": [
-          [
-            995,
-            493,
-            34,
-            6
-          ]
-        ]
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          253,
+          383
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          280,
+          379
+        ],
+        "exclude": []
       }
-    ]
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.44,
+        "travel": 0.32,
+        "hold": 0.14,
+        "recover": 0.78
+      },
+      "skill": {
+        "charge": 0.68,
+        "travel": 0.36,
+        "hold": 0.18,
+        "recover": 0.92
+      },
+      "ultimate": {
+        "charge": 1.1,
+        "travel": 0.44,
+        "hold": 0.24,
+        "recover": 1.18
+      }
+    }
   },
-  "sylva": {
-    "scale": 0.392927,
+  "auren": {
+    "file": "auren-renascimento-v1.png",
+    "scale": 0.547945205479452,
     "frames": [
       {
         "rect": [
-          184,
-          7,
-          347,
-          509
+          0,
+          0,
+          443,
+          443
         ],
         "foot": [
-          252.735,
-          506
+          238.5,
+          383
         ],
         "exclude": []
       },
       {
         "rect": [
-          857,
-          40,
-          526,
-          452
+          443,
+          0,
+          444,
+          443
         ],
         "foot": [
-          199.864,
-          449
+          188.5,
+          383
         ],
         "exclude": []
       },
       {
         "rect": [
-          41,
-          609,
-          750,
-          402
+          887,
+          0,
+          443,
+          443
         ],
         "foot": [
-          154.869,
+          136.5,
+          383
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          167,
+          365
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          404,
+          177
+        ]
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          145.5,
+          378
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          234,
+          382
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          212,
+          383
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          165.5,
+          375
+        ],
+        "exclude": []
+      }
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.42,
+        "travel": 0.3,
+        "hold": 0.14,
+        "recover": 0.74
+      },
+      "skill": {
+        "charge": 0.62,
+        "travel": 0.34,
+        "hold": 0.18,
+        "recover": 0.9
+      },
+      "ultimate": {
+        "charge": 1.04,
+        "travel": 0.42,
+        "hold": 0.24,
+        "recover": 1.14
+      }
+    }
+  },
+  "axion": {
+    "file": "axion-renascimento-v1.png",
+    "scale": 0.6006006006006006,
+    "frames": [
+      {
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          249,
+          405
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          225,
+          405
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          222.5,
+          405
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          212,
+          405
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          379,
+          194
+        ]
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          233,
+          369
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          238.5,
+          369
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          227.5,
+          369
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          247,
+          366
+        ],
+        "exclude": []
+      }
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.42,
+        "travel": 0.3,
+        "hold": 0.14,
+        "recover": 0.72
+      },
+      "skill": {
+        "charge": 0.56,
+        "travel": 0.34,
+        "hold": 0.16,
+        "recover": 0.88
+      },
+      "ultimate": {
+        "charge": 0.96,
+        "travel": 0.42,
+        "hold": 0.22,
+        "recover": 1.2
+      }
+    }
+  },
+  "sylva": {
+    "file": "sylva-renascimento-v2.png",
+    "scale": 0.5154639175257731,
+    "frames": [
+      {
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          229.5,
+          396
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          213.5,
+          396
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          206.5,
+          394
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          208,
+          394
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          365,
+          137
+        ]
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          210.5,
           399
         ],
         "exclude": []
       },
       {
         "rect": [
-          896,
-          494,
-          464,
-          527
+          443,
+          443,
+          444,
+          444
         ],
         "foot": [
-          305.431,
-          524
+          219,
+          402
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          213.5,
+          404
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          290,
+          72
+        ]
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          240,
+          395
         ],
         "exclude": []
       }
-    ]
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.42,
+        "travel": 0.32,
+        "hold": 0.14,
+        "recover": 0.76
+      },
+      "skill": {
+        "charge": 0.72,
+        "travel": 0.36,
+        "hold": 0.18,
+        "recover": 0.92
+      },
+      "ultimate": {
+        "charge": 1.12,
+        "travel": 0.44,
+        "hold": 0.24,
+        "recover": 1.18
+      }
+    }
   },
   "vesper": {
-    "scale": 0.392157,
+    "file": "vesper-renascimento-v1.png",
+    "scale": 0.6578947368421053,
     "frames": [
       {
         "rect": [
-          206,
-          9,
-          383,
-          510
+          0,
+          0,
+          443,
+          443
         ],
         "foot": [
-          160.899,
-          507
+          229,
+          385
         ],
         "exclude": []
       },
       {
         "rect": [
-          874,
-          28,
-          528,
-          488
+          443,
+          0,
+          444,
+          443
         ],
         "foot": [
-          143.136,
-          485
-        ],
-        "exclude": [
-          [
-            1262,
-            495,
-            44,
-            23
-          ],
-          [
-            1200,
-            511,
-            57,
-            7
-          ]
-        ]
-      },
-      {
-        "rect": [
-          42,
-          650,
-          876,
-          337
-        ],
-        "foot": [
-          241.411,
-          334
+          258,
+          377
         ],
         "exclude": []
       },
       {
         "rect": [
-          953,
-          494,
-          538,
-          525
+          887,
+          0,
+          443,
+          443
         ],
         "foot": [
-          180.637,
-          522
+          227.5,
+          376
         ],
-        "exclude": [
-          [
-            996,
-            492,
-            41,
-            23
-          ]
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          193,
+          375
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          365,
+          258
         ]
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          222.5,
+          344
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.5,
+          362
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          203.5,
+          353
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          226,
+          352
+        ],
+        "exclude": []
       }
-    ]
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.44,
+        "travel": 0.32,
+        "hold": 0.14,
+        "recover": 0.78
+      },
+      "skill": {
+        "charge": 0.62,
+        "travel": 0.34,
+        "hold": 0.18,
+        "recover": 0.94
+      },
+      "ultimate": {
+        "charge": 1.1,
+        "travel": 0.44,
+        "hold": 0.24,
+        "recover": 1.18
+      }
+    }
   },
   "veyra": {
-    "scale": 0.422833,
+    "file": "veyra-renascimento-v1.png",
+    "scale": 0.5405405405405406,
     "frames": [
       {
         "rect": [
-          139,
-          35,
-          547,
-          473
+          0,
+          0,
+          443,
+          443
         ],
         "foot": [
-          299.271,
-          470
+          258,
+          403
         ],
         "exclude": []
       },
       {
         "rect": [
-          808,
-          20,
-          693,
-          488
+          443,
+          0,
+          444,
+          443
         ],
         "foot": [
-          178.338,
-          485
+          241.5,
+          401
         ],
-        "exclude": [
-          [
-            1395,
-            492,
-            78,
-            18
-          ]
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          227.5,
+          402
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          167.5,
+          401
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          418,
+          190
         ]
       },
       {
         "rect": [
-          47,
-          597,
-          859,
-          387
+          0,
+          443,
+          443,
+          444
         ],
         "foot": [
-          144.401,
-          384
+          272.5,
+          396
         ],
         "exclude": []
       },
       {
         "rect": [
-          1024,
-          491,
-          476,
-          520
+          443,
+          443,
+          444,
+          444
         ],
         "foot": [
-          187.281,
-          517
+          260,
+          402
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          217,
+          400
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          228.5,
+          394
         ],
         "exclude": []
       }
-    ]
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.34,
+        "travel": 0.26,
+        "hold": 0.12,
+        "recover": 0.68
+      },
+      "skill": {
+        "charge": 0.54,
+        "travel": 0.3,
+        "hold": 0.16,
+        "recover": 0.82
+      },
+      "ultimate": {
+        "charge": 0.96,
+        "travel": 0.4,
+        "hold": 0.22,
+        "recover": 1.1
+      }
+    }
+  },
+  "rhazen": {
+    "file": "rhazen-renascimento-v1.png",
+    "scale": 0.6097560975609756,
+    "frames": [
+      {
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          403
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          402
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          402
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          401
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          380
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          380
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          380
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          378
+        ],
+        "exclude": []
+      },
+      {
+        "file": "rhazen-supreme-renascimento-v1.png",
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          385
+        ],
+        "scale": 0.7220216606498195,
+        "exclude": []
+      },
+      {
+        "file": "rhazen-supreme-renascimento-v1.png",
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          383
+        ],
+        "scale": 0.7220216606498195,
+        "exclude": []
+      },
+      {
+        "file": "rhazen-supreme-renascimento-v1.png",
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          384
+        ],
+        "scale": 0.7220216606498195,
+        "exclude": []
+      },
+      {
+        "file": "rhazen-supreme-renascimento-v1.png",
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          385
+        ],
+        "scale": 0.7220216606498195,
+        "exclude": []
+      },
+      {
+        "file": "rhazen-supreme-renascimento-v1.png",
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          348
+        ],
+        "scale": 0.7220216606498195,
+        "exclude": []
+      },
+      {
+        "file": "rhazen-supreme-renascimento-v1.png",
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          347
+        ],
+        "scale": 0.7220216606498195,
+        "exclude": []
+      },
+      {
+        "file": "rhazen-supreme-renascimento-v1.png",
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          348
+        ],
+        "scale": 0.7220216606498195,
+        "exclude": []
+      },
+      {
+        "file": "rhazen-supreme-renascimento-v1.png",
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          348
+        ],
+        "scale": 0.7220216606498195,
+        "exclude": []
+      }
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.54,
+        "travel": 0.3,
+        "hold": 0.18,
+        "recover": 0.86
+      },
+      "skill": {
+        "charge": 0.54,
+        "travel": 0.28,
+        "hold": 0.18,
+        "recover": 0.8
+      },
+      "ultimate": {
+        "charge": 1.04,
+        "travel": 0.46,
+        "hold": 0.28,
+        "recover": 1.1
+      }
+    },
+    "tierPhases": {
+      "ultimate": {
+        "charge": [
+          8,
+          9,
+          10
+        ],
+        "travel": [
+          11
+        ],
+        "impact": [
+          12
+        ],
+        "recover": [
+          13,
+          14,
+          15,
+          0
+        ]
+      }
+    }
+  },
+  "cindra": {
+    "file": "cindra-renascimento-v1.png",
+    "scale": 0.6349206349206349,
+    "frames": [
+      {
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          393
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          393
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          393
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          394
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          376
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          376
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          375
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          372
+        ],
+        "exclude": []
+      },
+      {
+        "file": "cindra-supreme-renascimento-v1.png",
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          394
+        ],
+        "scale": 0.7272727272727273,
+        "exclude": []
+      },
+      {
+        "file": "cindra-supreme-renascimento-v1.png",
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          395
+        ],
+        "scale": 0.7272727272727273,
+        "exclude": []
+      },
+      {
+        "file": "cindra-supreme-renascimento-v1.png",
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          394
+        ],
+        "scale": 0.7272727272727273,
+        "exclude": []
+      },
+      {
+        "file": "cindra-supreme-renascimento-v1.png",
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          394
+        ],
+        "scale": 0.7272727272727273,
+        "exclude": [],
+        "projectileOrigin": [
+          317,
+          132
+        ]
+      },
+      {
+        "file": "cindra-supreme-renascimento-v1.png",
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          374
+        ],
+        "scale": 0.7272727272727273,
+        "exclude": []
+      },
+      {
+        "file": "cindra-supreme-renascimento-v1.png",
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          374
+        ],
+        "scale": 0.7272727272727273,
+        "exclude": []
+      },
+      {
+        "file": "cindra-supreme-renascimento-v1.png",
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          375
+        ],
+        "scale": 0.7272727272727273,
+        "exclude": []
+      },
+      {
+        "file": "cindra-supreme-renascimento-v1.png",
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          375
+        ],
+        "scale": 0.7272727272727273,
+        "exclude": []
+      }
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.4,
+        "travel": 0.32,
+        "hold": 0.1,
+        "recover": 0.58
+      },
+      "skill": {
+        "charge": 0.6,
+        "travel": 0.38,
+        "hold": 0.16,
+        "recover": 0.8
+      },
+      "ultimate": {
+        "charge": 0.92,
+        "travel": 0.5,
+        "hold": 0.22,
+        "recover": 1.05
+      }
+    },
+    "tierPhases": {
+      "ultimate": {
+        "charge": [
+          8,
+          9,
+          10
+        ],
+        "travel": [
+          11
+        ],
+        "impact": [
+          12
+        ],
+        "recover": [
+          13,
+          14,
+          15,
+          0
+        ]
+      }
+    }
+  },
+  "oren": {
+    "file": "oren-renascimento-v1.png",
+    "scale": 0.7017543859649122,
+    "frames": [
+      {
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          375
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          375
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          375
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          375
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          352
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          351
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          350
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          352
+        ],
+        "exclude": []
+      },
+      {
+        "file": "oren-supreme-renascimento-v1.png",
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          379
+        ],
+        "scale": 0.7142857142857143,
+        "exclude": []
+      },
+      {
+        "file": "oren-supreme-renascimento-v1.png",
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          379
+        ],
+        "scale": 0.7142857142857143,
+        "exclude": []
+      },
+      {
+        "file": "oren-supreme-renascimento-v1.png",
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          378
+        ],
+        "scale": 0.7142857142857143,
+        "exclude": []
+      },
+      {
+        "file": "oren-supreme-renascimento-v1.png",
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          378
+        ],
+        "scale": 0.7142857142857143,
+        "exclude": []
+      },
+      {
+        "file": "oren-supreme-renascimento-v1.png",
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          358
+        ],
+        "scale": 0.7142857142857143,
+        "exclude": []
+      },
+      {
+        "file": "oren-supreme-renascimento-v1.png",
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          358
+        ],
+        "scale": 0.7142857142857143,
+        "exclude": []
+      },
+      {
+        "file": "oren-supreme-renascimento-v1.png",
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          358
+        ],
+        "scale": 0.7142857142857143,
+        "exclude": []
+      },
+      {
+        "file": "oren-supreme-renascimento-v1.png",
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          358
+        ],
+        "scale": 0.7142857142857143,
+        "exclude": []
+      }
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.48,
+        "travel": 0.32,
+        "hold": 0.18,
+        "recover": 0.82
+      },
+      "skill": {
+        "charge": 0.58,
+        "travel": 0.28,
+        "hold": 0.18,
+        "recover": 0.82
+      },
+      "ultimate": {
+        "charge": 0.94,
+        "travel": 0.4,
+        "hold": 0.24,
+        "recover": 1.08
+      }
+    },
+    "tierPhases": {
+      "ultimate": {
+        "charge": [
+          8,
+          9,
+          10
+        ],
+        "travel": [
+          11
+        ],
+        "impact": [
+          12
+        ],
+        "recover": [
+          13,
+          14,
+          15,
+          0
+        ],
+        "friendly": true
+      }
+    }
+  },
+  "nima": {
+    "file": "nima-renascimento-v1.png",
+    "scale": 0.5970149253731343,
+    "frames": [
+      {
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          401
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          401
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          401
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          401
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          388
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          388
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          386
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          386
+        ],
+        "exclude": []
+      }
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.34,
+        "travel": 0.28,
+        "hold": 0.1,
+        "recover": 0.56
+      },
+      "skill": {
+        "charge": 0.56,
+        "travel": 0.34,
+        "hold": 0.16,
+        "recover": 0.78
+      },
+      "ultimate": {
+        "charge": 0.9,
+        "travel": 0.48,
+        "hold": 0.22,
+        "recover": 1.0
+      }
+    }
+  },
+  "kira": {
+    "file": "kira-renascimento-v1.png",
+    "scale": 0.5208333333333334,
+    "frames": [
+      {
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          412
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          411
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          410
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          411
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          388,
+          112
+        ]
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          409
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          410
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          405
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          405
+        ],
+        "exclude": []
+      }
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.3,
+        "travel": 0.2,
+        "hold": 0.1,
+        "recover": 0.6
+      },
+      "skill": {
+        "charge": 0.62,
+        "travel": 0.24,
+        "hold": 0.16,
+        "recover": 0.82
+      },
+      "ultimate": {
+        "charge": 1.1,
+        "travel": 0.32,
+        "hold": 0.24,
+        "recover": 1.1
+      }
+    }
+  },
+  "vektor": {
+    "file": "vektor-renascimento-v1.png",
+    "scale": 0.5390835579514824,
+    "frames": [
+      {
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          409
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          409
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          409
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          409
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          352,
+          196
+        ]
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          409
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          410
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          410
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          342,
+          196
+        ]
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          407
+        ],
+        "exclude": []
+      }
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.42,
+        "travel": 0.34,
+        "hold": 0.12,
+        "recover": 0.72
+      },
+      "skill": {
+        "charge": 0.58,
+        "travel": 0.32,
+        "hold": 0.16,
+        "recover": 0.82
+      },
+      "ultimate": {
+        "charge": 1.0,
+        "travel": 0.42,
+        "hold": 0.24,
+        "recover": 1.1
+      }
+    }
+  },
+  "elun": {
+    "file": "elun-renascimento-v1.png",
+    "scale": 0.5970149253731343,
+    "frames": [
+      {
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          244,
+          393
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          216,
+          393
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          219.5,
+          388
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          203.5,
+          390
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          412,
+          324
+        ]
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          247,
+          387
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          234.5,
+          386
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          216,
+          386
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          245,
+          375
+        ],
+        "exclude": []
+      }
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.4,
+        "travel": 0.3,
+        "hold": 0.14,
+        "recover": 0.76
+      },
+      "skill": {
+        "charge": 0.58,
+        "travel": 0.32,
+        "hold": 0.16,
+        "recover": 0.9
+      },
+      "ultimate": {
+        "charge": 1.0,
+        "travel": 0.42,
+        "hold": 0.22,
+        "recover": 1.12
+      }
+    }
+  },
+  "saira": {
+    "file": "saira-renascimento-v1.png",
+    "scale": 0.5494505494505495,
+    "frames": [
+      {
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          243.5,
+          396
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          234,
+          397
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          244.5,
+          396
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          238,
+          396
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          364,
+          100
+        ]
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          244.5,
+          395
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          231.5,
+          396
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          226,
+          396
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          294,
+          74
+        ]
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          252,
+          392
+        ],
+        "exclude": []
+      }
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.42,
+        "travel": 0.34,
+        "hold": 0.14,
+        "recover": 0.78
+      },
+      "skill": {
+        "charge": 0.7,
+        "travel": 0.36,
+        "hold": 0.18,
+        "recover": 0.92
+      },
+      "ultimate": {
+        "charge": 1.06,
+        "travel": 0.44,
+        "hold": 0.24,
+        "recover": 1.15
+      }
+    }
+  },
+  "torv": {
+    "file": "torv-renascimento-v1.png",
+    "scale": 0.5988023952095808,
+    "frames": [
+      {
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          216,
+          388
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          214,
+          385
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          216,
+          385
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          235,
+          377
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          365,
+          151
+        ]
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          228,
+          378
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          218,
+          378
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          223,
+          378
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          226,
+          362
+        ],
+        "exclude": []
+      }
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.44,
+        "travel": 0.3,
+        "hold": 0.16,
+        "recover": 0.78
+      },
+      "skill": {
+        "charge": 0.66,
+        "travel": 0.34,
+        "hold": 0.18,
+        "recover": 0.96
+      },
+      "ultimate": {
+        "charge": 1.06,
+        "travel": 0.42,
+        "hold": 0.24,
+        "recover": 1.16
+      }
+    }
+  },
+  "brin": {
+    "file": "brin-renascimento-v1.png",
+    "scale": 0.6514657980456026,
+    "frames": [
+      {
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          232,
+          372
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          244,
+          372
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          226,
+          372
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          217,
+          371
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          337,
+          155
+        ]
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          240,
+          357
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          240,
+          357
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          236,
+          357
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          241,
+          355
+        ],
+        "exclude": []
+      }
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.42,
+        "travel": 0.3,
+        "hold": 0.14,
+        "recover": 0.74
+      },
+      "skill": {
+        "charge": 0.62,
+        "travel": 0.34,
+        "hold": 0.18,
+        "recover": 0.9
+      },
+      "ultimate": {
+        "charge": 1.04,
+        "travel": 0.42,
+        "hold": 0.24,
+        "recover": 1.14
+      }
+    }
+  },
+  "bast": {
+    "file": "bast-renascimento-v1.png",
+    "scale": 0.78125,
+    "frames": [
+      {
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          244,
+          338
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          239,
+          338
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          220,
+          338
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          226,
+          337
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          324,
+          170
+        ]
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          229,
+          326
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          236,
+          326
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221,
+          326
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222,
+          322
+        ],
+        "exclude": []
+      }
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.44,
+        "travel": 0.3,
+        "hold": 0.16,
+        "recover": 0.78
+      },
+      "skill": {
+        "charge": 0.66,
+        "travel": 0.34,
+        "hold": 0.18,
+        "recover": 0.96
+      },
+      "ultimate": {
+        "charge": 1.06,
+        "travel": 0.42,
+        "hold": 0.24,
+        "recover": 1.16
+      }
+    }
+  },
+  "ivo": {
+    "file": "ivo-renascimento-v1.png",
+    "scale": 0.6622516556291391,
+    "frames": [
+      {
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          240,
+          377
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          239,
+          374
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          222,
+          373
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          229,
+          363
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          360,
+          174
+        ]
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          230,
+          358
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          236,
+          360
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          229,
+          361
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          229,
+          347
+        ],
+        "exclude": []
+      }
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.42,
+        "travel": 0.3,
+        "hold": 0.14,
+        "recover": 0.74
+      },
+      "skill": {
+        "charge": 0.62,
+        "travel": 0.34,
+        "hold": 0.18,
+        "recover": 0.9
+      },
+      "ultimate": {
+        "charge": 1.04,
+        "travel": 0.42,
+        "hold": 0.24,
+        "recover": 1.14
+      }
+    }
+  },
+  "noct": {
+    "file": "noct-renascimento-v1.png",
+    "scale": 0.6968641114982579,
+    "frames": [
+      {
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          250,
+          378
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          235,
+          369
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          228,
+          369
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          215,
+          367
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          378,
+          183
+        ]
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          260,
+          355
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          245,
+          355
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          235,
+          356
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          230,
+          348
+        ],
+        "exclude": []
+      }
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.42,
+        "travel": 0.3,
+        "hold": 0.14,
+        "recover": 0.74
+      },
+      "skill": {
+        "charge": 0.62,
+        "travel": 0.34,
+        "hold": 0.18,
+        "recover": 0.9
+      },
+      "ultimate": {
+        "charge": 1.04,
+        "travel": 0.42,
+        "hold": 0.24,
+        "recover": 1.14
+      }
+    }
+  },
+  "maura": {
+    "file": "maura-renascimento-v1.png",
+    "scale": 0.6872852233676976,
+    "frames": [
+      {
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          245,
+          383
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          245,
+          382
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          242,
+          382
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          235,
+          378
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          374,
+          171
+        ]
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          242,
+          368
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          248,
+          368
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          244,
+          369
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          250,
+          367
+        ],
+        "exclude": []
+      }
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.42,
+        "travel": 0.3,
+        "hold": 0.14,
+        "recover": 0.74
+      },
+      "skill": {
+        "charge": 0.62,
+        "travel": 0.34,
+        "hold": 0.18,
+        "recover": 0.9
+      },
+      "ultimate": {
+        "charge": 1.04,
+        "travel": 0.42,
+        "hold": 0.24,
+        "recover": 1.14
+      }
+    }
+  },
+  "riven": {
+    "file": "riven-renascimento-v1.png",
+    "scale": 0.6968641114982579,
+    "frames": [
+      {
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          255,
+          378
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          245,
+          377
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          236,
+          389
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          230,
+          378
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          380,
+          222
+        ]
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          225,
+          365
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          245,
+          367
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          240,
+          367
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          240,
+          362
+        ],
+        "exclude": []
+      }
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.42,
+        "travel": 0.3,
+        "hold": 0.14,
+        "recover": 0.74
+      },
+      "skill": {
+        "charge": 0.62,
+        "travel": 0.34,
+        "hold": 0.18,
+        "recover": 0.9
+      },
+      "ultimate": {
+        "charge": 1.04,
+        "travel": 0.42,
+        "hold": 0.24,
+        "recover": 1.14
+      }
+    }
+  },
+  "elyra": {
+    "file": "elyra-renascimento-v1.png",
+    "scale": 0.7220216606498195,
+    "frames": [
+      {
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          244,
+          363
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          250,
+          361
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          243,
+          358
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          245,
+          360
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          330,
+          138
+        ]
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          240,
+          349
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          248,
+          350
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          244,
+          349
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          247,
+          345
+        ],
+        "exclude": []
+      }
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.42,
+        "travel": 0.3,
+        "hold": 0.14,
+        "recover": 0.74
+      },
+      "skill": {
+        "charge": 0.62,
+        "travel": 0.34,
+        "hold": 0.18,
+        "recover": 0.9
+      },
+      "ultimate": {
+        "charge": 1.04,
+        "travel": 0.42,
+        "hold": 0.24,
+        "recover": 1.14
+      }
+    }
+  },
+  "solen": {
+    "file": "solen-renascimento-v1.png",
+    "scale": 0.6472491909385113,
+    "frames": [
+      {
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          236,
+          379
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          240,
+          377
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          232,
+          379
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          224,
+          375
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          350,
+          151
+        ]
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          233,
+          360
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          240,
+          360
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          238,
+          360
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          230,
+          347
+        ],
+        "exclude": []
+      }
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.42,
+        "travel": 0.3,
+        "hold": 0.14,
+        "recover": 0.74
+      },
+      "skill": {
+        "charge": 0.62,
+        "travel": 0.34,
+        "hold": 0.18,
+        "recover": 0.9
+      },
+      "ultimate": {
+        "charge": 1.04,
+        "travel": 0.42,
+        "hold": 0.24,
+        "recover": 1.14
+      }
+    }
+  },
+  "zaya": {
+    "file": "zaya-renascimento-v1.png",
+    "scale": 0.7272727272727273,
+    "frames": [
+      {
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          242,
+          371
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          238,
+          372
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          236,
+          370
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          236,
+          374
+        ],
+        "exclude": [],
+        "projectileOrigin": [
+          349,
+          175
+        ]
+      },
+      {
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          236,
+          365
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          240,
+          366
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          240,
+          369
+        ],
+        "exclude": []
+      },
+      {
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          245,
+          356
+        ],
+        "exclude": []
+      }
+    ],
+    "phases": {
+      "charge": [
+        1,
+        2
+      ],
+      "travel": [
+        3
+      ],
+      "impact": [
+        4
+      ],
+      "recover": [
+        5,
+        0
+      ],
+      "support": [
+        6
+      ],
+      "defeat": [
+        7
+      ]
+    },
+    "timings": {
+      "basic": {
+        "charge": 0.42,
+        "travel": 0.3,
+        "hold": 0.14,
+        "recover": 0.74
+      },
+      "skill": {
+        "charge": 0.62,
+        "travel": 0.34,
+        "hold": 0.18,
+        "recover": 0.9
+      },
+      "ultimate": {
+        "charge": 1.04,
+        "travel": 0.42,
+        "hold": 0.24,
+        "recover": 1.14
+      }
+    }
   }
 }

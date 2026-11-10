@@ -40,7 +40,7 @@ func _run() -> void:
 	check(story.mastery_rank("veyra") == 1 and story.mastery_rank("axion") == 1, "First successful participation unlocks each hero's first mastery milestone")
 	story.claim_victory(victory)
 	check(story.team_experience() == 500 and story.mastery_experience("veyra") == 10, "Refreshing the same result cannot duplicate team experience or mastery")
-	check(story.save_progress() and FileAccess.get_file_as_string(PATH+".v6.bak") == old and JSON.parse_string(FileAccess.get_file_as_string(PATH)).schemaVersion == 8, "Schema six is preserved exactly before persisting progression")
+	check(story.save_progress() and FileAccess.get_file_as_string(PATH+".v6.bak") == old and JSON.parse_string(FileAccess.get_file_as_string(PATH)).schemaVersion == Campaign.SAVE_SCHEMA, "Schema six is preserved exactly before persisting progression")
 	var reopened := Campaign.new(engine.catalog,PATH)
 	check(reopened.team_level() == 4 and reopened.mastery_experience("veyra") == 10 and reopened.mastery_rank("axion") == 1, "Shared level and individual mastery reopen with the same campaign checkpoint")
 	story.set_team(["axion","veyra","astra"])
@@ -86,7 +86,7 @@ func _run() -> void:
 	forged.erase("mastery")
 	invalid.append(forged)
 	forged = document.duplicate(true)
-	forged.schemaVersion = 9
+	forged.schemaVersion = Campaign.SAVE_SCHEMA + 1
 	invalid.append(forged)
 	for data in invalid:
 		var original := JSON.stringify(data)

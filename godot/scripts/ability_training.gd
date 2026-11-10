@@ -1,4 +1,5 @@
 extends RefCounted
+const Pacts = preload("res://scripts/pact_abilities.gd")
 const Progression = preload("res://scripts/progression.gd")
 const RulesText = preload("res://scripts/rules_text.gd")
 const ACTIONS := ["basic","skill","ultimate"]
@@ -7,11 +8,18 @@ static var settings: Dictionary = JSON.parse_string(FileAccess.get_file_as_strin
 static func unlocked(action: String, points: int) -> bool:
 	return action in ACTIONS and Progression.rank(points) >= settings[action].rank
 
+static func available(hero: String, action: String, choice: String, points: int, completed: Dictionary) -> bool:
+	if action not in ACTIONS:return false
+	if choice=="":return true
+	if choice=="pact":return not Pacts.recipe(hero,action).is_empty() and completed.has("journey-"+hero)
+	return choice==settings[action].id and unlocked(action,points)
+
 static func build(hero: Dictionary, action: String, choice: String, basic_gain: int) -> Dictionary:
 	if action not in ACTIONS or not hero.has(action): return {}
 	var original: Dictionary = hero[action]
 	var result: Dictionary = original.duplicate(true)
 	if choice == "": return result
+	if choice == "pact":return Pacts.build(hero,action)
 	if choice != settings[action].id: return {}
 	var recipe: Dictionary = settings[action]
 	result.cost = int(original.cost)+int(recipe.costDelta)
@@ -31,13 +39,12 @@ static func build(hero: Dictionary, action: String, choice: String, basic_gain: 
 	if action != "basic": result.description += " Custo: %d EN." % result.cost
 	return result
 
-static func validate(choices: Variant, mastery: Dictionary, active_ids: Array) -> String:
+static func validate(choices: Variant, mastery: Dictionary, active_ids: Array, completed: Dictionary = {}) -> String:
 	if not choices is Dictionary or choices.size() > active_ids.size(): return "Treinamentos de habilidade inválidos."
 	for hero in choices:
 		if not hero is String or hero not in active_ids or not choices[hero] is Dictionary or choices[hero].size() > 3: return "Herói ou habilidades desconhecidos no treinamento."
 		for action in choices[hero]:
 			if not action is String or action not in ACTIONS: return "Habilidade de treinamento desconhecida."
 			var choice: Variant = choices[hero][action]
-			if not choice is String or choice not in ["",settings[action].id]: return "Alternativa de habilidade desconhecida."
-			if choice != "" and not unlocked(action,int(mastery.get(hero,0))): return "Treinamento ainda bloqueado pela maestria."
+			if not choice is String or not available(hero,action,choice,int(mastery.get(hero,0)),completed): return "Treinamento desconhecido ou ainda bloqueado pela maestria ou jornada."
 	return ""

@@ -48,7 +48,7 @@ func _run() -> void:
 	check(story.set_ability("veyra","ultimate","economy") and story.trained_action("veyra","ultimate").cost == 70 and is_equal_approx(story.trained_action("veyra","ultimate").power,engine.catalog.hero_by_id.veyra.ultimate.power*.9), "Mastery two enables a cheaper ultimate with ten percent less primary power")
 	check(story.set_ability("vektor","skill","burst") and story.trained_action("vektor","skill").secondary.amount == 35 and engine.catalog.hero_by_id.vektor.skill.secondary.amount == 30, "Pure-energy support training changes the actual transfer without mutating the base kit")
 	check(story.set_ability("maura","ultimate","economy") and story.trained_action("maura","ultimate").secondary.amount == 18, "A pure-utility ultimate preserves its cleanse and trades secondary energy for the cheaper cost")
-	check(story.save_progress() and FileAccess.file_exists(PATH+".v7.bak") and FileAccess.get_file_as_string(PATH+".v7.bak") == original and JSON.parse_string(FileAccess.get_file_as_string(PATH)).schemaVersion == 8, "Training migrates schema seven with an exact original backup")
+	check(story.save_progress() and FileAccess.file_exists(PATH+".v7.bak") and FileAccess.get_file_as_string(PATH+".v7.bak") == original and JSON.parse_string(FileAccess.get_file_as_string(PATH)).schemaVersion == Campaign.SAVE_SCHEMA, "Training migrates schema seven with an exact original backup")
 	var reopened := Campaign.new(engine.catalog,PATH)
 	check(reopened.trained_action("veyra","basic").get("energyGain") == 28 and reopened.trained_action("veyra","skill").cost == 40, "Chosen training reopens with the same real action parameters")
 	check(story.set_ability("veyra","skill","") and story.trained_action("veyra","skill").cost == 30 and engine.get_action(engine.unit(battle,"0-veyra"),"skill").cost == 40, "Resetting to the original skill is free and affects only the next mission")
@@ -77,7 +77,7 @@ func _run() -> void:
 	forged.erase("abilityChoices")
 	invalid.append(forged)
 	forged = document.duplicate(true)
-	forged.schemaVersion = 9
+	forged.schemaVersion = Campaign.SAVE_SCHEMA + 1
 	invalid.append(forged)
 	for data in invalid:
 		var raw := JSON.stringify(data)

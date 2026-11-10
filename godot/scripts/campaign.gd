@@ -1,14 +1,16 @@
 extends RefCounted
 ## Campaign progression is local and separate from the baseline combat catalog.
 const STORE := "user://campaign-0.7.json"
-const SAVE_SCHEMA := 8
+const SAVE_SCHEMA := 10
 const SLOT_COUNT := 3
 const Objectives = preload("res://scripts/mission_objectives.gd")
 const Waves = preload("res://scripts/mission_waves.gd")
 const Field = preload("res://scripts/mission_field.gd")
+const BossPhases = preload("res://scripts/mission_boss_phases.gd")
 const Equipment = preload("res://scripts/equipment.gd")
 const GemForge = preload("res://scripts/gem_forge.gd")
 const Progression = preload("res://scripts/progression.gd")
+const Bonds = preload("res://scripts/bonds.gd")
 const AbilityTraining = preload("res://scripts/ability_training.gd")
 const STARTING_COPIES := GemForge.STARTING_COPIES
 var tactics: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/campaign-tactics.json"))
@@ -28,25 +30,36 @@ const GEMS := [
 	{"id": "sap", "name": "Seiva cristalizada", "effect": "+5% VIDA", "detail": "Cada cópia soma 5% da vida base na campanha; três somam 15%. O limite de escudo continua sendo 25% da vida máxima.", "color": "47dda1", "stat": "maxHp", "bonus": 0.05},
 	{"id": "pulse", "name": "Pulso de éter", "effect": "+8 EN inicial", "detail": "Cada cópia soma 8 de energia no início da missão. Com peças básicas: 48, 56 ou 64. Não aumenta a energia gerada durante o combate.", "color": "4cbaff", "stat": "energy", "bonus": 8},
 ]
+const Collapse = preload("res://scripts/campaign_chapter_collapse.gd")
+const Truths = preload("res://scripts/campaign_chapter_truths.gd")
+const Nexus = preload("res://scripts/campaign_chapter_nexus.gd")
+const Returns = preload("res://scripts/campaign_chapter_returns.gd")
+const SideMissions = preload("res://scripts/campaign_side_missions.gd")
+const Journeys = preload("res://scripts/hero_journeys.gd")
 const CHAPTERS := [
 	{"id": "beacon", "finalMission": "eclipse", "name": "O Farol Partido", "eyebrow": "CAPÍTULO I", "theme": "sanctum", "color": "79ceef", "summary": "A cidade perdeu seu pulso. Atravesse os portões, liberte o pátio e rompa a âncora que aprisiona Vesper.", "lesson": "Aprenda a escolher alvos, lidar com estados e quebrar escudos."},
 	{"id": "tides", "finalMission": "tidal-heart", "name": "Marés da Memória", "eyebrow": "CAPÍTULO II", "theme": "tides", "color": "70dfd7", "summary": "As coordenadas do Farol levam a um observatório submerso. Recupere os nomes que a maré levou antes que a cidade esqueça seus próprios guardiões.", "lesson": "Combine dano, purificação e proteção para atravessar a maré."},
 	{"id": "forge", "finalMission": "forge-heart", "name": "A Última Fornalha", "eyebrow": "CAPÍTULO III", "theme": "forge", "color": "f7ae79", "summary": "O sinal roubado alimenta uma forja além do Trono. Interrompa a extração, desarme suas sentinelas e devolva ao Farol as cinco ressonâncias.", "lesson": "Administre energia, recargas e supremos no confronto final."},
+	Collapse.CHAPTER,
+	Truths.CHAPTER,
+	Nexus.CHAPTER,
 ]
-const MISSIONS := [
+static var MISSIONS := [
 	{"id": "gate", "seed": 730, "chapter": "beacon", "requires": [], "name": "01 · Os portões quebrados", "location": "ARREDORES DO FAROL", "story": "O Farol silenciou. Sentinelas de pedra abandonaram seus postos e as raízes ganharam vida. Seu trio precisa abrir caminho até o pátio.", "enemies": ["minion-sentinel", "minion-root", "minion-acolyte"], "scale": 1.0, "reward": "ember", "tip": "Elimine o Acólito para impedir exposição da defesa. Ataques básicos podem escolher qualquer alvo.", "ending": "Os sentinelas caem. Nos cacos há um fragmento de gema e o mesmo selo que Vesper carrega em sua lâmina."},
 	{"id": "court", "seed": 767, "chapter": "beacon", "requires": ["gate"], "name": "02 · Ecos no pátio", "location": "PÁTIO DAS RAÍZES", "story": "O selo do pátio ganha força a cada rodada. O Acólito conduz o ritual enquanto seus guardas bloqueiam a passagem. Neutralize o conjurador antes que o selo se feche.", "enemies": ["minion-root", "minion-sentinel", "minion-acolyte"], "scale": 1.24, "reward": "sap", "tip": "Concentre dano no Acólito até o fim da rodada 4. Não é necessário derrotar os guardas; ataques em área podem abrir caminho sem perder o alvo.", "ending": "A passagem se abre. Uma voz pede que vocês destruam a âncora do eclipse, mesmo que seu guardião lute para impedi-los.", "objective": {"type": "target", "target": "1-minion-acolyte", "targetName": "o Acólito do Véu", "rounds": 4}},
-	{"id": "eclipse", "seed": 804, "chapter": "beacon", "requires": ["court"], "name": "03 · O guardião do eclipse", "location": "NÚCLEO DO FAROL · CHEFE", "story": "Preso ao núcleo, Vesper é forçado a defender a âncora. Vença o guardião e seus dois servos para quebrar o vínculo. O Vesper do seu elenco continua disponível: este é um confronto de história.", "enemies": ["boss-vesper", "minion-sentinel", "minion-acolyte"], "scale": 1.05, "reward": "pulse", "tip": "Vesper provoca e contra-ataca. Ataques em área ignoram a restrição de Provocação; o escudo dele expira e não acumula.", "ending": "O eclipse se desfaz. Livre da âncora, Vesper guarda um caco do Farol: a energia que o aprisionava veio de além do Trono. Fim do capítulo I — as coordenadas apontam para o Observatório das Marés."},
+	{"id": "eclipse", "dialogue":[["astra","O núcleo está drenando o guardião. Se cortarmos a âncora, ele pode escolher por si."],["veyra","Então abram espaço. Eu cubro a retirada quando o selo ceder."]], "seed": 804, "chapter": "beacon", "requires": ["court"], "name": "03 · O guardião do eclipse", "location": "NÚCLEO DO FAROL · CHEFE", "story": "Preso ao núcleo, Vesper é forçado a defender a âncora. Vença o guardião e seus dois servos para quebrar o vínculo. O Vesper do seu elenco continua disponível: este é um confronto de história.", "enemies": ["boss-vesper", "minion-sentinel", "minion-acolyte"], "scale": 1.05, "reward": "pulse", "tip": "Vesper provoca e contra-ataca. Ataques em área ignoram a restrição de Provocação; o escudo dele expira e não acumula.", "ending": "O eclipse se desfaz. Livre da âncora, Vesper guarda um caco do Farol: a energia que o aprisionava veio de além do Trono. Fim do capítulo I — as coordenadas apontam para o Observatório das Marés."},
 	{"id": "tidal-gate", "seed": 841, "chapter": "tides", "requires": ["eclipse"], "name": "04 · A escadaria das marés", "location": "OBSERVATÓRIO · CAIS EXTERIOR", "story": "A água recua por alguns instantes. Sentinelas de sal guardam a escadaria e chamam reforços enquanto o coro repete nomes esquecidos. Atravesse duas ondas para abrir a passagem ao observatório.", "enemies": ["minion-tide", "minion-acolyte", "minion-root"], "scale": 1.08, "reward": "ember", "tip": "São duas ondas com os mesmos tipos de vigias. Vida, energia e efeitos do trio continuam entre elas; não há restauração nem recompensa intermediária. Cada reforço abre uma nova rodada, respeitando expiração dos escudos e Fratura.", "ending": "Sob a escadaria, Saira ouve um nome conhecido. O coro não pertence à água: são as memórias desviadas do Farol.", "waves": [{"name":"Vigias da escadaria","healthScale":0.65,"attackScale":0.9},{"name":"Reforços da maré","healthScale":0.75,"attackScale":1.0}]},
 	{"id": "tidal-archive", "seed": 878, "chapter": "tides", "requires": ["tidal-gate"], "name": "05 · O arquivo submerso", "location": "OBSERVATÓRIO · SALA DOS NOMES", "story": "Os registros presos nos cristais de sal precisam de três rodadas para atravessar o canal de memória. Mantenha os três portadores vivos enquanto a transferência ocorre, ou elimine a ameaça antes.", "enemies": ["minion-tide", "minion-siren", "minion-acolyte"], "scale": 1.08, "reward": "sap", "tip": "Proteja os três integrantes por três rodadas completas. Escudos, defesa e purificação ajudam a resistir; a queda de qualquer aliado interrompe a transferência.", "ending": "Os registros voltam a ter voz. Cada nome aponta para a mesma transferência: a energia foi enviada à Última Fornalha.", "objective": {"type": "survive", "rounds": 3, "protectAll": true}},
-	{"id": "tidal-heart", "seed": 915, "chapter": "tides", "requires": ["tidal-archive"], "name": "06 · A guardiã da memória", "location": "OBSERVATÓRIO · CÂMARA LUNAR · CHEFE", "story": "A guardiã confunde o trio com os saqueadores do núcleo. Uma corrente de éter atravessa a câmara: básicos recuperam mais energia, mas técnicas custam mais para todos. Rompa o selo para que ela reconheça seus aliados.", "enemies": ["boss-tide", "minion-tide", "minion-siren"], "scale": 1.0, "reward": "pulse", "tip": "Corrente do éter: básicos recuperam +4 EN; técnicas custam +5 EN para as duas equipes. Supremos mantêm seu custo. As cartas mostram os valores finais, combinados com seu treinamento.", "ending": "A guardiã devolve os nomes à cidade e abre o caminho da forja. Fim do capítulo II — o Farol recupera sua memória, mas ainda lhe falta uma voz.", "field": {"id":"aether-current","name":"Corrente do éter","basicEnergyGain":4,"skillCostDelta":5}},
+	{"id": "tidal-heart", "dialogue":[["saira","A maré devolveu os nomes. Agora precisamos manter o arquivo inteiro."],["oren","Fico na passagem. Tragam a Guardiã para longe da comporta."]], "seed": 915, "chapter": "tides", "requires": ["tidal-archive"], "name": "06 · A guardiã da memória", "location": "OBSERVATÓRIO · CÂMARA LUNAR · CHEFE", "story": "A guardiã confunde o trio com os saqueadores do núcleo. Uma corrente de éter atravessa a câmara: básicos recuperam mais energia, mas técnicas custam mais para todos. Rompa o selo para que ela reconheça seus aliados.", "enemies": ["boss-tide", "minion-tide", "minion-siren"], "scale": 1.0, "reward": "pulse", "tip": "Corrente do éter: básicos recuperam +4 EN; técnicas custam +5 EN para as duas equipes. Supremos mantêm seu custo. As cartas mostram os valores finais, combinados com seu treinamento.", "ending": "A guardiã devolve os nomes à cidade e abre o caminho da forja. Fim do capítulo II — o Farol recupera sua memória, mas ainda lhe falta uma voz.", "field": {"id":"aether-current","name":"Corrente do éter","basicEnergyGain":4,"skillCostDelta":5}},
 	{"id": "forge-road", "seed": 952, "chapter": "forge", "requires": ["tidal-heart"], "name": "07 · A estrada das cinzas", "location": "ÚLTIMA FORNALHA · PONTE EXTERIOR", "story": "Cinzas cobrem a ponte que liga o Trono à forja. A equipe resgata uma carga de fragmentos do Farol, mas os coletores cercam a passagem. O primeiro integrante do trio assume o transporte. Elimine a escolta inimiga mantendo esse portador vivo.", "enemies": ["minion-cinder", "minion-sentinel", "minion-acolyte"], "scale": 1.12, "reward": "ember", "tip": "Escolha o portador colocando qualquer herói na primeira posição do trio. Cura e escudo ajudam a protegê-lo. Se ele cair, a missão falha; os outros aliados não precisam sobreviver.", "ending": "O portador atravessa a ponte com os fragmentos resgatados. Veyra reconhece na carga a luz da manhã que sua cidade perdeu. A extração ainda continua no interior.", "objective": {"type":"clear","protectSlot":0}},
 	{"id": "forge-relay", "seed": 989, "chapter": "forge", "requires": ["forge-road"], "name": "08 · O coração das máquinas", "location": "ÚLTIMA FORNALHA · ANEL DE CONTENÇÃO", "story": "O Guardião do relé prepara a retirada dos fragmentos roubados. Seus auxiliares mantêm a defesa, mas neutralizar o comandante desliga o anel de contenção. Interrompa a retirada até o fim da sexta rodada.", "enemies": ["boss-relay", "minion-tide", "minion-siren"], "scale": 1.17, "reward": "sap", "tip": "O Guardião é o objetivo. Concentre a ofensiva nele, ou remova o curador para impedir sua recuperação. Os auxiliares sobreviventes recuam quando o Guardião cai.", "ending": "Os relés silenciam. Pela primeira vez, o Farol responde sem interferência. Apenas o juramento do Arconte impede que sua energia retorne.", "objective": {"type": "target", "target": "1-boss-relay", "targetName": "o Guardião do relé", "rounds": 6}},
-	{"id": "forge-heart", "seed": 1026, "chapter": "forge", "requires": ["forge-relay"], "name": "09 · O último juramento", "location": "ÚLTIMA FORNALHA · NÚCLEO · CHEFE", "story": "O Arconte acredita que aprisionar as ressonâncias é a única forma de impedir outra queda. Mostre que elas podem voltar a coexistir. Vença a guarda e encerre o ciclo de contenção.", "enemies": ["boss-forge", "minion-cinder", "minion-acolyte"], "scale": 1.0, "reward": "pulse", "tip": "O Arconte combina pressão em área e defesa. Preserve a cura, espere a abertura e use seus supremos em conjunto.", "ending": "As cinco ressonâncias retornam ao Farol. Os nomes, as manhãs e as vozes encontram seus lugares. Vesper quebra a última corrente. Fim do capítulo III — a cidade volta a escolher seu próprio futuro."},
-]
+	{"id": "forge-heart", "dialogue":[["veyra","Reconheço essa corrente. A Fornalha guarda ressonâncias que nunca foram dela."],["axion","Quebrem o relé sem ferir a passagem. Ainda temos gente do outro lado."]], "seed": 1026, "chapter": "forge", "requires": ["forge-relay"], "name": "09 · O último juramento", "location": "ÚLTIMA FORNALHA · NÚCLEO · CHEFE", "story": "O Arconte acredita que aprisionar as ressonâncias é a única forma de impedir outra queda. Mostre que elas podem voltar a coexistir. Vença a guarda e encerre o ciclo de contenção.", "enemies": ["boss-forge", "minion-cinder", "minion-acolyte"], "scale": 1.0, "reward": "pulse", "tip": "O Arconte combina pressão em área e defesa. Guarde cura e proteção coletiva para o Núcleo exposto. Escudos e efeitos aplicados antes da troca expiram normalmente.", "ending": "As cinco ressonâncias retornam ao Farol. Os nomes, as manhãs e as vozes encontram seus lugares. Vesper quebra a última corrente. Fim do capítulo III — a cidade volta a escolher seu próprio futuro.", "bossPhase": {"target":"1-boss-forge","name":"Núcleo exposto","healthRatio":0.5,"skillName":"Erupção do núcleo","skillPower":0.8}},
+] + Collapse.MISSIONS + Truths.MISSIONS + Returns.MISSIONS + Nexus.MISSIONS + SideMissions.MISSIONS + Journeys.missions()
 var completed: Dictionary = {}
 var cleared: int:
 	get: return completed.size()
+var main_cleared: int:
+	get: return main_missions().filter(is_complete).size()
 var missions: Array = []
 var team: Array = []
 var equipped: Dictionary = {}
@@ -55,6 +68,7 @@ var repeat_wins: Dictionary = {}
 var gem_crafts: Dictionary = {}
 var gem_fusions: Dictionary = {}
 var mastery: Dictionary = {}
+var bonds: Dictionary = {}
 var ability_choices: Dictionary = {}
 var error_text := ""
 var catalog
@@ -119,18 +133,35 @@ func summary(hero: String) -> String:
 		labels.append("%d · %s" % [index + 1, "Vazio" if item.is_empty() else item.name + " (" + item.effect + ")"])
 	return " | ".join(labels)
 
-func can_play(index: int) -> bool:
+func can_prepare(index: int) -> bool:
 	if _write_blocked or index < 0 or index >= missions.size(): return false
-	if is_complete(index): return true
-	return missions[index].get("requires", []).all(func(id): return completed.has(id))
+	return is_complete(index) or missions[index].get("requires", []).all(func(id): return completed.has(id))
+
+func can_play(index: int, roster: Array = team) -> bool:
+	return can_prepare(index) and (not missions[index].has("requiredHero") or missions[index].requiredHero in roster)
+
+func remaining_requirements(index: int) -> PackedStringArray:
+	var names: PackedStringArray = []
+	if index < 0 or index >= missions.size() or is_complete(index): return names
+	for id in missions[index].get("requires",[]):
+		if completed.has(id): continue
+		var required := mission_index(id)
+		if required >= 0: names.append(missions[required].name)
+	return names
 
 func is_complete(index: int) -> bool:
 	return index >= 0 and index < missions.size() and completed.has(missions[index].id)
 
+func main_missions() -> Array:
+	return range(missions.size()).filter(func(index): return missions[index].get("kind","main") == "main")
+
 func next_mission() -> int:
-	for index in range(missions.size()):
+	for index in main_missions():
 		if not is_complete(index) and can_play(index): return index
-	return chapter_final(CHAPTERS.size() - 1)
+	for index in range(CHAPTERS.size()-1,-1,-1):
+		var finale := chapter_final(index)
+		if finale >= 0: return finale
+	return -1
 
 func mission_index(id: String) -> int:
 	for index in range(missions.size()):
@@ -140,15 +171,19 @@ func mission_index(id: String) -> int:
 func chapter_final(index: int) -> int:
 	return mission_index(CHAPTERS[index].finalMission)
 
+func mission_environment(index: int) -> String:
+	if index >= 0 and index < missions.size():
+		for chapter in CHAPTERS:
+			if chapter.id == missions[index].chapter: return chapter.theme
+	return "sanctum"
+
 func mission_reward(index: int) -> Dictionary:
 	var mission: Dictionary = missions[index]
 	return gem(completed.get(mission.id, mission.reward))
 
-func chapter_missions(index: int) -> Array:
-	var result: Array = []
-	for mission in range(missions.size()):
-		if missions[mission].chapter == CHAPTERS[index].id: result.append(mission)
-	return result
+func chapter_missions(index: int, kind: String = "main") -> Array:
+	return range(missions.size()).filter(func(mission):
+		return missions[mission].chapter == CHAPTERS[index].id and missions[mission].get("kind","main") == kind)
 
 func chapter_cleared(index: int) -> int:
 	return chapter_missions(index).filter(is_complete).size()
@@ -207,7 +242,8 @@ func _valid_recovery(data: Dictionary) -> bool:
 	var budget: int = Equipment.earned(ledger,data.get("repeatWins",{}) if data.schemaVersion >= 5 else {}) - Equipment.spent(data.gear if data.schemaVersion >= 5 else {})
 	if GemForge.validate(data.get("gemCrafts") if data.schemaVersion >= 6 else {},data.get("gemFusions") if data.schemaVersion >= 6 else {},sockets,ledger,budget,active_ids) != "": return false
 	if data.schemaVersion >= 7 and Progression.validate(data.get("mastery"),ledger,data.repeatWins,active_ids) != "": return false
-	return data.schemaVersion < 8 or AbilityTraining.validate(data.get("abilityChoices"),data.mastery,active_ids) == ""
+	if data.schemaVersion >= 8 and AbilityTraining.validate(data.get("abilityChoices"),data.mastery,active_ids,ledger) != "": return false
+	return data.schemaVersion < 9 or Bonds.valid(data.get("bonds"),active_ids,Progression.victories(ledger,data.repeatWins))
 
 func load_progress() -> void:
 	completed.clear()
@@ -217,6 +253,7 @@ func load_progress() -> void:
 	gem_crafts.clear()
 	gem_fusions.clear()
 	mastery.clear()
+	bonds.clear()
 	ability_choices.clear()
 	_active_run.clear()
 	error_text = ""
@@ -249,6 +286,8 @@ func load_progress() -> void:
 	elif data.schemaVersion == 5: _backup_suffix = ".v5.bak"
 	elif data.schemaVersion == 6: _backup_suffix = ".v6.bak"
 	elif data.schemaVersion == 7: _backup_suffix = ".v7.bak"
+	elif data.schemaVersion == 8: _backup_suffix = ".v8.bak"
+	elif data.schemaVersion == 9: _backup_suffix = ".v9.bak"
 	var repaired := false
 	if data.schemaVersion >= 4:
 		if not _valid_ledger(data.get("completed")):
@@ -297,12 +336,19 @@ func load_progress() -> void:
 		mastery = data.mastery.duplicate()
 		for hero in mastery: mastery[hero] = int(mastery[hero])
 	if data.schemaVersion >= 8:
-		var training_error := AbilityTraining.validate(data.get("abilityChoices"),mastery,catalog.heroes.map(func(h):return h.id))
+		var training_error := AbilityTraining.validate(data.get("abilityChoices"),mastery,catalog.heroes.map(func(h):return h.id),completed)
 		if training_error != "":
 			_write_blocked = true
 			error_text = training_error + " O arquivo foi preservado; use uma versão compatível."
 			return
 		ability_choices = data.abilityChoices.duplicate(true)
+	if data.schemaVersion >= 9:
+		if not Bonds.valid(data.get("bonds"),catalog.heroes.map(func(hero):return hero.id),Progression.victories(completed,repeat_wins)):
+			_write_blocked = true
+			error_text = "Registros de vínculo inválidos. O arquivo foi preservado."
+			return
+		bonds = data.bonds.duplicate()
+		for pair in bonds: bonds[pair] = int(bonds[pair])
 	var saved_team: Variant = data.get("team", [])
 	if catalog.valid_team(saved_team) and saved_team.all(func(id): return active_hero(id)): team = saved_team.duplicate()
 	else: repaired = true
@@ -388,16 +434,19 @@ func save_progress() -> bool:
 	if mastery_error != "":
 		error_text = mastery_error
 		return false
-	var training_error := AbilityTraining.validate(ability_choices,mastery,catalog.heroes.map(func(h):return h.id))
+	var training_error := AbilityTraining.validate(ability_choices,mastery,catalog.heroes.map(func(h):return h.id),completed)
 	if training_error != "":
 		error_text = training_error
+		return false
+	if not Bonds.valid(bonds,catalog.heroes.map(func(hero):return hero.id),Progression.victories(completed,repeat_wins)):
+		error_text = "Registros de vínculo inválidos."
 		return false
 	var temporary := store_path + ".tmp"
 	var file := FileAccess.open(temporary, FileAccess.WRITE)
 	if file == null:
 		error_text = "Não foi possível salvar o progresso: " + error_string(FileAccess.get_open_error())
 		return false
-	file.store_string(JSON.stringify({"schemaVersion": SAVE_SCHEMA, "completed": completed, "team": team, "equipped": equipped, "gear":gear,"repeatWins":repeat_wins,"gemCrafts":gem_crafts,"gemFusions":gem_fusions,"mastery":mastery,"abilityChoices":ability_choices}, "\t"))
+	file.store_string(JSON.stringify({"schemaVersion": SAVE_SCHEMA, "completed": completed, "team": team, "equipped": equipped, "gear":gear,"repeatWins":repeat_wins,"gemCrafts":gem_crafts,"gemFusions":gem_fusions,"mastery":mastery,"abilityChoices":ability_choices,"bonds":bonds}, "\t"))
 	file.flush()
 	var write_error := file.get_error()
 	file.close()
@@ -482,6 +531,9 @@ func fill_gems(hero: String) -> bool:
 
 func complete(index: int) -> Dictionary:
 	if not can_play(index): return {"error": "Missão bloqueada."}
+	return _complete_unlocked(index)
+
+func _complete_unlocked(index: int) -> Dictionary:
 	if is_complete(index): return {"first": false, "saved": save_progress()}
 	completed[missions[index].id] = missions[index].reward
 	# Keep earned progress in memory on write failure; the result explicitly reports it.
@@ -504,7 +556,7 @@ func mastery_rank(hero: String) -> int:
 
 func set_ability(hero: String, action: String, choice: String) -> bool:
 	if _write_blocked or not active_hero(hero) or action not in AbilityTraining.ACTIONS: return false
-	if choice != "" and (choice != AbilityTraining.settings[action].id or not AbilityTraining.unlocked(action,mastery_experience(hero))): return false
+	if not AbilityTraining.available(hero,action,choice,mastery_experience(hero),completed): return false
 	if ability_choices.get(hero,{}).get(action,"") == choice: return true
 	var before := ability_choices.duplicate(true)
 	var actions: Dictionary = ability_choices.get(hero,{}).duplicate()
@@ -594,6 +646,12 @@ func transfer_piece(source: String, target: String, slot: int) -> bool:
 	equipped = gems_before
 	return false
 
+func journey_index(hero: String) -> int:
+	return mission_index("journey-"+hero)
+
+func pact_description(hero: String) -> String:
+	return Journeys.PACTS[catalog.hero_by_id[hero].role].description + " · libera " + AbilityTraining.Pacts.recipes[hero].name + " em Evolução"
+
 func loadout_stats(hero: String, override_slot: int = -1, proposed: Dictionary = {}, remove_socket: int = -1, socket_value: String = "") -> Dictionary:
 	if not active_hero(hero): return {}
 	var pieces: Array = Equipment.row(gear,hero)
@@ -601,6 +659,11 @@ func loadout_stats(hero: String, override_slot: int = -1, proposed: Dictionary =
 	var bonus: Dictionary = Equipment.bonuses(pieces)
 	var growth := Progression.bonuses(team_level(),catalog.hero_by_id[hero].role,mastery_experience(hero))
 	for stat in growth: bonus[stat] += growth[stat]
+	bonus.energy += Bonds.energy(bonds,team,hero)
+	if completed.has("journey-"+hero):
+		var pact: Dictionary = Journeys.PACTS[catalog.hero_by_id[hero].role]
+		for stat in pact:
+			if stat in bonus: bonus[stat] += pact[stat]
 	for index in range(3):
 		var item := gem(socket_value if index == remove_socket else slots(hero)[index])
 		if not item.is_empty(): bonus["health" if item.stat == "maxHp" else item.stat] += item.bonus
@@ -611,10 +674,11 @@ func claim_victory(state: Dictionary) -> Dictionary:
 	if state.get("phase") != "finished" or state.get("winner") != 0 or state.get("missionResult",{}).get("winner") != 0: return {"error":"A missão ainda não foi vencida."}
 	if _active_run.is_empty() or state.get("campaignRun") != _active_run.token or state.get("campaignMissionId") != _active_run.mission or _active_run.get("claimed",false): return {"error":"Resultado antigo, desconhecido ou já processado."}
 	var index: int = missions.find_custom(func(m):return m.id == _active_run.mission)
-	if index < 0 or not can_play(index): return {"error":"Missão inválida."}
+	if index < 0 or not can_play(index,_active_run.team): return {"error":"Missão inválida."}
 	var required_waves: Array = missions[index].get("waves",[])
 	if not required_waves.is_empty() and state.get("campaignWaveIndex",-1) != required_waves.size()-1: return {"error":"Ainda há ondas para concluir."}
 	_active_run.claimed = true
+	Bonds.record(bonds,_active_run.team)
 	var level_before := team_level()
 	var awards := {}
 	for hero in _active_run.team:
@@ -622,7 +686,7 @@ func claim_victory(state: Dictionary) -> Dictionary:
 		mastery[hero] = mini(int(Progression.settings.masteryThresholds[-1]),previous+int(Progression.settings.masteryPerVictory))
 		awards[hero] = mastery[hero]-previous
 	if not is_complete(index):
-		var reward := complete(index)
+		var reward := _complete_unlocked(index)
 		reward.materials = Equipment.first_reward(missions[index].id)
 		reward.teamExperience = int(Progression.settings.firstClearExperience)
 		reward.mastery = awards
@@ -667,7 +731,7 @@ static func register_enemies(source) -> void:
 		{"id":"boss-tide","source":"saira","name":"Guardiã das marés","hp":1550,"attack":190,"defense":85,"role":"Chefe"},
 		{"id":"boss-forge","source":"rhazen","name":"Arconte da fornalha","hp":1750,"attack":207,"defense":104,"role":"Chefe"},
 		{"id":"boss-relay","source":"rhazen","name":"Guardião do relé","hp":1300,"attack":170,"defense":90,"speed":71,"role":"Chefe"},
-	]:
+	] + Collapse.ENEMIES + Truths.ENEMIES + Nexus.ENEMIES + Returns.ENEMIES:
 		var enemy: Dictionary = source.hero_by_id[variant.source].duplicate(true)
 		enemy.merge(variant, true)
 		enemy.visualHero = variant.source
@@ -678,6 +742,9 @@ func battle(engine, index: int) -> Dictionary:
 	if not can_play(index) or not catalog.valid_team(team): return {"error": "Missão ou equipe inválida."}
 	register_enemies(engine.catalog)
 	var mission: Dictionary = missions[index]
+	if mission.get("protectProtagonist",false):
+		mission = mission.duplicate()
+		mission.objective = {"type":"clear","protectSlot":team.find(mission.requiredHero)}
 	var state: Dictionary = engine.new_battle(team, mission.enemies, "normal", mission.seed)
 	for actor in state.units:
 		if actor.side == 1:
@@ -704,6 +771,8 @@ func battle(engine, index: int) -> Dictionary:
 	if field_error != "": return {"error":field_error}
 	var objective_error := Objectives.attach(state, mission)
 	if objective_error != "": return {"error":objective_error}
+	var phase_error := BossPhases.attach(state,mission)
+	if phase_error != "": return {"error":phase_error}
 	_run_serial += 1
 	state.campaignRun = _run_prefix + ":" + str(_run_serial)
 	_active_run = {"token":state.campaignRun,"mission":mission.id,"team":team.duplicate(),"claimed":false}
@@ -713,6 +782,7 @@ func _checkpoint(state: Dictionary, engine, boundary: bool = false) -> bool:
 	var waiting := Waves.pending(state)
 	Objectives.resolve(state,boundary,waiting)
 	if state.phase != "playing": return false
+	if not waiting: BossPhases.resolve(engine,state)
 	return Waves.advance(engine,state) if waiting else false
 
 func act(engine, state: Dictionary, action: String, target: String, critical: Variant = null) -> Dictionary:
@@ -742,6 +812,38 @@ func _carrier_choice(engine, state: Dictionary, actor: Dictionary) -> Dictionary
 				best = {"actionId":action_id,"targetId":target.id}
 	return best
 
+func _best_target_attack_value(engine, state: Dictionary, unit_id: String, goal: Dictionary) -> float:
+	var probe: Dictionary=engine.forecast_turn(state,unit_id)
+	if probe.is_empty():return 0.0
+	var actor: Dictionary=engine.current(probe)
+	var best:=0.0
+	for id in ["basic","skill","ultimate"]:
+		if not engine.can_use(actor,id):continue
+		var action: Dictionary=engine.get_action(actor,id)
+		if engine.friendly(action):continue
+		for target in engine.legal_targets(probe,actor,action):
+			var prediction: Dictionary=engine.preview(probe,id,target.id).normal
+			var value:=0.0
+			for event in prediction.get("events",[]):
+				if event.type=="damage" and event.target==goal.target:
+					value+=event.amount+event.absorbed*tactics.absorbedDamageWeight
+					if event.hpAfter==0:value+=tactics.immediateVictoryBonus/tactics.targetDamageWeight
+			best=maxf(best,value)
+	return best
+
+func _offensive_support_value(engine, state: Dictionary, prediction: Dictionary, goal: Dictionary) -> float:
+	var future: Dictionary=state.duplicate(true)
+	future.units=prediction.impactUnits.duplicate(true)
+	var value:=0.0
+	for ally in state.units:
+		if ally.side!=0 or ally.hp<=0:continue
+		var index: int=state.order.find(ally.id)
+		if index<0 or (state.round>=goal.rounds and index<=state.cursor):continue
+		var after: Dictionary=engine.unit(future,ally.id)
+		if after.hp<=0 or (ally.energy==after.energy and ally.statuses==after.statuses):continue
+		value+=maxf(0.0,_best_target_attack_value(engine,future,ally.id,goal)-_best_target_attack_value(engine,state,ally.id,goal))
+	return value
+
 func choose_ai(engine, state: Dictionary) -> Dictionary:
 	if state.get("phase") != "playing": return {}
 	var actor: Dictionary = engine.current(state)
@@ -751,7 +853,8 @@ func choose_ai(engine, state: Dictionary) -> Dictionary:
 	var choice: Dictionary = engine.choose_ai(state)
 	var goal: Dictionary = state.get("campaignObjective",{})
 	if choice.is_empty() or actor.side != 0 or goal.get("type") != "target": return choice
-	if engine.friendly(engine.get_action(actor,choice.actionId)) and state.units.any(func(u): return u.side == 0 and u.hp > 0 and float(u.hp)/u.maxHp < tactics.endangeredHealthRatio): return choice
+	var emergency: Dictionary={}
+	if engine.friendly(engine.get_action(actor,choice.actionId)) and state.units.any(func(u): return u.side == 0 and u.hp > 0 and float(u.hp)/u.maxHp < tactics.endangeredHealthRatio): emergency=choice.duplicate()
 	# A basic attack can unlock a decisive ultimate on the next personal turn.
 	# Reserve only while that turn can still happen before the objective deadline.
 	var reserve_value := 0.0
@@ -771,16 +874,23 @@ func choose_ai(engine, state: Dictionary) -> Dictionary:
 	for id in ["basic","skill","ultimate"]:
 		if not engine.can_use(actor,id): continue
 		var action: Dictionary = engine.get_action(actor,id)
-		if engine.friendly(action): continue
 		for target in engine.legal_targets(state,actor,action):
 			var prediction: Dictionary = engine.preview(state,id,target.id).normal
 			var score: float = -action.cost * tactics.energyCostWeight
+			if engine.friendly(action):
+				var support: float=_offensive_support_value(engine,state,prediction,goal)
+				if support<=0:continue
+				score+=support*tactics.targetDamageWeight
 			if id == "basic": score += reserve_value
 			for event in prediction.get("events",[]):
 				if event.type != "damage": continue
 				score += (event.amount + event.absorbed * tactics.absorbedDamageWeight) * (tactics.targetDamageWeight if event.target == goal.target else tactics.collateralDamageWeight)
-				if event.target == goal.target and event.hpAfter == 0: score += tactics.immediateVictoryBonus
+				if event.target == goal.target and event.hpAfter == 0:
+					var finish: Dictionary=state.duplicate(true)
+					var result: Dictionary=act(engine,finish,id,target.id,false)
+					if not result.has("error") and finish.phase=="finished" and finish.winner==0:return {"actionId":id,"targetId":target.id}
+					score += tactics.immediateVictoryBonus
 			if score > best:
 				best = score
 				choice = {"actionId":id,"targetId":target.id}
-	return choice
+	return emergency if not emergency.is_empty() else choice

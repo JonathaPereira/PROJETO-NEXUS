@@ -34,7 +34,7 @@ func _run() -> void:
 	var story := Campaign.new(engine.catalog,PATH)
 	check(story.materials() == 24, "Migration credits real first victories and the first chapter bonus, without replay rewards")
 	check(story.slots("veyra")[0] == "ember" and story.piece("veyra",0) == {"variant":"standard","tier":1}, "Existing gems stay in the corresponding basic weapon/protection/relic socket")
-	check(story.save_progress() and FileAccess.get_file_as_string(PATH+".v4.bak") == legacy and JSON.parse_string(FileAccess.get_file_as_string(PATH)).schemaVersion == 8, "Version four is preserved byte-for-byte before the equipment schema is written")
+	check(story.save_progress() and FileAccess.get_file_as_string(PATH+".v4.bak") == legacy and JSON.parse_string(FileAccess.get_file_as_string(PATH)).schemaVersion == Campaign.SAVE_SCHEMA, "Version four is preserved byte-for-byte before the equipment schema is written")
 	var baseline: Dictionary = story.battle(engine,0)
 	var attack_before: int = engine.unit(baseline,"0-veyra").attack
 	check(story.upgrade_piece("veyra",0) and story.piece("veyra",0).tier == 2 and story.materials() == 21, "Weapon upgrade spends exactly three shared fragments")
@@ -137,7 +137,7 @@ func _run() -> void:
 	unknown.completed = {"gate":"ember"}
 	invalid.append(unknown)
 	unknown = document.duplicate(true)
-	unknown.schemaVersion = 9
+	unknown.schemaVersion = Campaign.SAVE_SCHEMA + 1
 	invalid.append(unknown)
 	for data in invalid:
 		var original := JSON.stringify(data)

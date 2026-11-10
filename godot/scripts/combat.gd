@@ -154,6 +154,32 @@ func _turn_event(state: Dictionary, events: Array, actor: Dictionary, event: Dic
 	_log(state, event)
 	events.append(event)
 
+func _expire_round_shields(state: Dictionary, turn_events: Array = []) -> void:
+	for target in state.units:
+		var before: int = target.shield
+		_normalize_shields(target, state.round - 1)
+		target.shieldLayers = target.shieldLayers.filter(func(layer): return layer.expiresRound > state.round)
+		_sync_shields(target, state.round)
+		if before > target.shield:
+			_turn_event(state, turn_events, target, {"type":"shieldExpired","actor":target.id,"target":target.id,"amount":before-target.shield})
+
+## Forecast only this ally's next turn start; intervening actions are not simulated.
+## The same turn owner applies cooldown recovery, periodic effects and expiration.
+func forecast_turn(state: Dictionary, unit_id: String) -> Dictionary:
+	if state.get("phase")!="playing":return {}
+	var index: int=state.order.find(unit_id)
+	var actor:=unit(state,unit_id)
+	if index<0 or actor.is_empty() or actor.hp<=0:return {}
+	var probe: Dictionary=state.duplicate(true)
+	if index<=state.cursor:
+		probe.round+=1
+		probe.order=_turn_order(probe)
+		index=probe.order.find(unit_id)
+		_expire_round_shields(probe)
+	probe.cursor=index
+	_begin_turn(probe)
+	return probe if probe.phase=="playing" and current(probe).get("id")==unit_id else {}
+
 func _begin_turn(state: Dictionary, turn_events: Array = [], round_checkpoint: Callable = Callable(), turn_checkpoint: Callable = Callable()) -> void:
 	while state.phase == "playing":
 		if state.cursor >= state.order.size():
@@ -167,13 +193,7 @@ func _begin_turn(state: Dictionary, turn_events: Array = [], round_checkpoint: C
 				state.order = []
 				state.cursor = 0
 				continue
-			for target in state.units:
-				var before: int = target.shield
-				_normalize_shields(target, state.round - 1)
-				target.shieldLayers = target.shieldLayers.filter(func(layer): return layer.expiresRound > state.round)
-				_sync_shields(target, state.round)
-				if before > target.shield:
-					_turn_event(state, turn_events, target, {"type":"shieldExpired","actor":target.id,"target":target.id,"amount":before-target.shield})
+			_expire_round_shields(state,turn_events)
 		var actor := current(state)
 		if actor.is_empty() or actor.hp <= 0:
 			state.cursor += 1

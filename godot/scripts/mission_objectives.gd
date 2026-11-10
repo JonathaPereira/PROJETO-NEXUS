@@ -1,6 +1,7 @@
 extends RefCounted
 ## Campaign encounter rules, separate from free combat, PvP and saved rewards.
 const Field = preload("res://scripts/mission_field.gd")
+const BossPhases = preload("res://scripts/mission_boss_phases.gd")
 
 static func attach(state: Dictionary, mission: Dictionary) -> String:
 	var value: Variant = mission.get("objective", {"type":"clear"})
@@ -65,13 +66,20 @@ static func brief(mission: Dictionary) -> String:
 		"survive": text = "Mantenha %s por %d rodadas completas, ou elimine todos os inimigos." % ["os três aliados vivos" if goal.get("protectAll",false) else "ao menos um aliado vivo",goal.rounds]
 	if mission.get("waves") is Array and mission.waves.size() > 1: text = "Enfrente %d ondas sucessivas. Vida, energia e condições do trio continuam entre elas. Recompensa apenas ao concluir todas. " % mission.waves.size()+text
 	if goal.has("protectSlot"):
-		text += " Proteja o %s integrante do trio: ele transporta a carga e deve sobreviver. Escolha livremente quem ocupa essa posição." % ["primeiro","segundo","terceiro"][int(goal.protectSlot)]
+		text += " Proteja o %s integrante do trio: o portador deve sobreviver. Escolha livremente quem ocupa essa posição." % ["primeiro","segundo","terceiro"][int(goal.protectSlot)]
+	if mission.get("protectProtagonist",false):
+		text += " O protagonista da jornada precisa sobreviver. Ele pode ocupar qualquer posição."
 	var field_text := Field.brief(mission)
 	if field_text != "": text += " " + field_text
+	var phase_text := BossPhases.brief(mission)
+	if phase_text != "": text += " " + phase_text
 	return text
 
 static func result_text(state: Dictionary) -> String:
-	return {"team_lost":"Seu trio foi derrotado.", "carrier_lost":"A proteção falhou: o portador da carga foi derrotado.", "ally_lost":"A proteção falhou: um integrante do trio caiu.", "target":"Alvo neutralizado. A missão foi concluída.", "cleared":"Todos os inimigos foram derrotados.", "survived":"Defesa concluída: o trio resistiu ao cerco.", "deadline":"O prazo terminou antes de neutralizar o alvo. A missão falhou."}.get(state.get("missionResult",{}).get("reason",""),"")
+	var text: String = {"team_lost":"Seu trio foi derrotado.", "carrier_lost":"A proteção falhou: o portador foi derrotado.", "ally_lost":"A proteção falhou: um integrante do trio caiu.", "target":"Alvo neutralizado. A missão foi concluída.", "cleared":"Todos os inimigos foram derrotados.", "survived":"Defesa concluída: o trio resistiu ao cerco.", "deadline":"O prazo terminou antes de neutralizar o alvo. A missão falhou."}.get(state.get("missionResult",{}).get("reason",""),"")
+	var phase_text := BossPhases.label(state)
+	if phase_text != "": text += " " + phase_text + "."
+	return text
 
 static func describe(state: Dictionary) -> String:
 	var goal: Dictionary = state.get("campaignObjective",{"type":"clear"})
@@ -82,4 +90,6 @@ static func describe(state: Dictionary) -> String:
 	if goal.has("protectSlot"): text = "Portador: %s · %s" % [goal.protectedName,text]
 	if state.has("campaignWaves"): text = "Onda %d/%d · %s" % [state.campaignWaveIndex+1,state.campaignWaves.size(),text]
 	if state.has("campaignField"): text = "Campo: %s · %s" % [state.campaignField.name,text]
+	var phase_text := BossPhases.label(state)
+	if phase_text != "": text = phase_text + " · " + text
 	return text

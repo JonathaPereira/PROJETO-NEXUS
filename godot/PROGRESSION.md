@@ -1,6 +1,6 @@
 # Progressão — equipamentos e próximas etapas
 
-Direção escolhida: **equilibrar campanha e domínio dos heróis com equipamentos e gemas**. O incremento Renascimento entrega as três peças, melhorias, especializações e fragmentos repetíveis descritos a seguir. Fabricação e fusão de gemas também estão implementadas. Nível comum e maestria individual também estão implementados. Variantes de habilidades também estão implementadas para os 24 heróis ativos. Vínculos continuam para as próximas etapas.
+Direção escolhida: **equilibrar campanha e domínio dos heróis com equipamentos e gemas**. O incremento Renascimento entrega as três peças, melhorias, especializações e fragmentos repetíveis descritos a seguir. Fabricação e fusão de gemas também estão implementadas. Nível comum e maestria individual também estão implementados. Variantes de habilidades também estão implementadas para os 24 heróis ativos. Vínculos e técnicas pessoais por pacto também estão implementados.
 
 ## Implementado no incremento Renascimento
 
@@ -14,9 +14,27 @@ Em **Coleção → Oficina**, cada herói ativo tem Arma, Proteção e Relíquia
 
 Especializações e patamar II abrem ao concluir `eclipse`; patamar III, ao concluir `tidal-heart`. Melhorias custam **3** e **5 fragmentos**, respectivamente. Especialização e troca entre heróis são gratuitas. Não há compra aleatória ou desgaste de peças. Bônus valem só na campanha; os atributos livres/PvP permanecem normalizados.
 
-Primeiras vitórias concedem **6 fragmentos**, mais **6** nos três finais de capítulo. Vitórias antigas recebem esse crédito pela lista histórica de IDs. As nove missões somam **72**, exatamente o custo de nove peças no patamar III para um trio. Uma nova vitória em missão concluída concede **2** fragmentos e nenhuma nova gema. O resultado precisa pertencer a uma tentativa real da sessão; reabrir/renderizar a mesma tela não concede outra recompensa. Derrota não consome itens.
+Primeiras vitórias concedem **6 fragmentos**, mais **6** em cada final de capítulo. Vitórias antigas recebem esse crédito pela lista histórica de IDs. As nove missões originais somam **72**, exatamente o custo de nove peças no patamar III para um trio. Uma nova vitória em missão concluída concede **2** fragmentos e nenhuma nova gema. O resultado precisa pertencer a uma tentativa real da sessão; reabrir/renderizar a mesma tela não concede outra recompensa. Derrota não consome itens.
 
-O saldo deriva de vitórias e repetições menos os patamares investidos. Save formato **8**, migração 1–7 com cópia exata do original, validação do estoque e recuperação conjunta de peças, gemas e materiais. Edições voltam atrás se salvar falhar; recompensas vitoriosas permanecem pendentes em memória, com aviso e sem duplicar ao atualizar o resultado. [Compatibilidade](CAMPAIGN.md#progresso-e-compatibilidade).
+O saldo deriva de vitórias e repetições menos os patamares investidos. Save atual no formato **10**, migração 1–9 com cópia exata do original, validação do estoque e recuperação conjunta de peças, gemas e materiais. Edições voltam atrás se salvar falhar; recompensas vitoriosas permanecem pendentes em memória, com aviso e sem duplicar ao atualizar o resultado. [Compatibilidade](CAMPAIGN.md#progresso-e-compatibilidade).
+
+## Continuidade por teclado na Coleção
+
+Melhorar, aplicar especialização, trocar peças e aplicar treinamento atualizam
+os valores conservando foco e posição de leitura quando o controle permanece
+visível. Ações que ficam indisponíveis devolvem o foco ao seletor da mesma
+peça/habilidade; o treinamento conserva a aba escolhida. A troca mantém o
+herói destinatário, e selecionar outro herói mantém o foco no novo seletor
+ou retrato, sem alterar os trios.
+
+Se salvar falhar, a transação mantém seu rollback e a interface conserva a
+prévia solicitada e o botão de tentativa. O erro permanece no rodapé; ao
+liberar o caminho, Enter aplica a escolha preservada. A restauração espera
+o layout e respeita navegação ou uma escolha de foco mais recente.
+A implementação pertence ao Hub; Campaign continua dona de transações,
+atributos e saves, sem mudança de regras ou formato. Trinta verificações
+dirigidas exercitam Enter real, falha/retry, seleções e navegação rápida.
+São fixtures de progresso/maestria, sem aceite humano ou campanha conquistada.
 
 ## Um ciclo fácil de entender
 
@@ -63,6 +81,10 @@ A campanha pode terminar com as nove gemas básicas equipadas e todas as peças 
 
 Parâmetros em `data/gem-forge.json`. Fabricação e fusão adicionais, gemas táticas e raridades continuam fora deste incremento.
 
+O Colapso acrescenta oito primeiras vitórias pelo mesmo recibo do save 8.
+Cada uma concede gema e 6 fragmentos, com 6 adicionais no desfecho do capítulo.
+As regras de EXP, maestria, fabricação e repetição continuam valendo.
+
 ## Nível comum e maestria entregues
 
 **Coleção → Evolução** mostra a experiência da equipe, o próximo marco, a maestria do herói escolhido e os atributos completos da próxima missão. O HUD identifica o nível usado naquela batalha; o resultado informa EXP e pontos por participante. Bônus novos só entram na próxima tentativa, preservando o snapshot do combate encerrado.
@@ -104,7 +126,60 @@ O fator principal pode ser dano, cura ou escudo. Nas técnicas sem fator princip
 
 A batalha captura a seleção ao iniciar; alterar a preparação depois não muda o combate em andamento. Livre/PvP usam as habilidades originais. O automático da campanha considera custo e energia real do básico. Parâmetros em `data/ability-training.json`.
 
-O save **8** guarda `abilityChoices`, migra 1–7 e preserva uma cópia exata `.v7.bak`. Heróis, ações, variantes ou marcos incompatíveis impedem sobrescrita. Falha de gravação desfaz a seleção. A suíte executa as 72 formas alternativas, comparando recibos com a prévia pública, além de testar interface, snapshots, bloqueios, migração e recuperação. Variantes com mecânicas exclusivas por personagem continuam como aprofundamento futuro.
+Introduzido no save **8**, `abilityChoices` migra 1–7 e preserva uma cópia exata `.v7.bak`. Heróis, ações, variantes ou marcos incompatíveis impedem sobrescrita. Falha de gravação desfaz a seleção. A suíte executa as 72 formas alternativas, comparando recibos com a prévia pública, além de testar interface, snapshots, bloqueios, migração e recuperação. As técnicas pessoais adquiridas pelas jornadas ampliam essas opções no formato 10, como descrito a seguir.
+
+## Vínculos e pactos
+
+Cada vitória de campanha credita uma vez os três pares do trio que iniciou a
+batalha. Após três vitórias compartilhadas, cada parceiro vinculado no trio
+concede **+2 EN inicial**, até +4 por herói. **Coleção → Evolução** mostra os
+parceiros e as vitórias compartilhadas. O save 9 valida os pares e o limite de
+participação. A migração de 1–8 preserva o arquivo original e começa sem
+vínculos presumidos.
+
+As 24 jornadas pessoais ficam em **Coleção → História** após o prólogo. O
+protagonista participa com dois parceiros livres. A primeira vitória firma
+um pacto que dá um bônus pequeno por função na campanha. O pacto deriva da
+vitória da jornada, sem estoque ou contador separado. Os 24 heróis continuam
+disponíveis em Livre e PvP com seus kits base.
+
+
+## Técnicas pessoais adquiridas
+
+Concluir uma jornada libera uma técnica alternativa do protagonista em
+**Coleção → Evolução → Técnica → Pacto pessoal**. A seleção é gratuita e
+opcional, inclusive sem maestria. Pode voltar à original ou a Ímpeto antes de
+preparar outra missão. O combate em andamento conserva sua escolha inicial.
+
+São 24 técnicas com contrapartidas próprias: Veyra troca dano por barreira
+pessoal; Cindra troca proteção por purificação e energia; Kira troca potência
+por perfuração maior de escudo; Solen troca área por um golpe concentrado.
+A prévia mostra o efeito e o custo; campos da missão ajustam o custo final.
+As receitas editáveis ficam em `data/pact-abilities.json`.
+
+O save **10** guarda `"pact"` na escolha da técnica e valida a jornada
+concluída. Migra 1–9 com cópia exata do original, inclusive `.v9.bak`.
+Não concede jornadas ou técnicas automaticamente. Falha de gravação desfaz
+a seleção e preserva o arquivo anterior. Os 109 checks específicos incluem
+as 24 execuções com prévia, snapshots, migração e o menu real. A inspeção Web
+usa um perfil descartável com jornadas concluídas; não representa aceite
+humano ou conclusão manual das jornadas.
+
+## Conquistas locais
+
+**Extras → Conquistas locais** mostra oito marcos com requisito, contagem e
+estado: primeira missão principal; as 48 principais; nível 6 da equipe;
+primeiro pacto; as 24 jornadas; primeiro vínculo maduro; um herói em maestria
+III; e os três desafios especiais. Os cartões distinguem progresso de
+conquista concluída por texto, além da cor.
+
+As conquistas são calculadas pelos fatos já validados do save 10. Consultar a
+tela não grava dados, concede moedas, muda trios ou presume participação.
+Saves antigos reconhecem suas missões registradas; vínculos e maestria
+continuam dependendo dos registros próprios. Não há serviço externo ou novo
+contador para manter sincronizado. As 15 verificações específicas incluem
+perfil inicial, catálogo parcial sem metas zero conquistadas, primeira missão salva, reabertura, preservação byte a byte,
+progresso antigo e os oito marcos em um perfil completo de teste.
 
 ## Campanha e objetivos opcionais
 
@@ -122,7 +197,7 @@ Essa política precisa ser escolhida antes de precificar melhorias. Uma progress
 
 1. **Entregue:** equipamentos de três peças, especializações, fragmentos e migração dos três engastes atuais.
 2. **Entregue:** fabricação escolhida, fusão até III, prévias e proteção das cópias equipadas.
-3. **Entregue para os 24 ativos:** nível comum, experiência, maestria e três alternativas de habilidade por herói. Variantes com mecânicas exclusivas e vínculos ainda aguardam revisão.
-4. Novos capítulos e desafios para validar o ritmo; só então ampliar os atributos de gemas e preparar PvP online.
+3. **Entregue para os 24 ativos:** nível comum, experiência, maestria e três alternativas de habilidade por herói. Uma técnica pessoal por herói é adquirida pela jornada; vínculos e escolha opcional já são jogáveis.
+4. **Entregues:** seis capítulos, 48 missões principais, três secundárias, três desafios e 24 jornadas. O balanceamento amplo, a validação humana e o audiovisual final continuam pendentes.
 
 Para ampliar essas regras, conferir o tempo para completar um trio, a viabilidade de trocar de personagem, a quantidade de itens livres, a duração dos combates e a diferença entre uma equipe inicial e uma evoluída. O jogador deve conseguir experimentar um novo herói sem recomeçar todo o investimento.

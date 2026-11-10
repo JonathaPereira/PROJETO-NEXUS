@@ -85,7 +85,7 @@ func _label(font_size: int) -> Label:
 	label.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	return label
 
-func configure(action: Dictionary, id: String, shortcut: int, color: Color, energy: int, cooldown: int, interactive: bool, hero_index: int = 0) -> void:
+func configure(action: Dictionary, id: String, shortcut: Variant, color: Color, energy: int, cooldown: int, interactive: bool, hero_index: int = 0) -> void:
 	action_id = id
 	tint = color
 	available = energy >= action.cost and cooldown <= 0
@@ -93,7 +93,7 @@ func configure(action: Dictionary, id: String, shortcut: int, color: Color, ener
 	reason = ""
 	if cooldown > 0: reason = "Disponível em %d turno(s) deste herói." % cooldown
 	elif energy < action.cost: reason = "Faltam %d de energia." % (int(action.cost) - energy)
-	kind_label.text = "%d  %s" % [shortcut, {"basic": "ATAQUE", "skill": "TÉCNICA", "ultimate": "SUPREMO", "guard": "DEFESA"}[id]]
+	kind_label.text = "%s  %s" % [shortcut, {"basic": "ATAQUE", "skill": "TÉCNICA", "ultimate": "SUPREMO", "guard": "DEFESA"}[id]]
 	kind_label.add_theme_color_override("font_color", color.lightened(0.15))
 	scope_label.text = _scope(action.kind)
 	name_label.text = action.name

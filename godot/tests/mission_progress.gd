@@ -32,10 +32,10 @@ func _run() -> void:
 	check(story.cleared == 4 and story.copies("ember") == 5 and story.copies("sap") == 4, "Legacy third schema preserves all four earned rewards")
 	check(story.save_progress(), "Migrated progress can be saved")
 	var saved: Dictionary = JSON.parse_string(FileAccess.get_file_as_string(PATH))
-	check(saved.get("schemaVersion") == 8 and saved.get("completed", {}) == {"gate":"ember","court":"sap","eclipse":"pulse","tidal-gate":"ember"}, "Migration stores stable mission IDs and historical rewards")
+	check(saved.get("schemaVersion") == Campaign.SAVE_SCHEMA and saved.get("completed", {}) == {"gate":"ember","court":"sap","eclipse":"pulse","tidal-gate":"ember"}, "Migration stores stable mission IDs and historical rewards")
 	check(FileAccess.file_exists(PATH + ".v3.bak"), "Version-three source receives a migration backup")
 	var unchanged := saved.duplicate(true)
-	var reordered: Array = Campaign.MISSIONS.duplicate(true)
+	var reordered: Array = Campaign.MISSIONS.slice(0,9).duplicate(true)
 	reordered.reverse()
 	for mission in reordered:
 		if mission.id == "gate": mission.reward = "pulse"
@@ -62,7 +62,7 @@ func _run() -> void:
 	app.campaign = reopened
 	app.hub.selected_chapter = 0
 	app.hub.open("story")
-	check(app.hub.mission_slots.has(0) and app.hub.mission_slots[0].text == "Rejogar missão", "The real story menu shows the inserted completed mission by its identity")
+	check(app.hub.mission_slots.has(0) and app.hub.mission_slots[0].text == "Preparar repetição", "The real story menu shows the inserted completed mission by its identity")
 	check(app.hub.mission_slots.size() == 4 and not app.hub.next_mission_button.disabled, "Chapter grouping and Continue remain usable after catalog reordering and insertion")
 	var reward_labels: Array = app.hub.mission_slots[index_of(reopened,"gate")].get_parent().find_children("*", "Label", true, false)
 	check(reward_labels.any(func(label): return label.text.contains("RECEBIDA") and label.text.contains("Brasa lapidada")), "The actual completed mission card displays the gem it awarded before rebalance")

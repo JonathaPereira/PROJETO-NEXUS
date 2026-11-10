@@ -4,9 +4,8 @@
 
 A expansão preserva o lore do Farol, os trios livres e o motor existente. A meta
 é seis capítulos com oito missões variadas, progressão individual/de equipe e
-24 personagens em seis afinidades. A revisão atual tem nove missões e **24 ativos em seis afinidades**;
-Auren, Elyra, Solen e Zaya voltaram com kits, fichas e vozes. A campanha de
-48 missões, vínculos e aquisição ainda não estão entregues.
+24 personagens em seis afinidades. A revisão atual tem 48 missões principais em seis capítulos e **24 ativos em seis afinidades**;
+Auren, Elyra, Solen e Zaya voltaram com kits, fichas e vozes. A campanha tem 48 missões principais, três secundárias, três desafios e 24 jornadas pessoais. Vínculos e pactos ficam restritos à campanha.
 
 Antes da expansão, a fundação prioriza recuperação de progresso: trio, missões e
 gemas devem ser restaurados juntos, sem inventar recompensas ou alterar os kits
@@ -22,9 +21,9 @@ até a rodada 4, defender o trio por três rodadas e derrotar o Guardião do rel
 a rodada 6, e proteger o portador escolhido na estrada das cinzas. Preparação, HUD e resultado mostram as condições reais. O automático
 considera o alvo, a preparação de supremos e aliados em risco; parâmetros ficam
 fora da lógica em `godot/data/campaign-tactics.json`. O combate livre e o PvP não
-usam esses parâmetros. As nove missões e o elenco atual permanecem.
+usam esses parâmetros. As nove missões originais e o elenco atual permanecem. O Colapso acrescenta oito missões ligadas ao desfecho da Fornalha, com dois campos, ondas, prazos, defesa, escolta e o Custódio da dobra em duas fases. O Arconte também tem duas fases.
 
-A oficina acrescenta Arma, Proteção e Relíquia por herói, com três patamares, especializações e fragmentos previsíveis de primeira vitória/repetição. Peças são transferíveis e conservam investimento; gemas são devolvidas ao trocar. O save 5 migra os formatos 1–4 com backup. [Estado e parâmetros](../godot/PROGRESSION.md). Fabricação e fusão até III foram acrescentadas com estoque por nível e save 6. O incremento seguinte entrega nível comum 1–6 e maestria I–III por participação, com tela Evolução, bônus limitados e save 7. Save 8 acrescenta três alternativas de habilidade por herói ativo, ligadas à maestria e com contrapartidas explícitas. Vínculos e variantes com mecânicas exclusivas continuam pendentes.
+A oficina acrescenta Arma, Proteção e Relíquia por herói, com três patamares, especializações e fragmentos previsíveis de primeira vitória/repetição. Peças são transferíveis e conservam investimento; gemas são devolvidas ao trocar. O save 5 migra os formatos 1–4 com backup. [Estado e parâmetros](../godot/PROGRESSION.md). Fabricação e fusão até III foram acrescentadas com estoque por nível e save 6. O incremento seguinte entrega nível comum 1–6 e maestria I–III por participação, com tela Evolução, bônus limitados e save 7. Save 8 acrescenta três alternativas de habilidade por herói ativo, ligadas à maestria e com contrapartidas explícitas. Save 9 acrescenta vínculos por trio e pactos por jornada concluída. Save 10 acrescenta uma técnica pessoal adquirida por jornada para cada um dos 24 heróis, com alteração de mecânica e contrapartida. A escolha é opcional e preserva os kits normalizados do Livre/PvP.
 
 Próximos marcos: ampliar objetivos e cenas; refinar núcleo e IA; completar progressão;
 capítulos; audiovisual; balanceamento; homologação.

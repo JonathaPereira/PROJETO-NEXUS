@@ -162,7 +162,8 @@ func _position() -> void:
 	for pair in [["actor", 0.25], ["target", 0.75]]:
 		var fighter = fighters[pair[0]]
 		fighter.position = Vector2(stage.size.x * pair[1] - 93, stage.size.y - 164 - 257)
-		fighter.set_depth(0.95)
+		# Keep headroom for anticipation above the authored full-cell drawing.
+		fighter.set_depth(minf(0.95,(stage.size.y-188.0)/244.0))
 		fighter.plate.position = Vector2(-5, stage.size.y - fighter.plate.size.y - 4 - fighter.position.y)
 
 func _play(action_id: String) -> void:
@@ -222,7 +223,7 @@ func _play(action_id: String) -> void:
 		if is_instance_valid(audio): audio.strike(hero,action,mapped,action_id)
 		for pair in [["actor", actor_id], ["target", target_id]]:
 			var data: Dictionary = result.impactUnits.filter(func(u): return u.id == pair[1])[0]
-			fighters[pair[0]].refresh(data, pair[0] == "actor", false, false)
+			fighters[pair[0]].refresh(data, pair[0] == "actor", false, false, not reduced_motion)
 		report.text = "\n".join(mapped.filter(func(e): return e.has("amount")).map(func(e): return CombatUI.event_detail(e)))
 		report.tooltip_text = CombatUI._plain(report.text))
 	if stamp != version or not completed: return
