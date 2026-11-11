@@ -853,8 +853,10 @@ func choose_ai(engine, state: Dictionary) -> Dictionary:
 	var choice: Dictionary = engine.choose_ai(state)
 	var goal: Dictionary = state.get("campaignObjective",{})
 	if choice.is_empty() or actor.side != 0 or goal.get("type") != "target": return choice
+	var near_deadline: bool = goal.get("type") == "target" and state.round >= int(goal.get("rounds", 99)) - 1
+	var threshold: float = tactics.endangeredHealthRatio * 0.45 if near_deadline else tactics.endangeredHealthRatio
 	var emergency: Dictionary={}
-	if engine.friendly(engine.get_action(actor,choice.actionId)) and state.units.any(func(u): return u.side == 0 and u.hp > 0 and float(u.hp)/u.maxHp < tactics.endangeredHealthRatio): emergency=choice.duplicate()
+	if engine.friendly(engine.get_action(actor,choice.actionId)) and state.units.any(func(u): return u.side == 0 and u.hp > 0 and float(u.hp)/u.maxHp < threshold): emergency=choice.duplicate()
 	# A basic attack can unlock a decisive ultimate on the next personal turn.
 	# Reserve only while that turn can still happen before the objective deadline.
 	var reserve_value := 0.0

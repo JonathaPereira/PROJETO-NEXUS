@@ -67,5 +67,14 @@ func run():
  check(urgent.actionId=="basic" and urgent.targetId=="1-boss-relay" and finisher==injured_before,"Immediate mission victory takes priority over emergency support without mutating state or RNG")
  story.act(engine,finisher,urgent.actionId,urgent.targetId,false)
  check(finisher.phase=="finished" and finisher.winner==0,"The selected finisher really completes the mission with an injured ally")
+ story.set_team(["sylva","oren","torv"])
+ var deadline_state=story.battle(engine,story.mission_index("forge-relay"))
+ deadline_state.round=5
+ deadline_state.order=["0-sylva","0-oren","0-torv","1-boss-relay","1-minion-tide","1-minion-siren"]
+ deadline_state.cursor=0
+ engine.unit(deadline_state,"0-torv").hp=int(engine.unit(deadline_state,"0-torv").maxHp * 0.28)
+ engine.unit(deadline_state,"1-boss-relay").hp=220
+ var deadline_choice=story.choose_ai(engine,deadline_state)
+ check(deadline_choice.actionId=="basic" and deadline_choice.targetId=="1-boss-relay","When the mission round deadline is imminent, hitting the objective takes priority over non-critical emergency heals")
  print("Offensive mission support: %d checks, %d failures."%[checks,failures])
  quit(1 if failures else 0)
