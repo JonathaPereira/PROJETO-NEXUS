@@ -129,12 +129,14 @@ func run():
    var side:=1 if action=="ultimate" else 0
    result=await present(app,action,side,hero_id)
    var storyboard=[6] if action=="guard" or action in profile.support else [1,2,3,4,5,0]
-   if (hero_id=="oren" or hero_id=="nima") and action=="ultimate":storyboard=[8,9,10,11,12,13,14,15,0]
+   if (hero_id=="oren" or hero_id=="nima" or hero_id=="kira") and action=="ultimate":storyboard=[8,9,10,11,12,13,14,15,0]
    check(result.resolved and result.frames==storyboard and (side==0 or result.fighter.artwork.flip_h),"%s's %s follows its authored attack/protection poses, facing and engine result"%[hero_id,action])
    if hero_id=="oren" and action=="ultimate":
     check(result.sheets==["res://assets/poses/oren-supreme-renascimento-v1.png","res://assets/poses/oren-renascimento-v1.png"],"Oren's forest awakening renders its own support sheet before returning to the preserved base drawing")
    if hero_id=="nima" and action=="ultimate":
     check(result.sheets==["res://assets/poses/nima-supreme-renascimento-v1.png","res://assets/poses/nima-renascimento-v1.png"],"Nima's thousand thorns renders its own supreme sheet before returning to the preserved base drawing")
+   if hero_id=="kira" and action=="ultimate":
+    check(result.sheets==["res://assets/poses/kira-supreme-renascimento-v1.png","res://assets/poses/kira-renascimento-v1.png"],"Kira's steel orbit renders its own supreme sheet before returning to the preserved base drawing")
   var fallen_data=app.combat.unit(app.state,"0-"+hero_id).duplicate(true);fallen_data.hp=0
   result.fighter.refresh(fallen_data,false,false,false);result.fighter.reset_pose()
   check(result.fighter.pose_index==7 and result.fighter.visual_root.rotation==0,"%s keeps its drawn kneeling defeat through snapshot and cancellation"%hero_id)
