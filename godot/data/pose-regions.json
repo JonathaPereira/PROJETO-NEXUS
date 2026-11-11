@@ -422,6 +422,118 @@
           366
         ],
         "exclude": []
+      },
+      {
+        "file": "axion-supreme-renascimento-v1.png",
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          405.0
+        ],
+        "exclude": []
+      },
+      {
+        "file": "axion-supreme-renascimento-v1.png",
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          405.0
+        ],
+        "exclude": []
+      },
+      {
+        "file": "axion-supreme-renascimento-v1.png",
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          405.0
+        ],
+        "exclude": []
+      },
+      {
+        "file": "axion-supreme-renascimento-v1.png",
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          405.0
+        ],
+        "exclude": []
+      },
+      {
+        "file": "axion-supreme-renascimento-v1.png",
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          405.0
+        ],
+        "exclude": []
+      },
+      {
+        "file": "axion-supreme-renascimento-v1.png",
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          405.0
+        ],
+        "exclude": []
+      },
+      {
+        "file": "axion-supreme-renascimento-v1.png",
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          405.0
+        ],
+        "exclude": []
+      },
+      {
+        "file": "axion-supreme-renascimento-v1.png",
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          405.0
+        ],
+        "exclude": []
       }
     ],
     "phases": {
@@ -464,6 +576,28 @@
         "travel": 0.42,
         "hold": 0.22,
         "recover": 1.2
+      }
+    },
+    "tierPhases": {
+      "ultimate": {
+        "charge": [
+          8,
+          9,
+          10
+        ],
+        "travel": [
+          11
+        ],
+        "impact": [
+          12
+        ],
+        "recover": [
+          13,
+          14,
+          15,
+          0
+        ],
+        "friendly": true
       }
     }
   },

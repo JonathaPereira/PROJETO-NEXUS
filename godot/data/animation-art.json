@@ -874,6 +874,36 @@
       "humanAcceptance": false,
       "generationPrompt": "Use case: identity-preserve. Asset type: production RGBA 2D game animation sprite sheet for Nexus, Kira's Órbita de aço SUPREME only. Reference: adult riflewoman Kira with short tousled white/silver pixie hair, red eyes, black-and-gold armor outfit with cyan glowing accents, black boots and gloves, large black sci-fi rail rifle. 8 distinctly articulated full-body poses in 4 columns by 2 rows grid, landscape 2:1 canvas.",
       "correctionPrompt": "Layout and background extraction. Preserve Kira's exact adult identity, white pixie hair, black-and-gold sci-fi armor, complete rail rifle and all 8 distinct poses in 4x2 grid on transparent canvas."
+    },
+    {
+      "id": "axion-supreme-renascimento-v1",
+      "path": "assets/poses/axion-supreme-renascimento-v1.png",
+      "reference": "assets/poses/axion-renascimento-v1.png (Axion identity, basic attack preserved)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-11",
+      "bytes": 1526204,
+      "sha256": "2381bd9478d4b3ca2a26fef6acc33ff9690644dbd3588af089c92af13f6803e6",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "braced_draw",
+        "sword_plant",
+        "chest_core_surge",
+        "channel_upward",
+        "protective_palm_apex",
+        "barrier_stabilize",
+        "blade_recovery",
+        "combat_ready"
+      ],
+      "humanAcceptance": false,
+      "generationPrompt": "Use case: identity-preserve. Asset type: production RGBA 2D game animation sprite sheet for Nexus, Axion's Protocolo zero SUPREME only. Reference: fully closed dark steel helmet knight, glowing cyan visor, gold trim, cobalt blue cape, cyan energy sword. 8 distinctly articulated full-body poses in 4 columns by 2 rows grid, landscape 2:1 canvas.",
+      "correctionPrompt": "Layout and background extraction. Preserve Axion's exact knight identity, closed helmet, cyan visor/core, blue cape, cyan energy sword and all 8 distinct poses in 4x2 grid on transparent canvas."
     }
   ]
 }
