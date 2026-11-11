@@ -814,6 +814,36 @@
         "BACKGROUND EXTRACTION ONLY. Make a clean transparent PNG cutout of the EIGHT existing Oren figures in this exact sheet. Keep every existing character pixel/shape/pose/placement/scale as faithfully as possible, same4columns2rows and same1774x887canvas. Remove the entire gray/white/green mist background and the pale halos between the figures and between limbs, setting that BACKGROUND TO ALPHA ZERO. Transparent means actual RGBA alpha0, not white, gray, a gradient or a painted checkerboard. Preserve opaque brown stone bodies, green ivy/leaves, roots, open hands/fingers/feet and all costume details. Retain all eight isolated full bodies at their current coordinates with generous empty padding, no cropping/resizing/repositioning/pose changes. Do not generate scenery, fog, glows, shadows, lighting panels, floor or new art outside the tight existing silhouettes. Background outside characters and in gaps must be fully transparent. The image must show ONLY the eight characters floating on actual transparency with clean antialiased cutout edges."
       ],
       "selectionNote": "First correction produced opaque graymatte and was rejected/preserved. Selected second correction background extraction; basic sheet untouched."
+    },
+    {
+      "id": "nima-supreme-renascimento-v1",
+      "path": "assets/poses/nima-supreme-renascimento-v1.png",
+      "reference": "assets/poses/nima-renascimento-v1.png (Nima identity, basic attack preserved)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-10",
+      "bytes": 1061097,
+      "sha256": "3f0d954b8e7a2c4e1d0a027bb59df4da9ce097d54ff34a58958b9b325a612811",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "low_gather",
+        "skyward_coil",
+        "skyward_draw",
+        "skyward_release",
+        "apex_follow_through",
+        "aerial_descent",
+        "landing_contact",
+        "ready_recovery"
+      ],
+      "humanAcceptance": false,
+      "generationPrompt": "Use case: identity-preserve. Asset type: production RGBA 2D game animation sprite sheet for Nexus, Nima's Mil espinhos SUPREME only. Input image is reference ONLY: preserve this EXACT adult female nature archer Nima, long green hair, face, emerald and gold leaf-inspired fantasy armor, teal leaf cape, boots, quiver, ornate green-and-gold thorned bow. Same hand-painted fantasy-anime rendering, costume and proportions; no redesign or increased exposure. Create a NEW sibling sheet of 8 genuinely different anatomical drawings, four equal columns by two equal rows, landscape 2:1 canvas. Every COMPLETE figure and COMPLETE bow including all tips must fit inside its own cell with generous 50px fully transparent padding on EVERY edge. Uniform character scale across cells. Camera orthographic, facing right in consistent 3/4 side view, ground baseline 86% down cell. Transparent background. No text, labels, grid, floor, shadow, detached magic, external glow or haze. This supreme is her Mil espinhos volley, clearly different from her ordinary horizontal single shot.",
+      "correctionPrompt": "Layout and background extraction. Preserve Nima's exact adult identity, emerald/gold costume, long green hair, complete ornate thorned bow and all 8 distinct poses in 4x2 grid on transparent canvas."
     }
   ]
 }

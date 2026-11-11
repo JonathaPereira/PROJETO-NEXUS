@@ -1930,6 +1930,126 @@
           386
         ],
         "exclude": []
+      },
+      {
+        "file": "nima-supreme-renascimento-v1.png",
+        "rect": [
+          0,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          381
+        ],
+        "scale": 0.5970149253731343,
+        "exclude": []
+      },
+      {
+        "file": "nima-supreme-renascimento-v1.png",
+        "rect": [
+          443,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          381
+        ],
+        "scale": 0.5970149253731343,
+        "exclude": []
+      },
+      {
+        "file": "nima-supreme-renascimento-v1.png",
+        "rect": [
+          887,
+          0,
+          443,
+          443
+        ],
+        "foot": [
+          221.5,
+          381
+        ],
+        "scale": 0.5970149253731343,
+        "exclude": []
+      },
+      {
+        "file": "nima-supreme-renascimento-v1.png",
+        "rect": [
+          1330,
+          0,
+          444,
+          443
+        ],
+        "foot": [
+          222.0,
+          381
+        ],
+        "scale": 0.5970149253731343,
+        "exclude": []
+      },
+      {
+        "file": "nima-supreme-renascimento-v1.png",
+        "rect": [
+          0,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          381
+        ],
+        "scale": 0.5970149253731343,
+        "exclude": []
+      },
+      {
+        "file": "nima-supreme-renascimento-v1.png",
+        "rect": [
+          443,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          381
+        ],
+        "scale": 0.5970149253731343,
+        "exclude": []
+      },
+      {
+        "file": "nima-supreme-renascimento-v1.png",
+        "rect": [
+          887,
+          443,
+          443,
+          444
+        ],
+        "foot": [
+          221.5,
+          381
+        ],
+        "scale": 0.5970149253731343,
+        "exclude": []
+      },
+      {
+        "file": "nima-supreme-renascimento-v1.png",
+        "rect": [
+          1330,
+          443,
+          444,
+          444
+        ],
+        "foot": [
+          222.0,
+          381
+        ],
+        "scale": 0.5970149253731343,
+        "exclude": []
       }
     ],
     "phases": {
@@ -1972,6 +2092,27 @@
         "travel": 0.48,
         "hold": 0.22,
         "recover": 1.0
+      }
+    },
+    "tierPhases": {
+      "ultimate": {
+        "charge": [
+          8,
+          9,
+          10
+        ],
+        "travel": [
+          11
+        ],
+        "impact": [
+          12,
+          13
+        ],
+        "recover": [
+          14,
+          15,
+          0
+        ]
       }
     }
   },
