@@ -342,3 +342,13 @@ seis composições com percurso completo comprovado em simulação, usando
 políticas distintas; não equivale a seis vitórias da IA atual ou balanço
 aprovado. Roteiros, 25 logs/relatórios e verificação ficam em
 `artifacts/renascimento-final-checks/relay77-*`.
+
+## Balanceamento tático sob pressão de prazo no relé — incremento Renascimento 82
+
+A política de campanha foi refinada em `godot/scripts/campaign.gd` para encontros com prazo de alvo iminente (`state.round >= goal.rounds - 1`):
+o limiar de emergência de vida aliada (`endangeredHealthRatio`) é reduzido para 45% do valor original (`threshold = tactics.endangeredHealthRatio * 0.45`).
+Isso impede que combatentes ofensivos travem em loops defensivos de cura e proteção na penúltima ou última rodada quando a vitória por eliminação do alvo da missão é alcançável no turno corrente.
+As regras de combate Livre/PvP em `src/kits.js`, `src/data.js` e `src/balance.json` permanecem completamente inalteradas.
+
+Com este ajuste tático, as três composições de campanha que permaneciam bloqueadas no Guardião do relé (`Torv/Oren/Sylva`, `Nima/Axion/Brin` e `Noct/Auren/Elyra`) vencem o encontro na rodada 5 antes do prazo de 6 rodadas, completando a campanha 48/48 com conservação integral do save e progressão legal.
+A suíte `mission_support_ai.gd` expandiu de 12 para 13 verificações (0 falhas); `objective_matrix.gd` executou 624 cenários com 600 vitórias e zero erros de resolução.
