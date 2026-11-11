@@ -56,7 +56,7 @@ func _run() -> void:
 	root.size=Vector2i(1600,900)
 	await settle()
 	app.campaign=app.Campaign.new(app.catalog,"user://capture-012.json")
-	app.campaign.cleared=3
+	app.campaign.completed = app.campaign._legacy_completed(3)
 	app.reduced_motion=false
 	app.sound.enabled=true
 	app.audio_enabled=true

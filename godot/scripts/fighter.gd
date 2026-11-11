@@ -5,12 +5,15 @@ const Meter = preload("res://scripts/meter.gd")
 const Glyph = preload("res://scripts/glyph.gd")
 const ATLAS = preload("res://assets/clean-atlas.png")
 const CHARACTER_SHADER = preload("res://shaders/character.gdshader")
+const DEFEAT_ANGLE=.28
+const DEFEAT_ALPHA=.4
 const SPECIAL = {0: "veyra", 4: "sylva", 8: "axion", 12: "astra", 16: "vesper", 20: "auren"}
 const RulesText = preload("res://scripts/rules_text.gd")
 static var STATUS_NAMES: Dictionary = RulesText.status_names()
 static var texture_cache: Dictionary = {}
 static var region_cache: Dictionary = {}
 static var pose_regions: Dictionary = {}
+static var art_cache: Dictionary = {}
 var unit_id := ""
 var hero_id := ""
 var tint := Color.WHITE
@@ -21,10 +24,12 @@ var motion_enabled := true
 var posing := false
 var elapsed := 0.0
 var dead := false
+var fall_direction:=1.0
 var base_tooltip := ""
 var display_data: Dictionary = {}
 var depth := 1.0
 var pose_index := -1
+var _pose_serial:=0
 var visual_root: Node2D
 var artwork: TextureRect
 var resting_art: Texture2D
@@ -50,7 +55,21 @@ var affinity_label: Label
 var relationship: Label
 var plate: Panel
 
+static func prepare_poses(id: String) -> void:
+	if pose_regions.is_empty() and FileAccess.file_exists("res://data/pose-regions.json"):
+		pose_regions=JSON.parse_string(FileAccess.get_file_as_string("res://data/pose-regions.json"))
+	if not pose_regions.has(id):return
+	var files: Array=[pose_regions[id].get("file",id+".png")]
+	for frame in pose_regions[id].frames:
+		if frame.has("file") and not frame.file in files:files.append(frame.file)
+	for file in files:
+		var key: String="poses/"+file
+		if not texture_cache.has(key) and ResourceLoader.exists("res://assets/"+key):
+			texture_cache[key]=load("res://assets/"+key)
+
 static func portrait(index: int, full_body: bool = false) -> Texture2D:
+	var key := "%d-%s" % [index,full_body]
+	if art_cache.has(key): return art_cache[key]
 	var texture := AtlasTexture.new()
 	texture.filter_clip = true
 	if region_cache.is_empty(): region_cache = JSON.parse_string(FileAccess.get_file_as_string("res://data/art-regions.json"))
@@ -71,10 +90,12 @@ static func portrait(index: int, full_body: bool = false) -> Texture2D:
 		var bounds: Array = region_cache._legacy[str(index)]
 		var region := Rect2(bounds[0], bounds[1], bounds[2], bounds[3])
 		texture.region = region if full_body else Rect2(region.position + Vector2(region.size.x * 0.15, 0), Vector2(region.size.x * 0.7, region.size.y * 0.6))
+	art_cache[key]=texture
 	return texture
 
 func setup(hero: Dictionary, id: String, color: Color) -> void:
 	unit_id = id
+	fall_direction=1.0 if id.begins_with("1-") or id=="target" else -1.0
 	hero_id = hero.get("visualHero", hero.id)
 	hero_name = hero.name
 	role_name = hero.role
@@ -247,6 +268,19 @@ func hit_position() -> Vector2:
 	if spatial_presentation: return spatial_head.lerp(spatial_foot, 0.3)
 	return foot_position() - Vector2(0, 108 * depth)
 
+func projectile_origin() -> Vector2:
+	if spatial_presentation:return hit_position()
+	prepare_poses(hero_id)
+	var definition: Dictionary=pose_regions.get(hero_id,{})
+	var frames: Array=definition.get("frames",[])
+	if pose_index<0 or pose_index>=frames.size():return hit_position()
+	var frame: Dictionary=frames[pose_index]
+	var anchor: Array=frame.get("projectileOrigin",[])
+	if anchor.size()!=2:return hit_position()
+	var point:=Vector2(anchor[0],anchor[1])
+	if artwork.flip_h:point.x=float(frame.rect[2])-point.x
+	return position+visual_root.transform*(artwork.position+point*float(frame.get("scale",definition.scale)))
+
 func use_spatial_presentation() -> void:
 	spatial_presentation = true
 	visual_root.hide()
@@ -265,19 +299,17 @@ func set_pose(frame: int) -> void:
 		_rest_pose()
 		material_fx.set_shader_parameter("exclusion_count", 0)
 		return
-	if pose_regions.is_empty() and FileAccess.file_exists("res://data/pose-regions.json"):
-		pose_regions = JSON.parse_string(FileAccess.get_file_as_string("res://data/pose-regions.json"))
+	prepare_poses(hero_id)
 	if not pose_regions.has(hero_id): return
-	var key := hero_id + "-poses"
-	if not texture_cache.has(key): texture_cache[key] = load("res://assets/poses/%s.png" % hero_id)
+	var data: Dictionary = pose_regions[hero_id].frames[frame]
+	var key: String = "poses/"+data.get("file",pose_regions[hero_id].get("file",hero_id+".png"))
 	var texture := AtlasTexture.new()
 	texture.atlas = texture_cache[key]
 	texture.filter_clip = true
-	var data: Dictionary = pose_regions[hero_id].frames[frame]
 	var rect: Array = data.rect
 	texture.region = Rect2(rect[0], rect[1], rect[2], rect[3])
 	artwork.texture = texture
-	var factor: float = pose_regions[hero_id].scale
+	var factor: float = data.get("scale",pose_regions[hero_id].scale)
 	artwork.size = Vector2(rect[2], rect[3]) * factor
 	var foot_x: float = float(rect[2]) - data.foot[0] if artwork.flip_h else float(data.foot[0])
 	artwork.position = -Vector2(foot_x, data.foot[1]) * factor
@@ -295,6 +327,36 @@ func _rest_pose() -> void:
 	# Anchor the texture's actual lower edge to the feet, including wide silhouettes.
 	artwork.position = Vector2(-artwork.size.x * 0.5, -artwork.size.y)
 
+func action_timing(tier: String,fallback: Dictionary) -> Dictionary:
+	prepare_poses(hero_id)
+	return pose_regions.get(hero_id,{}).get("timings",{}).get(tier,fallback).duplicate()
+
+func set_action_pose(phase: String,context: Dictionary,progress:=0.0) -> void:
+	_pose_serial+=1
+	_apply_action_pose(phase,context,progress)
+
+func _apply_action_pose(phase: String,context: Dictionary,progress: float) -> void:
+	prepare_poses(hero_id)
+	var phases: Dictionary=pose_regions.get(hero_id,{}).get("phases",{})
+	var specific: Dictionary=pose_regions.get(hero_id,{}).get("tierPhases",{}).get(context.get("tier",""),{})
+	if not dead and not specific.is_empty() and bool(specific.get("friendly",false))==bool(context.get("support",false)):
+		phases=specific
+	var sequence: Array=phases.get("support" if context.get("support",false) and phases.has("support") else phase,[])
+	if dead and phases.has("defeat"):sequence=phases.defeat
+	var frame: int
+	if sequence.is_empty():
+		var release:=3 if context.get("tier")=="ultimate" else 2
+		frame={"charge":1,"travel":release,"impact":release,"recover":3}.get(phase,-1)
+	else:
+		frame=sequence[mini(sequence.size()-1,int(clampf(progress,0,1)*sequence.size()))]
+	if frame!=pose_index:set_pose(frame)
+
+func animate_action_pose(tween: Tween,phase: String,context: Dictionary,duration: float) -> void:
+	set_action_pose(phase,context)
+	var version:=_pose_serial
+	tween.tween_method(func(progress):
+		if version==_pose_serial:_apply_action_pose(phase,context,progress),0.0,1.0,duration)
+
 func _has_point(point: Vector2) -> bool:
 	var plate_point := plate.get_transform().affine_inverse() * point
 	var in_plate := Rect2(Vector2.ZERO, plate.size).has_point(plate_point)
@@ -304,6 +366,7 @@ func _has_point(point: Vector2) -> bool:
 	return Rect2(Vector2(93 - 90 * depth, 257 - 200 * depth), Vector2(180 * depth, 200 * depth)).has_point(point) or in_plate
 
 func _process(delta: float) -> void:
+	if not is_visible_in_tree(): return
 	if spatial_presentation: return
 	if not is_instance_valid(visual_root): return
 	elapsed += delta
@@ -313,6 +376,7 @@ func _process(delta: float) -> void:
 	queue_redraw()
 
 func reset_pose() -> void:
+	_pose_serial+=1
 	posing = false
 	set_pose(-1)
 	visual_root.position = Vector2(93, 257)
@@ -322,13 +386,40 @@ func reset_pose() -> void:
 	visual_root.z_index = 0
 	material_fx.set_shader_parameter("flash", 0.0)
 	material_fx.set_shader_parameter("bend", 0.0)
+	if dead: _settle_defeat()
 
-func refresh(data: Dictionary, is_active: bool, is_chosen: bool, can_target: bool) -> void:
+func _settle_defeat() -> void:
+	var frame:=_defeat_frame()
+	if frame>=0:set_pose(frame)
+	visual_root.position=Vector2(93,257) if frame>=0 else _fallen_position()
+	visual_root.rotation=0.0 if frame>=0 else DEFEAT_ANGLE*fall_direction
+	visual_root.modulate.a=DEFEAT_ALPHA
+
+func _defeat_frame() -> int:
+	prepare_poses(hero_id)
+	var sequence: Array=pose_regions.get(hero_id,{}).get("phases",{}).get("defeat",[])
+	return int(sequence[0]) if not sequence.is_empty() else -1
+
+func _fallen_position() -> Vector2:
+	return Vector2(93+20*fall_direction,271)
+
+func animate_defeat(tween: Tween,direction: float) -> void:
+	fall_direction=direction
+	var frame:=_defeat_frame()
+	if frame>=0:set_pose(frame)
+	tween.tween_property(visual_root,"rotation",0.0 if frame>=0 else DEFEAT_ANGLE*fall_direction,.25)
+	tween.tween_property(visual_root,"position",Vector2(93,257) if frame>=0 else _fallen_position(),.25)
+	tween.tween_property(visual_root,"modulate:a",DEFEAT_ALPHA,.5)
+
+func refresh(data: Dictionary, is_active: bool, is_chosen: bool, can_target: bool, animated_defeat:=false) -> void:
+	var was_dead:=dead
 	display_data = data.duplicate(true)
 	active = is_active
 	chosen = is_chosen
 	available = can_target
 	dead = data.hp <= 0
+	if dead and not animated_defeat:reset_pose()
+	elif was_dead and not dead:reset_pose()
 	if dead: relationship.visible = false
 	health.max_value = data.maxHp
 	health.value = data.hp
@@ -339,7 +430,9 @@ func refresh(data: Dictionary, is_active: bool, is_chosen: bool, can_target: boo
 	shield_label.text = "ESCUDO  %d" % data.shield
 	health.caption = "VIDA  %d / %d" % [data.hp, data.maxHp]
 	energy.caption = "ENERGIA  %d / %d" % [data.energy, int(RulesText.rules.energy.maximum)]
-	shield.caption = "ESCUDO  %d / %d%s" % [data.shield, int(shield.max_value), (" · %dT" % data.get("shieldTurns", 0)) if data.shield > 0 and data.get("shieldTurns", 0) > 0 else " · AGORA" if data.shield > 0 else ""]
+	shield.tooltip_text = "Camadas independentes: expiram no início da rodada indicada. Limite total: 25% da vida."
+	for layer in data.get("shieldLayers", []): shield.tooltip_text += "\n%d de escudo · expira na rodada %d" % [layer.amount,layer.expiresRound]
+	shield.caption = "ESCUDO  %d / %d%s" % [data.shield, int(shield.max_value), (" · %dR" % data.get("shieldTurns", 0)) if data.shield > 0 and data.get("shieldTurns", 0) > 0 else " · AGORA" if data.shield > 0 else ""]
 	shield_label.modulate.a = 1.0 if data.shield > 0 else 0.55
 	stats.text = "%d/%d PV · %d EN" % [data.hp, data.maxHp, data.energy]
 	var states: Array = []
@@ -355,12 +448,12 @@ func refresh(data: Dictionary, is_active: bool, is_chosen: bool, can_target: boo
 	status_label.text = "DERROTADO" if dead else " · ".join(compact)
 	status_strip.configure(data.statuses, data.guarding, hero_name, dead)
 	status_label.tooltip_text = "\n".join(states)
-	tooltip_text = base_tooltip + "\nEscudo único; dura %d ações do protegido. Não acumula.\nEscudo: %d / %d máximo" % [int(RulesText.rules.shield.durationActions), data.shield, int(shield.max_value)] + ("\n\nESTADOS\n" + "\n".join(states) if not states.is_empty() else "")
+	tooltip_text = base_tooltip + "\nCamadas independentes; cada aplicação dura %d rodadas globais.\nEscudo: %d / %d máximo" % [int(RulesText.rules.shield.durationRounds), data.shield, int(shield.max_value)] + ("\n\nESTADOS\n" + "\n".join(states) if not states.is_empty() else "")
 	if data.has("gem"):
 		var gems: Variant = data.gem
 		var summary: String = " · ".join(gems) if gems is Array else str(gems)
 		tooltip_text += "\n\nENGASTES DE CAMPANHA\n" + summary
-	artwork.modulate = Color(0.35, 0.4, 0.5, 0.4) if dead else Color.WHITE
+	artwork.modulate = Color(0.65, 0.7, 0.8, 1.0) if dead else Color.WHITE
 	indicator.text = "◇" if chosen and available else "●"
 	indicator.visible = (active or (chosen and available)) and not dead
 	indicator.add_theme_color_override("font_color", Color("f6da97") if chosen and available else Color("99f5e5"))

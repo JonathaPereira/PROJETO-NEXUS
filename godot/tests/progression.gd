@@ -23,7 +23,7 @@ func conservation(progress) -> bool:
 		if used + progress.available(type.id) != progress.copies(type.id): return false
 	return true
 func _run() -> void:
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(PATH))
+	for suffix in ["", ".tmp", ".bak", ".bak.tmp"]: DirAccess.remove_absolute(ProjectSettings.globalize_path(PATH + suffix))
 	var engine := Combat.new()
 	var progress := Campaign.new(engine.catalog, PATH)
 	progress.equip("veyra", "ember", 0)
@@ -64,7 +64,7 @@ func _run() -> void:
 	app.hub.selected_hero = "bast"
 	app.hub.open("gems")
 	await settle()
-	check(app.hub.hero_picker.item_count == 20 and app.hub.slot_buttons.size() == 3, "RPG workshop exposes twenty heroes and three independent sockets")
+	check(app.hub.hero_picker.item_count == 24 and app.hub.slot_buttons.size() == 3, "RPG workshop exposes twenty-four heroes and three independent sockets")
 	check(app.hub.transfer_buttons.ember.disabled == false, "An equipped copy offers an explicit transfer action")
 	app.hub.transfer_buttons.ember.pressed.emit()
 	await settle()
@@ -86,6 +86,6 @@ func _run() -> void:
 		check(app.hub.scroll.follow_focus, "Keyboard focus scrolls to inventory controls at %s" % dimensions)
 	app.queue_free()
 	await settle()
-	DirAccess.remove_absolute(ProjectSettings.globalize_path(PATH))
+	for suffix in ["", ".tmp", ".bak", ".bak.tmp"]: DirAccess.remove_absolute(ProjectSettings.globalize_path(PATH + suffix))
 	print("Classes and RPG workshop: %d checks, %d failures." % [checks, failures])
 	quit(1 if failures else 0)

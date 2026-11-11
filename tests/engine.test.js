@@ -5,23 +5,24 @@ import {createBattle,currentUnit,advantage,canUse,legalTargets,getAction,act,cho
 function scene(id='veyra') {
  const rest=HEROES.map(h=>h.id).filter(h=>h!==id);
  const s=createBattle([id,...rest.slice(0,2)],rest.slice(2,5));
+ for(const u of s.units)u.statuses=[];
  const a=s.units[0];s.order=[a.id,...s.units.slice(1).map(u=>u.id)];s.cursor=0;a.energy=100;
  return {s,a,t:s.units[3]};
 }
 const damage=r=>r.events.find(e=>e.type==='damage'&&!e.reaction&&!e.intercepted);
-test('five affinities each have a distinct tank, support and damage kit; four archived heroes retain art indices',()=>{
- assert.equal(HEROES.length,20);assert.equal(ARCHIVED_HEROES.length,4);assert.equal(CLASSES.length,5);
+test('six affinities each have a distinct tank, support and damage kit with stable art indices',()=>{
+ assert.equal(HEROES.length,24);assert.equal(ARCHIVED_HEROES.length,0);assert.equal(CLASSES.length,6);
  assert.equal(new Set([...HEROES,...ARCHIVED_HEROES].map(h=>h.index)).size,24);
  for(const c of CLASSES) assert.deepEqual([...new Set(HEROES.filter(h=>h.classId===c.id).map(h=>h.role))].sort(),['Dano','Suporte','Tanque']);
  for(const h of HEROES) {assert(h.identity&&h.synergy);for(const k of ['basic','skill','ultimate'])assert(h[k].description&&h[k].name);}
- assert(!HERO_BY_ID.auren);
+ assert.equal(HERO_BY_ID.auren.index,20);
 });
-test('five-class cycle closes with Sombrio over Ígneo and reversed resistance',()=>{
+test('six-class cycle closes with Lumi over Ígneo and reversed resistance',()=>{
  for(const c of CLASSES){assert.equal(advantage(c.id,CLASS_BY_ID[c.id].strongAgainst),1.25);assert.equal(advantage(CLASS_BY_ID[c.id].strongAgainst,c.id),.85);}
- assert.equal(advantage('sombrio','igneo'),1.25);assert.equal(advantage('arcano','igneo'),1);
+ assert.equal(advantage('sombrio','lumi'),1.25);assert.equal(advantage('arcano','igneo'),1);
 });
-test('invalid or archived teams, illegal targets and unavailable actions do not mutate a battle',()=>{
- assert(!validateTeam(['auren','veyra','astra']));assert(!validateTeam(['veyra','veyra','astra']));
+test('invalid teams, illegal targets and unavailable actions do not mutate a battle',()=>{
+ assert(!validateTeam(['missing','veyra','astra']));assert(!validateTeam(['veyra','veyra','astra']));
  const s=createBattle(...DEFAULT_TEAMS),before=structuredClone(s);
  assert.throws(()=>act(s,'ultimate',s.units[3].id));assert.throws(()=>act(s,'basic',currentUnit(s).id));assert.deepEqual(s,before);
 });
@@ -95,7 +96,7 @@ test('Fracture starts at round 12 with 4% max HP, bypasses barriers and ends def
  const {s,a}=scene();s.round=11;s.order=[a.id];a.speed=999;const hp=a.hp;act(s,'guard',a.id);assert.equal(s.round,12);assert.equal(a.hp,hp-Math.ceil(a.maxHp*.04));assert(a.shield>0);
  const q=createBattle(...DEFAULT_TEAMS);while(q.phase==='playing'&&q.turns<400)act(q,'guard',currentUnit(q).id);assert.equal(q.phase,'finished');
 });
-test('deterministic AI exercises all twenty kits and keeps resources bounded through complete matches',()=>{
+test('deterministic AI exercises all twenty-four kits and keeps resources bounded through complete matches',()=>{
  for(let i=0;i<HEROES.length;i++){
  const teams=[0,5].map(offset=>[0,1,2].map(j=>HEROES[(i+offset+j)%HEROES.length].id));const s=createBattle(...teams,{seed:i+1});
  while(s.phase==='playing'&&s.turns<400){const m=chooseAI(s);assert(m);assert(canUse(currentUnit(s),m.actionId));act(s,m.actionId,m.targetId);for(const u of s.units){assert(u.hp>=0&&u.hp<=u.maxHp);assert(u.shield>=0&&u.shield<=Math.round(u.maxHp*.25));assert(u.energy>=0&&u.energy<=100);}}
@@ -116,19 +117,29 @@ test('periodic burn, bleeding and regeneration activate exactly twice per target
  assert.equal(a.statuses.length,0);
 });
 
-test('shields replace by the stronger value, never add, and weaker applications cannot renew them',()=>{
+test('independent shields add up to the cap without renewing an older layer',()=>{
  const {s,a}=scene('rhazen');a.shield=100;a.shieldTurns=1;
- const r=act(s,'skill',a.id);const shield=r.events.find(e=>e.type==='shield');
- const expected=Math.round(a.maxHp*.16);assert.equal(shield.shieldAfter,expected);assert.equal(shield.amount,expected-100);assert.equal(a.shieldTurns,2);
- const q=scene('veyra');q.a.shield=200;q.a.shieldTurns=1;const receipt=act(q.s,'guard',q.a.id).events.find(e=>e.type==='guard');
- assert.equal(receipt.shieldAfter,200);assert.equal(receipt.amount,0);assert.equal(receipt.shieldTurns,1);
+ const r=act(s,'skill',a.id).events.find(e=>e.type==='shield');
+ assert.equal(r.shieldAfter,100+Math.round(a.maxHp*.16));
+ assert.deepEqual(a.shieldLayers.map(l=>l.expiresRound),[2,3]);
+ const q=scene();q.a.shield=Math.round(q.a.maxHp*.25);q.a.shieldTurns=1;
+ assert.equal(act(q.s,'guard',q.a.id).events[0].amount,0);
+ assert.equal(q.a.shieldLayers[0].expiresRound,2);
 });
-test('an untouched shield expires after two further actions and a fresh guard replaces a due shield',()=>{
- for(const refresh of [false,true]){
-  const {s,a,t}=scene();act(s,'guard',a.id);let visits=0,expired=false;
-  while(visits<2){const actor=currentUnit(s);if(actor.id===a.id){visits++;assert.equal(actor.shieldTurns,2-visits);const r=act(s,visits===2&&refresh?'guard':'basic',visits===2&&refresh?a.id:t.id,false);expired ||= r.events.some(e=>e.type==='shieldExpired');}else act(s,'guard',actor.id);}
-  assert.equal(expired,!refresh);assert.equal(a.shield,refresh?Math.round(a.maxHp*.06):0);if(refresh)assert.equal(a.shieldTurns,2);
- }
+test('round 1 shield expires in round 3 while round 2 shield survives, consuming oldest layers first',()=>{
+ const {s,a}=scene();const grant=Math.round(a.maxHp*.06);
+ act(s,'guard',a.id);
+ while(s.round<2)act(s,'guard',currentUnit(s).id);
+ s.order=[a.id];s.cursor=0;
+ const r=act(s,'guard',a.id);
+ assert.equal(s.round,3);assert.equal(a.shield,grant);
+ assert.deepEqual(a.shieldLayers,[{amount:grant,expiresRound:4}]);
+ assert(r.turnEvents.some(e=>e.type==='shieldExpired'&&e.target===a.id&&e.amount===grant&&e.shieldAfter===grant));
+ const q=scene();q.t.shield=240;q.t.shieldTurns=2;
+ q.t.shieldLayers=[{amount:80,expiresRound:3},{amount:160,expiresRound:4}];
+ const d=damage(act(q.s,'basic',q.t.id,false));
+ assert(d.absorbed>80);assert.equal(q.t.shieldLayers.length,1);
+ assert.equal(q.t.shieldLayers[0].expiresRound,4);assert.equal(q.t.shieldLayers[0].amount,240-d.absorbed);
 });
 test('basic attacks can target front or rear unless a live enemy is provoking',()=>{
  const {s,a}=scene();assert.equal(legalTargets(s,a,getAction(a,'basic')).length,3);
@@ -178,7 +189,7 @@ test('one archived hero per affinity returns with a distinct specialty and stabl
  assert.deepEqual(returned.map(h=>h.index),[3,7,10,15,18]);
  assert.equal(new Set(returned.map(h=>h.classId)).size,5);
  assert.equal(new Set(returned.map(h=>h.specialty)).size,5);
- assert(ARCHIVED_HEROES.every(h=>h.classId==='lumi'));
+ assert.equal(ARCHIVED_HEROES.length,0);
  for(const c of CLASSES)assert.equal(HEROES.filter(h=>h.classId===c.id).length,4);
 });
 test('dark marks tick actual HP through shields, heal only their living author and record correct off-turn endpoints',()=>{
@@ -226,10 +237,10 @@ test('a nearly defeated interceptor cannot erase overflow damage and cannot inte
  const p=damage(act(plain,'basic',t.id,false));assert.equal(intercept.amount,1);assert.equal(direct.total+intercept.amount,p.total);
  const q=scene('astra');q.t.statuses=[{type:'cover',owner:q.s.units[4].id,turns:2}];assert(!act(q.s,'ultimate',q.t.id,false).events.some(e=>e.intercepted));
 });
-test('Vesper creates one-turn taunt and riposte while multi-status combos consume just one opening',()=>{
+test('Vesper creates two-turn taunt and riposte while multi-status combos consume just one opening',()=>{
  const q=scene('vesper'),r=act(q.s,'skill',q.a.id,false);const statuses=r.impactUnits[0].statuses;
- assert.equal(statuses.find(s=>s.type==='taunt').turns,1);assert.equal(statuses.find(s=>s.type==='riposte').turns,1);
- assert.equal(r.events.find(e=>e.extraEffect==='riposte').extraEffectTurns,1);
+ assert.equal(statuses.find(s=>s.type==='taunt').turns,2);assert.equal(statuses.find(s=>s.type==='riposte').turns,2);
+ assert.equal(r.events.find(e=>e.extraEffect==='riposte').extraEffectTurns,2);
  const {s,a,t}=scene('veyra');t.statuses=[{type:'bleed',turns:2},{type:'burn',turns:2}];const hit=act(s,'skill',t.id,false);
  const after=hit.impactUnits.find(u=>u.id===t.id);assert(!after.statuses.some(x=>x.type==='burn'));assert(after.statuses.some(x=>x.type==='bleed'));
 });
@@ -246,4 +257,24 @@ test('an isolated interceptor skips its unavailable ally protection and always s
   const action=chooseAI(s);assert(action);assert.notEqual(action.actionId,'skill');
   assert(legalTargets(s,a,getAction(a,action.actionId)).some(t=>t.id===action.targetId));
  }
+});
+
+test('provoking tank pays a bound defense penalty; cleansing cannot remove that price',()=>{
+ const {s,a,t}=scene();t.heroId='vesper';t.defense=108;t.statuses=[];
+ const plain=damage(act(structuredClone(s),'basic',t.id,false)).total;
+ t.statuses=[{type:'taunt',turns:2}];
+ const taunted=damage(act(structuredClone(s),'basic',t.id,false)).total;
+ assert(taunted>plain);assert.equal(a.defense,HERO_BY_ID[a.heroId].defense);
+ const q=scene('vektor');q.a.statuses=[{type:'taunt',turns:2},{type:'burn',turns:2}];
+ act(q.s,'skill',q.a.id);assert(q.a.statuses.some(st=>st.type==='taunt'));assert(!q.a.statuses.some(st=>st.type==='burn'));
+});
+test('opening cover selects a single tank and stops redirecting when that tank falls',()=>{
+ const s=createBattle(['vesper','oren','sylva'],['veyra','kira','nima']);
+ for(const u of s.units.slice(1,3))assert.equal(u.statuses.find(st=>st.type==='cover').owner,'0-vesper');
+ assert(!s.units[0].statuses.some(st=>st.type==='cover'));
+});
+test('AI finishes an exposed damage hero, conserves energy, protects a dying ally and never changes RNG',()=>{
+ const {s,a}=scene('veyra');s.units[3].hp=1;s.units[3].heroId='nima';s.units[4].hp=0;s.units[5].hp=0;
+ const before=structuredClone(s),choice=chooseAI(s);assert.equal(choice.targetId,s.units[3].id);assert.equal(choice.actionId,'basic');assert.deepEqual(s,before);
+ const q=scene('sylva');q.s.units[1].hp=10;assert.equal(chooseAI(q.s).targetId,q.s.units[1].id);assert(['skill','ultimate'].includes(chooseAI(q.s).actionId));
 });

@@ -8,6 +8,8 @@ const ReceiptLink = preload("res://scripts/receipt_link.gd")
 const Bloom = preload("res://scripts/impact_bloom.gd")
 const AreaWave = preload("res://scripts/area_wave.gd")
 const Echo = preload("res://scripts/attack_echo.gd")
+const Signature = preload("res://scripts/hero_signature.gd")
+const Quality = preload("res://scripts/presentation_quality.gd")
 const PROFILES = {"igneo": "flame_dash", "natural": "verdant_bloom", "tecnico": "ion_cannon", "arcano": "astral_rift", "sombrio": "shadow_step", "lumi": "dawn_lance"}
 var generation := 0
 var tweens: Array[Tween] = []
@@ -129,17 +131,18 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 		return true
 	var tier: String = str(result.actionId)
 	var timing := {"charge": 0.96, "travel": 0.42, "hold": 0.22, "recover": 1.20} if tier == "ultimate" else {"charge": 0.56, "travel": 0.34, "hold": 0.16, "recover": 0.88} if tier == "skill" else {"charge": 0.36, "travel": 0.28, "hold": 0.10, "recover": 0.70}
+	timing=actor.action_timing(tier,timing)
 	last_timing = timing.duplicate()
 	var art_hero: Dictionary = hero.duplicate()
 	art_hero.color = actor.tint.to_html()
 	var signature: String = hero.animation
 	var ultimate: bool = tier == "ultimate"
 	var support: bool = action.kind.begins_with("heal") or action.kind.begins_with("shield") or action.kind == "guard" or action.kind.begins_with("support")
-	var melee: bool = not support and signature in ["sweep", "crater", "roots", "prism", "crescent", "daggers", "eruption", "plates", "rift", "claws"]
+	var pose_context:={"tier":tier,"support":support}
+	var melee: bool = not support and signature in ["sweep", "crater", "roots", "prism", "crescent", "daggers", "eruption", "plates", "rift", "claws", "lance", "rays"]
 	actor.posing = true
 	posed_fighters.append(actor)
 	actor.visual_root.z_index = 30
-	actor.set_pose(1)
 	var home: Vector2 = actor.visual_root.position
 	var direction := -1.0 if actor.artwork.flip_h else 1.0
 	var targets: Array = result.events.filter(func(e): return e.type in ["damage", "heal", "shield", "guard", "support"] and fighters.has(e.target) and not e.get("passive", false) and not e.get("reaction", false) and not e.get("intercepted", false))
@@ -178,19 +181,21 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 		transients.append(ultimate_scene)
 	_effect(effects, origin, origin, art_hero, action.kind, "charge", ultimate, timing.charge + 0.06, tier)
 	var anticipate := _tween(owner).set_parallel(true)
+	actor.animate_action_pose(anticipate,"charge",pose_context,timing.charge)
 	var heavy: bool = signature in ["crater", "roots", "hex", "eruption", "plates", "claws"]
 	var floating: bool = signature in ["orbit", "runes", "threads", "spiral"]
 	anticipate.set_trans(Tween.TRANS_SINE).set_ease(Tween.EASE_IN_OUT)
-	anticipate.tween_property(actor.visual_root, "rotation", (-0.10 if heavy else -0.055) * direction, timing.charge)
+	var motion: Array = Signature.MOTION.get(signature,[-.055,-3.0])
+	anticipate.tween_property(actor.visual_root, "rotation", float(motion[0]) * direction, timing.charge)
 	anticipate.tween_method(func(v): actor.material_fx.set_shader_parameter("bend", v), 0.0, -6.0 * direction, timing.charge)
-	anticipate.tween_property(actor.visual_root, "position", home + Vector2((-16 if melee else -7) * direction, -17 if floating else 7 if heavy else -3), timing.charge)
+	anticipate.tween_property(actor.visual_root, "position", home + Vector2((-16 if melee else -7) * direction, float(motion[1])), timing.charge)
 	anticipate.tween_property(actor.visual_root, "scale", Vector2(1.025 if heavy else 0.985, 0.97 if heavy else 1.02) * actor.depth, timing.charge)
 	await owner.get_tree().create_timer(timing.charge).timeout
 	if not _valid(version, actor): return false
 	if is_instance_valid(ultimate_scene): ultimate_scene.release()
-	actor.set_pose(3 if ultimate else 2)
 	var contact: Vector2 = primary.foot_position() - (actor.position + home) - Vector2(116 * direction, 0)
 	var strike := _tween(owner).set_parallel(true)
+	actor.animate_action_pose(strike,"travel",pose_context,timing.travel)
 	strike.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_IN)
 	if melee:
 		if signature in ["crater", "roots", "eruption"]:
@@ -214,17 +219,22 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 	else:
 		strike.tween_property(actor.visual_root, "scale", Vector2(1.05, 0.96) * actor.depth, timing.travel)
 		strike.tween_property(actor.visual_root, "position", home + Vector2(7 * direction, 4), timing.travel)
+	var travelling: Dictionary = {}
+	var release_origin: Vector2=actor.projectile_origin()
 	for event in targets:
-		_effect(effects, origin, fighters[event.target].hit_position(), art_hero, event.type, "travel", ultimate, timing.travel, tier)
+		if travelling.has(event.target): continue
+		travelling[event.target]=true
+		_effect(effects, release_origin, fighters[event.target].hit_position(), art_hero, event.type, "travel", ultimate, timing.travel, tier)
 	for segment in range(3):
 		await owner.get_tree().create_timer(timing.travel / 3.0).timeout
 		if not _valid(version, actor): return false
-		if melee and segment < 2:
+		if melee and segment < (2 if Quality.level==2 else 1):
 			var echo := Echo.new()
 			echo.snapshot(actor, actor.tint)
 			effects.add_child(echo)
 			transients.append(echo)
 	# The only logical callback. Contact is a pose hold, never global time scaling.
+	actor.set_action_pose("impact",pose_context)
 	on_impact.call()
 	impact_count += 1
 	if owner.has_method("_screen_impact"): owner._screen_impact(primary.hit_position(),actor.tint,ultimate)
@@ -235,6 +245,7 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 		spatial_body_bounds.append(Rect2(fighter.foot_position()-Vector2(fighter.artwork.size.x*fighter.depth*.5,fighter.artwork.size.y*fighter.depth),fighter.artwork.size*fighter.depth))
 	var receivers := {}
 	var reactions := {}
+	var painted: Dictionary = {}
 	for event in result.events:
 		if not fighters.has(event.get("target", "")): continue
 		if not receivers.has(event.target): receivers[event.target] = []
@@ -246,13 +257,24 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 		if not target in posed_fighters: posed_fighters.append(target)
 		var impact_kind: String = event.type
 		if event.get("absorbed", 0) > 0: impact_kind = "shieldBreak" if event.shieldAfter == 0 else "shieldHit"
-		_effect(effects, actor.hit_position(), target.hit_position(), art_hero, impact_kind, "impact", ultimate, 0.94 if ultimate else 0.74, tier)
+		if not painted.has(event.target):
+			painted[event.target]=true
+			_effect(effects, actor.hit_position(), target.hit_position(), art_hero, impact_kind, "impact", ultimate, 0.94 if ultimate else 0.74, tier)
+			var motif := Signature.new()
+			motif.signature=signature
+			motif.tint=actor.tint
+			motif.tier=tier
+			motif.position=target.hit_position()
+			motif.scale.x=direction
+			effects.add_child(motif)
+			transients.append(motif)
 		target.material_fx.set_shader_parameter("flash_color", Color("a5efc2") if event.type == "heal" else Color("a2dcff") if event.get("absorbed", 0) > 0 else Color.WHITE)
 		target.material_fx.set_shader_parameter("flash", 0.88 if event.type == "damage" else 0.55)
 		if (event.type == "damage" or (event.type == "heal" and signature == "runes" and not event.get("passive",false))) and not event.get("reaction",false) and not event.get("intercepted",false):
 			var bloom := Bloom.new()
 			bloom.element = Bloom.element_for(hero)
 			bloom.extent = 275 if ultimate else 220 if tier == "skill" else 140
+			if signature=="crater":bloom.extent*=.65 # Leave the hammer's ground contact readable.
 			bloom.critical = event.get("critical",false)
 			bloom.position = target.hit_position()
 			bloom.z_index = -12
@@ -272,8 +294,8 @@ func play(owner: Node, effects: Control, fighters: Dictionary, hero: Dictionary,
 		var flash := _tween(owner)
 		flash.tween_method(func(v):
 			if is_instance_valid(target): target.material_fx.set_shader_parameter("flash", v), 0.72, 0.0, 0.28)
-	actor.set_pose(3)
 	var recover := _tween(owner).set_parallel(true)
+	actor.animate_action_pose(recover,"recover",pose_context,timing.recover)
 	var return_time: float = timing.recover * (0.58 if ultimate else 0.66)
 	recover.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	recover.tween_property(actor.visual_root, "position", home, return_time)
@@ -292,9 +314,7 @@ func _recoil(owner: Node, target, direction: float, hold := .12, strength := 1.0
 	var recoil := _tween(owner).set_parallel(true)
 	var target_home := Vector2(93, 257)
 	if target.dead:
-		recoil.tween_property(target.visual_root, "rotation", .28*direction,.25)
-		recoil.tween_property(target.visual_root, "position", target_home+Vector2(20*direction,14),.25)
-		recoil.tween_property(target.visual_root, "modulate:a", .25,.5)
+		target.animate_defeat(recoil,direction)
 	else:
 		recoil.tween_property(target.visual_root,"rotation",-.13*direction*strength,.055)
 		recoil.tween_property(target.visual_root,"position",target_home+Vector2(20*direction,-4)*strength,.055)
@@ -348,9 +368,9 @@ static func number_lines(event: Dictionary) -> Array:
 		"heal": lines.append(["+%d VIDA" % event.amount, "a1e6b3", 20])
 		"shieldExpired":
 			lines.append(["ESCUDO EXPIROU", "9ebad2", 15])
-			lines.append(["−%d ESCUDO · resta 0" % event.amount, "85dcff", 15])
+			lines.append(["−%d ESCUDO · resta %d" % [event.amount,event.get("shieldAfter",0)], "85dcff", 15])
 		"shield", "guard":
-			lines.append(["+%d ESCUDO" % event.amount if event.amount > 0 else "ESCUDO RENOVADO", "85dcff", 20])
+			lines.append(["+%d ESCUDO" % event.amount if event.amount > 0 else "LIMITE DE ESCUDO", "85dcff", 20])
 			lines.append(["Escudo total: %d" % event.get("shieldAfter", event.amount), "85dcff", 12])
 		"energy": lines.append(["+%d ENERGIA" % event.amount, "c6b4ff", 18])
 		"support": lines.append(["SUPORTE", "c6b4ff", 15])

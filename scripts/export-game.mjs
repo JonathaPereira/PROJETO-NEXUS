@@ -5,7 +5,7 @@ import {fileURLToPath} from 'node:url';
 import {zipSync} from 'fflate';
 import {BUILD} from '../server/pvp-loadout.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url));const output=resolve(root,'artifacts/web-game');
-const endpoint=process.env.PVP_PUBLIC_URL||'ws://127.0.0.1:8787/pvp';
+const endpoint=process.env.PVP_PUBLIC_URL||'wss://nexus-pvp.onrender.com/pvp';
 if(!/^wss?:\/\/[^\s<>"']+\/pvp$/.test(endpoint))throw Error('PVP_PUBLIC_URL deve ser ws(s)://HOST/pvp');
 const manifest=JSON.parse(await readFile(resolve(root,'godot/data/pvp-build.json'),'utf8'));
 if(manifest.build!==BUILD)throw Error('Catálogo/regras mudaram. Execute npm run sync:godot antes de exportar.');

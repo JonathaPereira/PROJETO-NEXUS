@@ -10,6 +10,11 @@ const PvpLobby = preload("res://scripts/pvp_lobby.gd")
 const Hub = preload("res://scripts/hub.gd")
 const UITheme = preload("res://scripts/ui_theme.gd")
 const RulesText = preload("res://scripts/rules_text.gd")
+const Voice = preload("res://scripts/hero_voice.gd")
+const Quality = preload("res://scripts/presentation_quality.gd")
+const PresentationSettings = preload("res://scripts/presentation_settings.gd")
+const Keyboard = preload("res://scripts/keyboard_controls.gd")
+const KeyboardSettings = preload("res://scripts/keyboard_settings.gd")
 const ACCENT := UITheme.ACCENT
 const GOLD := ACCENT # Legacy view API; the visual accent is now cyan.
 const MUTED := UITheme.MUTED
@@ -30,6 +35,8 @@ var ai_request := 0
 var auto_button: CheckButton
 var spatial_combat := false # Archived 3D study; normal play uses the illustrated stage.
 var battle_version := 0
+var _presentation_serial := 0
+var _presentation: Dictionary = {}
 var result_shown := false
 var reduced_motion := false
 var field: Control
@@ -48,6 +55,7 @@ var log_view: RichTextLabel
 var action_buttons: Dictionary = {}
 var target_buttons: HBoxContainer
 var execute_button: Button
+var skip_button: Button
 var start_button: Button
 var roster_button: Button
 var mode_picker: OptionButton
@@ -56,6 +64,18 @@ var audio_enabled := true
 var audio_level := .8
 var sound_button: Button
 var sound
+var voice
+var voice_enabled := true
+var voice_subtitles := true
+var voice_level := .75
+var voice_caption: PanelContainer
+var voice_caption_text: Label
+var battle_voice_caption: Label
+var presentation_settings: AcceptDialog
+var keyboard=Keyboard.new()
+var keyboard_settings: AcceptDialog
+var preferences_path:="user://preferences.cfg"
+var presentation_quality
 var restart_button: Button
 var controls_note: Label
 var restart_dialog: ConfirmationDialog
@@ -107,6 +127,7 @@ var pvp_seq := -1
 var campaign_mission := -1
 var roster_campaign := false
 var mission_label: Label
+var objective_label: Label
 var menu_dialog: ConfirmationDialog
 var vesper_atelier: Control
 const Lessons = preload("res://scripts/lessons.gd")
@@ -118,6 +139,7 @@ func _ready() -> void:
 	_load_preferences()
 	_build_theme()
 	_build_interface()
+	_build_presentation()
 	campaign = Campaign.new(catalog)
 	Campaign.register_enemies(catalog)
 	_new_battle()
@@ -164,6 +186,57 @@ func _clear(node: Node) -> void:
 
 func _build_interface() -> void:
 	CombatUI.build(self)
+
+func _build_presentation() -> void:
+	presentation_quality=Quality.new()
+	presentation_quality.app=self
+	add_child(presentation_quality)
+	Quality.noise_texture()
+	voice=Voice.new()
+	add_child(voice)
+	voice.enabled=voice_enabled
+	voice.subtitles=voice_subtitles
+	voice.set_level(voice_level)
+	var layer := CanvasLayer.new()
+	layer.layer=12
+	add_child(layer)
+	voice_caption=PanelContainer.new()
+	voice_caption.name="HeroVoiceSubtitle"
+	voice_caption.set_anchors_and_offsets_preset(PRESET_CENTER_TOP)
+	voice_caption.position=Vector2(-240,9)
+	voice_caption.custom_minimum_size=Vector2(480,44)
+	voice_caption.mouse_filter=MOUSE_FILTER_IGNORE
+	voice_caption.add_theme_stylebox_override("panel",_style(Color("07121def"),Color("4a8aab")))
+	layer.add_child(voice_caption)
+	voice_caption_text=_label("",14)
+	voice_caption_text.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+	voice_caption_text.autowrap_mode=TextServer.AUTOWRAP_WORD_SMART
+	voice_caption_text.mouse_filter=MOUSE_FILTER_IGNORE
+	voice_caption.add_child(voice_caption_text)
+	voice_caption.hide()
+	voice.caption_changed.connect(func(id,text):
+		var line := "%s: %s" % [catalog.hero_by_id[id].name,text]
+		if combat_view.is_visible_in_tree():
+			voice_caption.hide()
+			battle_voice_caption.text=line
+		else:
+			voice_caption_text.text=line
+			voice_caption.show())
+	voice.line_finished.connect(func():
+		if is_instance_valid(voice_caption): voice_caption.hide()
+		if is_instance_valid(battle_voice_caption): battle_voice_caption.text="")
+	presentation_settings=PresentationSettings.new()
+	presentation_settings.app=self
+	add_child(presentation_settings)
+	keyboard_settings=KeyboardSettings.new()
+	keyboard_settings.app=self
+	add_child(keyboard_settings)
+
+func _show_keyboard_settings() -> void:
+	keyboard_settings.popup_centered(Vector2i(490,560))
+
+func _show_presentation_settings() -> void:
+	presentation_settings.popup_centered(Vector2i(470,mini(540,int(get_viewport_rect().size.y)-60)))
 
 func _open_vesper() -> void:
 	if pvp_active:return
@@ -234,10 +307,12 @@ func _leave_battle(page: String = "menu") -> void:
 		pvp_client.leave()
 		_end_pvp()
 	battle_version += 1
+	_presentation = {}
 	ai_request += 1
 	director.cancel()
 	backdrop.cancel()
 	sound.stop_all()
+	if is_instance_valid(voice): voice.stop_line()
 	started = false
 	busy = false
 	ai_pending = false
@@ -253,17 +328,23 @@ func _result_confirmed() -> void:
 		_open_pvp()
 		return
 	if campaign_mission >= 0 and state.winner == 0:
-		hub.selected_chapter = mini(2,int(mini(campaign.cleared,8)/3.0))
-		_leave_battle("story")
+		var kind: String = campaign.missions[campaign_mission].get("kind","main")
+		if kind == "journey":
+			_leave_battle("heroes")
+		else:
+			if kind == "main": hub.selected_chapter = campaign.next_chapter()
+			_leave_battle("story")
 	else: _new_battle()
 
 func _new_battle() -> void:
 	if pvp_active:return
 	battle_version += 1
+	_presentation = {}
 	ai_request += 1
 	director.cancel()
 	backdrop.cancel()
 	if is_instance_valid(sound): sound.stop_all()
+	if is_instance_valid(voice): voice.stop_line()
 	started = false
 	busy = false
 	ai_pending = false
@@ -276,7 +357,7 @@ func _new_battle() -> void:
 	_rebuild_fighters()
 
 func _rebuild_fighters() -> void:
-	backdrop.encounter_kind = maxi(0, campaign_mission)
+	if not spatial_combat: backdrop.environment = campaign.mission_environment(campaign_mission)
 	if tutorial_index >= 0:
 		tutorial_progress = {}
 		Lessons.prepare(state, tutorial_index)
@@ -288,6 +369,8 @@ func _rebuild_fighters() -> void:
 	_clear(effects)
 	for data in state.units:
 		var hero: Dictionary = catalog.hero_by_id[data.heroId]
+		voice.prepare(hero.id)
+		Fighter.prepare_poses(str(hero.get("visualHero",hero.id)))
 		var fighter = Fighter.new()
 		fighter.setup(hero, data.id, catalog.affinity_color(hero.classId))
 		if spatial_combat: fighter.use_spatial_presentation()
@@ -376,6 +459,9 @@ func _refresh() -> void:
 	_update_log()
 	if state.phase == "finished" and not result_shown:
 		result_shown = true
+		if state.winner!=null:
+			var survivors: Array=state.units.filter(func(u):return u.side==state.winner and u.hp>0)
+			if not survivors.is_empty(): voice.speak(survivors[0].heroId,"victory",true)
 		if tutorial_index < 0 and campaign_mission < 0 and not pvp_active: Lab.record(state, mode, difficulty)
 		var damage := 0
 		var healing := 0
@@ -388,16 +474,29 @@ func _refresh() -> void:
 			result_dialog.dialog_text += "\n\n" + Lessons.hint(tutorial_index, tutorial_progress)
 		result_dialog.ok_button_text = "Jogar novamente"
 		if campaign_mission >= 0:
-			var mission: Dictionary = Campaign.MISSIONS[campaign_mission]
+			var mission: Dictionary = campaign.missions[campaign_mission]
 			result_dialog.ok_button_text = "Voltar às missões" if state.winner == 0 else "Tentar novamente"
 			result_dialog.dialog_text = ("VITÓRIA · " if state.winner == 0 else "DERROTA · ") + mission.name + "\n\n"
 			if state.winner == 0:
-				var reward: Dictionary = campaign.complete(campaign_mission)
-				result_dialog.dialog_text += mission.ending + "\n\n" + ("Primeira vitória: +1 " + reward.gem if reward.get("first", false) else "Missão repetida: sem recompensa adicional.")
-				if not reward.get("saved", false): result_dialog.dialog_text += "\n\nATENÇÃO: " + campaign.error_text
+				var reward: Dictionary = campaign.claim_victory(state)
+				result_dialog.dialog_text += mission.ending + "\n\n"
+				if reward.has("error"): result_dialog.dialog_text += reward.error
+				else:
+					result_dialog.dialog_text += ("Primeira vitória: +1 " + reward.gem + "\n" if reward.get("first", false) else "Nova vitória nesta missão: ") + "+%d fragmentos para a oficina." % reward.materials
+					if reward.get("first",false) and mission.get("kind") == "journey":
+						result_dialog.dialog_text += "\nPacto firmado · " + campaign.pact_description(mission.requiredHero)
+					result_dialog.dialog_text += "\n+%d EXP de equipe · Nível %d" % [reward.teamExperience,reward.levelAfter]
+					var mastery_awards: PackedStringArray = []
+					for hero_id in reward.mastery:
+						mastery_awards.append("%s +%d" % [catalog.hero_by_id[hero_id].name,reward.mastery[hero_id]] if reward.mastery[hero_id] > 0 else catalog.hero_by_id[hero_id].name+" (máxima)")
+					result_dialog.dialog_text += "\nMaestria: " + ", ".join(mastery_awards)
+					if not reward.get("saved", false): result_dialog.dialog_text += "\n\nATENÇÃO: " + campaign.error_text
 			else:
 				result_dialog.dialog_text += "Seu progresso e suas gemas foram preservados. Ajuste o trio ou os engastes no menu e tente de novo.\n\n" + mission.tip
-			result_dialog.dialog_text += "\n\n%d rodadas · %d ações" % [state.round, state.turns]
+			result_dialog.dialog_text += "\n\n" + Campaign.Objectives.result_text(state)
+			var objective_result: Dictionary = state.get("missionResult",{})
+			var boundary: bool = objective_result.get("reason") in ["deadline","survived"]
+			result_dialog.dialog_text += "\n\n%d %s · %d ações" % [objective_result.get("completedRounds",state.round),"rodadas completas" if boundary else "rodadas",state.turns]
 		if pvp_active:
 			var own_side: int=int(pvp_client.own_player().get("side",-1))
 			var outcome := "VITÓRIA" if state.winner==own_side else "EMPATE" if state.winner==null else "DERROTA"
@@ -439,7 +538,7 @@ func _play_turn(action_id: String, target: String) -> void:
 	if busy or not started or state.phase != "playing": return
 	# Compute separately: the displayed actor stays stable until the strike lands.
 	var pending := state.duplicate(true)
-	var result := combat.act(pending, action_id, target)
+	var result: Dictionary = campaign.act(combat,pending,action_id,target) if campaign_mission >= 0 else combat.act(pending, action_id, target)
 	if result.has("error"):
 		description.text = result.error
 		return
@@ -450,7 +549,12 @@ func _present_turn(action_id: String, target: String, pending: Dictionary, resul
 	var actor := combat.current(state)
 	var hero: Dictionary = catalog.hero_by_id[actor.heroId]
 	var action := combat.get_action(actor,action_id)
+	_presentation_serial += 1
+	var context := {"id":_presentation_serial,"version":version,"pending":pending,"result":result,"side":actor.side,"action_name":action.name}
+	_presentation = context
 	busy = true
+	voice.prepare(hero.id)
+	if action_id in ["skill","ultimate"]: voice.speak(hero.id,action_id)
 	selected_action = action_id
 	target_id = target
 	preview_requested = false
@@ -460,7 +564,7 @@ func _present_turn(action_id: String, target: String, pending: Dictionary, resul
 		if version != battle_version: return
 		sound.strike(hero, action, result.events, action_id)
 		for data in result.impactUnits:
-			fighters[data.id].refresh(data, data.id == actor.id, false, false)
+			fighters[data.id].refresh(data, data.id == actor.id, false, false, not reduced_motion and not spatial_combat)
 		backdrop.sync_units(result.impactUnits)
 		CombatUI.update_actor_stats(self, result.impactUnits.filter(func(u): return u.id == actor.id)[0])
 		CombatUI.show_report(self, result.events, action.name)
@@ -491,12 +595,32 @@ func _present_turn(action_id: String, target: String, pending: Dictionary, resul
 			sound.play_cue(9 if event.type in ["burn", "bleed", "darkmark", "fracture"] else 5)
 			CombatUI.show_report(self, [event], "INÍCIO DO TURNO"))
 		if version != battle_version or not ticks_done: return
-	if tutorial_index >= 0: Lessons.observe(tutorial_progress, result, actor.side)
-	state = pending
+	_finish_presentation(context)
+
+func _finish_presentation(context: Dictionary) -> void:
+	if _presentation.is_empty() or context.id != _presentation.id or context.version != battle_version:return
+	_presentation = {}
+	if tutorial_index >= 0: Lessons.observe(tutorial_progress, context.result, context.side)
+	state = context.pending
 	busy = false
 	selected_action = "basic"
 	_refresh()
 	_schedule_ai()
+
+func _skip_animation() -> void:
+	if pvp_active or not busy or _presentation.is_empty():return
+	var context := _presentation
+	if context.version != battle_version:return
+	battle_version += 1
+	ai_request += 1
+	ai_pending = false
+	context.version = battle_version
+	director.cancel()
+	backdrop.cancel()
+	sound.stop_all()
+	voice.stop_line()
+	CombatUI.show_report(self,context.result.events,context.action_name)
+	_finish_presentation(context)
 
 func _can_inspect() -> bool:
 	return combat_view.visible and not busy and (not started or (state.phase == "playing" and _human_turn()))
@@ -521,7 +645,7 @@ func _schedule_ai() -> void:
 		if version != battle_version or request != ai_request: return
 	ai_pending = false
 	if not _wants_ai() or not started or state.phase != "playing" or not combat_view.visible: return
-	var choice := combat.choose_ai(state)
+	var choice: Dictionary = campaign.choose_ai(combat,state) if campaign_mission >= 0 else combat.choose_ai(state)
 	if not choice.is_empty(): _play_turn(choice.actionId, choice.targetId)
 
 func _wants_ai() -> bool:
@@ -546,6 +670,7 @@ func _update_log() -> void:
 		var target := _unit_name(entry.get("target", ""))
 		var message := ""
 		match entry.type:
+			"objective": message = entry.text
 			"action": message = "%s usou %s." % [actor, entry.name]
 			"damage", "heal", "shield", "guard", "burn", "bleed", "darkmark", "fracture", "energy", "status", "support", "converted", "shieldExpired": message = "%s: %s" % [target, CombatUI._plain(CombatUI.event_detail(entry))]
 			"defeated": message = "%s foi derrotado." % target
@@ -566,7 +691,7 @@ func _ask_restart() -> void:
 
 func _toggle_sound() -> void:
 	sound.enabled = not sound.enabled
-	sound_button.text = "Som: ligado" if sound.enabled else "Som: desligado"
+	sound_button.text = "Efeitos: ligados" if sound.enabled else "Efeitos: desligados"
 	audio_enabled = sound.enabled
 	_save_preferences()
 	sound.play_layer("ui",-6)
@@ -577,7 +702,7 @@ func _show_classes() -> void:
 	var text := "Cada personagem possui uma afinidade permanente.\n\n"
 	for affinity in catalog.classes:
 		text += "%s → %s  (+%s de dano)\n%s\n\n" % [affinity.name, catalog.class_by_id[affinity.strongAgainst].name, RulesText.percent(combat.rules.affinity.advantageMultiplier - 1), affinity.description]
-	text += "Classe define afinidade; tanque, suporte e dano são funções dos kits. Cada classe tem as três funções. Lumi e nove personagens estão arquivados para esta fase de testes.\n\nAtacar quem supera sua classe causa %s menos dano.\nAs demais relações são neutras." % RulesText.percent(1 - combat.rules.affinity.resistanceMultiplier)
+	text += "Classe define afinidade; tanque, suporte e dano são funções dos kits. Cada classe tem as três funções. Os 24 heróis estão ativos nas seis afinidades, incluindo Lumi.\n\nAtacar quem supera sua classe causa %s menos dano.\nAs demais relações são neutras." % RulesText.percent(1 - combat.rules.affinity.resistanceMultiplier)
 	dialog.dialog_text = text
 	add_child(dialog)
 	var help_text: String = dialog.dialog_text
@@ -607,7 +732,7 @@ func _show_help() -> void:
 
 func _build_roster() -> void:
 	roster_dialog = AcceptDialog.new()
-	roster_dialog.title = "15 ativos · tanque, suporte e dano em cada classe · 9 arquivados"
+	roster_dialog.title = "%d heróis · %d afinidades · trios livres" % [catalog.heroes.size(), catalog.classes.size()]
 	roster_dialog.ok_button_text = "Usar equipes"
 	roster_dialog.confirmed.connect(_save_roster)
 	add_child(roster_dialog)
@@ -655,7 +780,7 @@ func _build_roster() -> void:
 
 func _open_roster() -> void:
 	if pvp_active or tutorial_index >= 0 or (started and state.phase == "playing"): return
-	roster_campaign = is_instance_valid(hub) and hub.visible and hub.page in ["story", "gems"]
+	roster_campaign = is_instance_valid(hub) and hub.visible and hub.page in ["story", "gems", "preparation"]
 	if campaign_mission >= 0: return
 	roster_work = [campaign.team.duplicate(), catalog.default_teams[1].duplicate()] if roster_campaign else teams.duplicate(true)
 	roster_side.select(0)
@@ -709,7 +834,8 @@ func _save_roster() -> void:
 
 func _load_preferences() -> void:
 	var config := ConfigFile.new()
-	if config.load("user://preferences.cfg") != OK: return
+	if config.load(preferences_path) != OK: return
+	keyboard.load_data(config.get_value("keyboard","bindings",{}))
 	for side in range(2):
 		var saved: Variant = config.get_value("teams", str(side), [])
 		if catalog.valid_team(saved): teams[side] = saved.duplicate()
@@ -727,6 +853,10 @@ func _load_preferences() -> void:
 	if saved_audio is bool: audio_enabled = saved_audio
 	var saved_level: Variant = config.get_value("audio","level",.8)
 	if saved_level is float or saved_level is int: audio_level = clampf(float(saved_level),0,1)
+	voice_enabled=bool(config.get_value("voice","enabled",true))
+	voice_subtitles=bool(config.get_value("voice","subtitles",true))
+	voice_level=clampf(float(config.get_value("voice","level",.75)),0,1)
+	Quality.configure(str(config.get_value("video","quality","auto")))
 
 func _save_preferences() -> void:
 	var config := ConfigFile.new()
@@ -735,11 +865,16 @@ func _save_preferences() -> void:
 	config.set_value("game", "mode", free_settings.get("mode", mode))
 	config.set_value("game", "difficulty", free_settings.get("difficulty", difficulty))
 	config.set_value("game", "reduced_motion", reduced_motion)
+	config.set_value("keyboard","bindings",keyboard.to_data())
 	config.set_value("audio","enabled",audio_enabled)
 	config.set_value("audio","level",audio_level)
+	config.set_value("voice","enabled",voice_enabled)
+	config.set_value("voice","subtitles",voice_subtitles)
+	config.set_value("voice","level",voice_level)
+	config.set_value("video","quality",Quality.mode)
 	config.set_value("display", "mode", display_mode)
 	config.set_value("display", "resolution", display_resolution)
-	var error := config.save("user://preferences.cfg")
+	var error := config.save(preferences_path)
 	if error != OK: push_warning("Não foi possível salvar as preferências: %s" % error_string(error))
 
 func _any_dialog() -> bool:
@@ -750,6 +885,7 @@ func _open_showcase() -> void:
 		showcase = Showcase.new()
 		showcase.catalog = catalog
 		showcase.audio = sound
+		showcase.voice = voice
 		showcase.reduced_motion = reduced_motion
 		add_child(showcase)
 	else:
@@ -776,27 +912,31 @@ func _input(event: InputEvent) -> void:
 		return
 	if is_instance_valid(hub) and hub.visible:
 		if event.keycode == KEY_ESCAPE and hub.page != "menu":
-			hub.open("menu")
+			hub.open(hub.preparation_origin if hub.page == "preparation" else "menu")
 			get_viewport().set_input_as_handled()
 		return
 	var focused := get_viewport().gui_get_focus_owner()
 	if focused is LineEdit or focused is TextEdit: return
+	var command: String=keyboard.action_for(event)
 	if event.keycode == KEY_ESCAPE:
 		_open_menu()
 		get_viewport().set_input_as_handled()
-	elif event.keycode == KEY_A:
+	elif command == "auto":
 		_set_auto_play(not auto_play)
 		get_viewport().set_input_as_handled()
-	elif event.keycode >= KEY_1 and event.keycode <= KEY_4:
-		_select_action(ACTIONS[event.keycode - KEY_1])
+	elif command in ACTIONS:
+		_select_action(command)
 		get_viewport().set_input_as_handled()
-	elif event.keycode in [KEY_LEFT, KEY_RIGHT] and _can_act():
+	elif command in ["target_previous","target_next"] and _can_act():
 		var targets := combat.legal_targets(state, combat.current(state), combat.get_action(combat.current(state), selected_action))
 		var ids: Array = targets.map(func(u): return u.id)
 		var index: int = ids.find(target_id)
-		_select_target(ids[posmod(index + (-1 if event.keycode == KEY_LEFT else 1), ids.size())])
+		if not ids.is_empty():_select_target(ids[posmod(index + (-1 if command == "target_previous" else 1), ids.size())])
 		get_viewport().set_input_as_handled()
-	elif event.keycode in [KEY_ENTER, KEY_KP_ENTER]:
+	elif command == "skip" and busy and not pvp_active:
+		_skip_animation()
+		get_viewport().set_input_as_handled()
+	elif command == "execute":
 		var battle_focus: bool = focused == null or focused == execute_button or focused in action_buttons.values() or focused in fighters.values() or focused in target_buttons.get_children()
 		if battle_focus and _can_act():
 			_execute()
@@ -812,23 +952,33 @@ func _show_lab() -> void:
 
 func _show_lessons() -> void:
 	var dialog := AcceptDialog.new()
-	dialog.title = "Aprender · três batalhas guiadas"
+	dialog.title = "Aprender · %d batalhas guiadas" % Lessons.TITLES.size()
 	add_child(dialog)
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(650, 360)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.follow_focus = true
+	dialog.add_child(scroll)
 	var column := VBoxContainer.new()
-	dialog.add_child(column)
-	for i in range(3):
+	column.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(column)
+	if pvp_active: column.add_child(_label("Encerre o PvP para iniciar uma batalha guiada.", 13, MUTED))
+	for i in range(Lessons.TITLES.size()):
 		var tip := _label(Lessons.hint(i, {}), 13, MUTED)
+		tip.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		column.add_child(tip)
-		column.add_child(_button(Lessons.TITLES[i], func():
+		var lesson_button := _button(Lessons.TITLES[i], func():
 			dialog.hide()
-			_begin_lesson(i)))
+			_begin_lesson(i))
+		lesson_button.disabled = pvp_active
+		column.add_child(lesson_button)
 	if tutorial_index >= 0:
 		column.add_child(_button("Voltar ao treino livre", func():
 			dialog.hide()
 			_end_lesson()))
 	dialog.visibility_changed.connect(func():
 		if not dialog.visible: dialog.queue_free())
-	dialog.popup_centered()
+	dialog.popup_centered_clamped(Vector2i(900, 570), 0.95)
 
 func _begin_lesson(index: int) -> void:
 	if pvp_active:return
@@ -933,9 +1083,11 @@ func _end_pvp() -> void:
 	pvp_queue.clear()
 	pvp_seq=-1
 	battle_version+=1
+	_presentation = {}
 	director.cancel()
 	backdrop.cancel()
 	sound.stop_all()
+	if is_instance_valid(voice): voice.stop_line()
 	busy=false
 	started=false
 	result_shown=false
@@ -967,9 +1119,11 @@ func _pvp_packet(packet: Dictionary) -> void:
 		pvp_draining=false
 		pvp_queue.clear()
 		battle_version+=1
+		_presentation = {}
 		director.cancel()
 		backdrop.cancel()
 		sound.stop_all()
+		if is_instance_valid(voice): voice.stop_line()
 		pvp_active=true
 		auto_play=false
 		ai_request+=1

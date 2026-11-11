@@ -41,7 +41,7 @@ func _run() -> void:
 	sample.guarding = true
 	fighter.refresh(sample,true,false,true)
 	var strip = fighter.status_strip
-	check(strip.entries.size()==18 and strip.positive_count==11 and strip.negative_count==7,"All states are classified from the recipient's perspective, including guard")
+	check(strip.entries.size()==19 and strip.positive_count==11 and strip.negative_count==8,"All states are classified from the recipient's perspective, including guard")
 	check(not Strip.positive("seed") and not Strip.positive("focus") and Strip.positive("taunt"),"Seed and astral focus are harmful to their bearer; taunt follows the engine's positive classification")
 	var icons: Array = []
 	for type in Strip.TYPES:

@@ -11,11 +11,11 @@ static func build(app) -> void:
 	var margin := MarginContainer.new()
 	margin.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right"]: margin.add_theme_constant_override("margin_" + side, 18)
-	for side in ["top", "bottom"]: margin.add_theme_constant_override("margin_" + side, 12)
+	for side in ["top", "bottom"]: margin.add_theme_constant_override("margin_" + side, 9)
 	app.add_child(margin)
 	app.combat_view = margin
 	var layout := VBoxContainer.new()
-	layout.add_theme_constant_override("separation", 9)
+	layout.add_theme_constant_override("separation", 6)
 	margin.add_child(layout)
 	var header := HBoxContainer.new()
 	header.custom_minimum_size.y = 42
@@ -45,7 +45,7 @@ static func build(app) -> void:
 	tools_popup.add_child(tools)
 	var tools_button: Button = app._button("Opções  ···", func(): tools_popup.popup_centered())
 	header.add_child(tools_button)
-	for item in [["Afinidades", app._show_classes], ["Ajuda", app._show_help], ["Galeria 2D", app._open_showcase], ["Aprender", app._show_lessons], ["Balanço", app._show_lab]]:
+	for item in [["Teclado", app._show_keyboard_settings], ["Afinidades", app._show_classes], ["Ajuda", app._show_help], ["Galeria 2D", app._open_showcase], ["Aprender", app._show_lessons], ["Balanço", app._show_lab]]:
 		var callback: Callable = item[1]
 		tools.add_child(app._button(item[0], func():
 			tools_popup.hide()
@@ -60,8 +60,10 @@ static func build(app) -> void:
 	app.log_dialog.add_child(app.log_view)
 	app.log_button = app._button("Registro", func(): app.log_dialog.popup_centered())
 	header.add_child(app.log_button)
-	app.sound_button = app._button("Som: ligado" if app.audio_enabled else "Som: desligado", app._toggle_sound)
+	app.sound_button = app._button("Efeitos: ligados" if app.audio_enabled else "Efeitos: desligados", app._toggle_sound)
+	app.sound_button.tooltip_text="Ativa os efeitos sonoros. As vozes têm controles próprios em Áudio e vídeo."
 	header.add_child(app.sound_button)
+	header.add_child(app._button("Voz e vídeo",app._show_presentation_settings))
 	app.screen_button = app._button("⛶ Tela", app._show_display)
 	tools.add_child(app.screen_button)
 	app.sound = Sound.new()
@@ -119,6 +121,24 @@ static func build(app) -> void:
 	app.mission_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	app.mission_label.visible = false
 	brief_row.add_child(app.mission_label)
+	var caption_row := HBoxContainer.new()
+	caption_row.add_theme_constant_override("separation",12)
+	layout.add_child(caption_row)
+	app.objective_label = app._label("", 13, Color("97e7de"))
+	app.objective_label.name = "MissionObjective"
+	app.objective_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	app.objective_label.size_flags_stretch_ratio = 2
+	app.objective_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	app.objective_label.visible = false
+	caption_row.add_child(app.objective_label)
+	# A stable caption lane preserves access to the menu, timeline and action buttons.
+	app.battle_voice_caption=app._label("",14,Color("d5f4ff"))
+	app.battle_voice_caption.custom_minimum_size.y=20
+	app.battle_voice_caption.size_flags_horizontal=Control.SIZE_EXPAND_FILL
+	app.battle_voice_caption.horizontal_alignment=HORIZONTAL_ALIGNMENT_CENTER
+	app.battle_voice_caption.text_overrun_behavior=TextServer.OVERRUN_TRIM_ELLIPSIS
+	app.battle_voice_caption.mouse_filter=Control.MOUSE_FILTER_IGNORE
+	caption_row.add_child(app.battle_voice_caption)
 	var arena := PanelContainer.new()
 	arena.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	arena.add_theme_stylebox_override("panel", app._style(Color("0a1422"), Color("293b50")))
@@ -260,6 +280,9 @@ static func build(app) -> void:
 	reduce.button_pressed = app.reduced_motion
 	reduce.toggled.connect(app._set_reduced)
 	footer.add_child(reduce)
+	app.skip_button=app._button("Pular animação",app._skip_animation)
+	app.skip_button.tooltip_text="Mostra o resultado da ação em andamento, incluindo os efeitos de turno. Não passa outro turno."
+	footer.add_child(app.skip_button)
 	app.restart_button=app._button("Reiniciar", app._ask_restart)
 	footer.add_child(app.restart_button)
 	app.start_button = app._button("INICIAR COMBATE", app._start)
@@ -284,6 +307,8 @@ static func build(app) -> void:
 	app._build_roster()
 
 static func refresh(app) -> void:
+	app.skip_button.visible=app.busy and not app.pvp_active
+	app.skip_button.disabled=not app.busy or app.pvp_active
 	app.log_button.text="Registro PvP" if app.pvp_active else "Registro"
 	app.log_dialog.title="Registro desta partida PvP" if app.pvp_active else "Registro da batalha"
 	var own_side: int=int(app.pvp_client.own_player().get("side",-1)) if app.pvp_active else 0
@@ -301,9 +326,14 @@ static func refresh(app) -> void:
 	app.mode_picker.visible = app.campaign_mission < 0 and not app.pvp_active
 	app.difficulty_picker.visible = app.campaign_mission < 0 and not app.pvp_active
 	app.mission_label.visible = app.campaign_mission >= 0 or app.pvp_active
+	app.objective_label.visible = app.campaign_mission >= 0
+	app.field.custom_minimum_size.y = 395 if app.campaign_mission >= 0 else 410
 	if app.campaign_mission >= 0:
-		app.mission_label.text = "HISTÓRIA\n" + app.Campaign.MISSIONS[app.campaign_mission].name
-		app.mission_label.tooltip_text = app.Campaign.MISSIONS[app.campaign_mission].tip
+		app.objective_label.text = "OBJETIVO  /  " + app.Campaign.Objectives.describe(app.state)
+		app.objective_label.tooltip_text = app.Campaign.Objectives.brief(app.campaign.missions[app.campaign_mission])
+	if app.campaign_mission >= 0:
+		app.mission_label.text = "HISTÓRIA · EQUIPE NV %d\n%s" % [app.state.get("teamLevel",1),app.campaign.missions[app.campaign_mission].name]
+		app.mission_label.tooltip_text = app.campaign.missions[app.campaign_mission].tip
 	app.start_button.text = "INICIAR MISSÃO" if app.campaign_mission >= 0 else "INICIAR COMBATE"
 	app.mode_picker.disabled = app.tutorial_index >= 0 or (app.started and app.state.phase == "playing")
 	app.difficulty_picker.disabled = (app.started and app.state.phase == "playing") or app.mode == "local" or app.tutorial_index >= 0
@@ -313,7 +343,9 @@ static func refresh(app) -> void:
 	app.auto_button.disabled = app.tutorial_index >= 0 or app.pvp_active
 	app.auto_button.visible=not app.pvp_active
 	app.restart_button.text=("Desistir" if app.state.phase=="playing" else "Preparação PvP") if app.pvp_active else "Reiniciar"
-	app.controls_note.text="1–4  Habilidades    ← →  Alvo    Enter  Confirmar    Esc  Sair" if app.pvp_active else "1–4  Habilidades    ← →  Alvo    Enter  Confirmar    A  Automático    Esc  Menu"
+	app.controls_note.text="%s/%s/%s/%s  Habilidades   %s/%s  Alvo   %s  Usar   Esc  %s" % [app.keyboard.key_name("basic"),app.keyboard.key_name("skill"),app.keyboard.key_name("ultimate"),app.keyboard.key_name("guard"),app.keyboard.key_name("target_previous"),app.keyboard.key_name("target_next"),app.keyboard.key_name("execute"),"Sair" if app.pvp_active else "Menu"]
+	app.auto_button.text="Automático · "+app.keyboard.key_name("auto")
+	app.skip_button.tooltip_text="%s: mostra o resultado da ação em andamento, incluindo efeitos de turno. Não passa outro turno."%app.keyboard.key_name("skip")
 	if app.started and app.auto_play and actor.side == 0 and app.state.phase == "playing": app.phase_label.text = "%s · automático" % hero.name
 	var fracture: Dictionary = app.combat.rules.fracture
 	app.round_label.text = "RODADA %02d  ·  FRATURA EM %d RODADAS" % [app.state.round, int(fracture.startRound) - app.state.round]
@@ -330,8 +362,8 @@ static func refresh(app) -> void:
 		var id: String = app.ACTIONS[index]
 		var card = app.action_buttons[id]
 		var presented_action: Dictionary = app.combat.get_action(actor, id).duplicate()
-		if id in ["basic", "guard"]: presented_action.energyGain = app.combat.rules.energy.basicGain if id == "basic" else app.combat.rules.energy.guardGain
-		card.configure(presented_action, id, index + 1, app.catalog.affinity_color(hero.classId), int(actor.energy), int(actor.cooldowns.get(id, 0)), app._can_inspect(), int(hero.index))
+		if id in ["basic", "guard"]: presented_action.energyGain = presented_action.get("energyGain",app.combat.rules.energy.basicGain) if id == "basic" else app.combat.rules.energy.guardGain
+		card.configure(presented_action, id, app.keyboard.key_name(id), app.catalog.affinity_color(hero.classId), int(actor.energy), int(actor.cooldowns.get(id, 0)), app._can_inspect(), int(hero.index))
 		if app.combat.legal_targets(app.state, actor, presented_action).is_empty():
 			card.disabled = true
 			card.available = false
@@ -418,8 +450,8 @@ static func event_detail(event: Dictionary) -> String:
 				if event.shieldAfter == 0: detail += "  ·  [color=#83d8ff]ESCUDO QUEBRADO[/color]"
 			if event.get("advantage", 1.0) != 1.0: detail += "  ·  " + RulesText.relationship(float(event.advantage))
 		"heal": detail = "[color=#a1e6b3]+%d VIDA%s[/color]" % [event.amount, (" · REGENERAÇÃO" if event.has("remaining") else " · SEMENTE" if event.get("source", "") == "seed" else " · DRENO DE VIDA") if event.get("passive", false) else ""]
-		"shield", "guard": detail = "[color=#83d8ff]%s · total %d · %dT[/color]" % ["+%d ESCUDO" % event.amount if event.amount > 0 else "ESCUDO MANTIDO/RENOVADO", event.get("shieldAfter", event.amount), event.get("shieldTurns", int(RulesText.rules.shield.durationActions))]
-		"shieldExpired": detail = "ESCUDO EXPIROU · −%d · resta 0" % event.amount
+		"shield", "guard": detail = "[color=#83d8ff]%s · total %d · %dR[/color]" % ["+%d ESCUDO" % event.amount if event.amount > 0 else "LIMITE DE ESCUDO", event.get("shieldAfter", event.amount), event.get("shieldTurns", int(RulesText.rules.shield.durationRounds))]
+		"shieldExpired": detail = "CAMADA EXPIROU · −%d · resta %d" % [event.amount,event.get("shieldAfter",0)]
 		"energy": detail = "+%d ENERGIA · total %d" % [event.amount, event.energyAfter]
 		"converted": detail = "%d ESCUDO CONVERTIDO EM DANO" % event.shieldSpent
 		"support": detail = "SUPORTE"

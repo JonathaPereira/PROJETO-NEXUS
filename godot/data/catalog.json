@@ -8,7 +8,7 @@
       "classId": "igneo",
       "title": "Duelista da aurora",
       "lore": "Sua dança mantém acesas as últimas luzes de uma cidade perdida.",
-      "hp": 1080,
+      "hp": 1015,
       "attack": 251,
       "defense": 78,
       "speed": 112,
@@ -67,7 +67,7 @@
       "title": "Guardião da fornalha",
       "lore": "Carrega uma fornalha antiga onde antes havia um coração.",
       "hp": 1390,
-      "attack": 180,
+      "attack": 194,
       "defense": 116,
       "speed": 69,
       "weapon": "hammer",
@@ -80,7 +80,7 @@
         "power": 0.8,
         "cost": 0,
         "cooldown": 0,
-        "description": "80% do ataque e ganha escudo de 2% da própria vida máxima. Recupera 24 de energia. Escudo dura 2 ações do protegido; não soma com outro escudo.",
+        "description": "80% do ataque e ganha escudo de 2% da própria vida máxima. Recupera 24 de energia. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.",
         "secondary": {
           "kind": "shield",
           "target": "actor",
@@ -95,7 +95,7 @@
         "effect": "mirror",
         "cost": 30,
         "cooldown": 2,
-        "description": "Escudo próprio de 16%, Espelho e Brasa reativa por 2 turnos. Reflete 30% do dano à vida (10% ígneo +20% do Espelho) e queima quem o atingir. Escudo dura 2 ações do protegido; não soma com outro escudo.",
+        "description": "Escudo próprio de 16%, Espelho e Brasa reativa por 2 turnos. Reflete 30% do dano à vida (10% ígneo +20% do Espelho) e queima quem o atingir. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.",
         "self": true,
         "extraEffect": "emberguard"
       },
@@ -107,7 +107,7 @@
         "effect": "burn",
         "cost": 80,
         "cooldown": 0,
-        "description": "110% do ataque em área, queimadura por 2 turnos e escudo próprio de 8%. Escudo dura 2 ações do protegido; não soma com outro escudo.",
+        "description": "110% do ataque em área, queimadura por 2 turnos e escudo próprio de 8%. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.",
         "secondary": {
           "kind": "shield",
           "target": "actor",
@@ -150,7 +150,7 @@
         "effect": "empower",
         "cost": 30,
         "cooldown": 2,
-        "description": "Escudo de 8% da vida máxima e ataque +20% para a equipe por 2 turnos. Escudo dura 2 ações do protegido; não soma com outro escudo."
+        "description": "Escudo de 8% da vida máxima e ataque +20% para a equipe por 2 turnos. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente."
       },
       "ultimate": {
         "id": "ultimate",
@@ -178,7 +178,7 @@
       "classId": "igneo",
       "title": "Errante vulcânico",
       "lore": "Cada passo seu ecoa nos vulcões adormecidos de Asterion.",
-      "hp": 1130,
+      "hp": 1062,
       "attack": 235,
       "defense": 86,
       "speed": 88,
@@ -281,7 +281,7 @@
       "title": "Colosso de musgo",
       "lore": "Sob a armadura, vive uma floresta que já não existe nos mapas.",
       "hp": 1380,
-      "attack": 179,
+      "attack": 193,
       "defense": 118,
       "speed": 66,
       "weapon": "hammer",
@@ -305,7 +305,7 @@
         "effect": "cover",
         "cost": 30,
         "cooldown": 2,
-        "description": "Escudo de 14% em um aliado. Oren recebe 25% dos golpes individuais desse aliado por 2 turnos. Escudo dura 2 ações do protegido; não soma com outro escudo."
+        "description": "Escudo de 14% em um aliado. Oren recebe 25% dos golpes individuais desse aliado por 2 turnos. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente."
       },
       "ultimate": {
         "id": "ultimate",
@@ -315,7 +315,7 @@
         "effect": "regen",
         "cost": 80,
         "cooldown": 0,
-        "description": "Escudo de 10% e regeneração para todos os aliados por 2 turnos. Escudo dura 2 ações do protegido; não soma com outro escudo."
+        "description": "Escudo de 10% e regeneração para todos os aliados por 2 turnos. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente."
       },
       "identity": "Colosso que divide o peso do golpe",
       "synergy": "Cobre um aliado frágil; escudo e regeneração sustentam essa proteção.",
@@ -328,7 +328,7 @@
       "classId": "natural",
       "title": "Caçadora do orvalho",
       "lore": "Segue rastros que só aparecem sob o orvalho da manhã.",
-      "hp": 1050,
+      "hp": 987,
       "attack": 252,
       "defense": 75,
       "speed": 114,
@@ -430,7 +430,7 @@
       "title": "Sentinela da última torre",
       "lore": "Continua protegendo uma torre que ninguém se lembra de construir.",
       "hp": 1340,
-      "attack": 186,
+      "attack": 201,
       "defense": 114,
       "speed": 80,
       "weapon": "sword",
@@ -454,7 +454,7 @@
         "effect": "fortify",
         "cost": 30,
         "cooldown": 2,
-        "description": "Escudo de 8%, Fortificação (−15% dano) e Sentinela para a equipe por 2 turnos. Um agressor direto recebe ataque −20% após o golpe. Escudo dura 2 ações do protegido; não soma com outro escudo.",
+        "description": "Escudo de 8%, Fortificação (−15% dano) e Sentinela para a equipe por 2 turnos. Um agressor direto recebe ataque −20% após o golpe. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.",
         "extraEffect": "sentinel"
       },
       "ultimate": {
@@ -465,7 +465,7 @@
         "effect": "fortify",
         "cost": 80,
         "cooldown": 0,
-        "description": "Escudo de 16%, Fortificação e Sentinela por 2 turnos; +10 de energia para cada aliado. Sentinela enfraquece o agressor após o golpe. Escudo dura 2 ações do protegido; não soma com outro escudo.",
+        "description": "Escudo de 16%, Fortificação e Sentinela por 2 turnos; +10 de energia para cada aliado. Sentinela enfraquece o agressor após o golpe. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.",
         "secondary": {
           "kind": "energy",
           "target": "allies",
@@ -484,7 +484,7 @@
       "classId": "tecnico",
       "title": "Engenheira de pulsos",
       "lore": "Transforma sucata das ruínas em máquinas que desafiam o impossível.",
-      "hp": 1030,
+      "hp": 968,
       "attack": 265,
       "defense": 73,
       "speed": 108,
@@ -537,7 +537,7 @@
       "title": "Muralha ambulante",
       "lore": "Despertou sem memória, mas com a certeza de que deveria proteger.",
       "hp": 1450,
-      "attack": 170,
+      "attack": 184,
       "defense": 126,
       "speed": 63,
       "weapon": "gauntlet",
@@ -561,7 +561,7 @@
         "effect": "cover",
         "cost": 30,
         "cooldown": 2,
-        "description": "Escudo de 18% em um aliado. Bast recebe 25% de seus golpes individuais por 2 turnos; golpes em área atingem normalmente. O aliado recebe 15% menos dano por 2 turnos. Escudo dura 2 ações do protegido; não soma com outro escudo.",
+        "description": "Escudo de 18% em um aliado. Bast recebe 25% de seus golpes individuais por 2 turnos; golpes em área atingem normalmente. O aliado recebe 15% menos dano por 2 turnos. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.",
         "extraEffect": "fortify"
       },
       "ultimate": {
@@ -572,7 +572,7 @@
         "effect": "fortify",
         "cost": 80,
         "cooldown": 0,
-        "description": "Escudo de 14% e redução de dano de 15% para a equipe por 2 turnos. Escudo dura 2 ações do protegido; não soma com outro escudo."
+        "description": "Escudo de 14% e redução de dano de 15% para a equipe por 2 turnos. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente."
       },
       "identity": "Muralha que intercepta por um aliado",
       "synergy": "Divide o golpe individual recebido pelo aliado protegido; barreiras de outros técnicos ajudam Bast a suportar essa carga.",
@@ -626,7 +626,7 @@
         "effect": "empower",
         "cost": 80,
         "cooldown": 0,
-        "description": "Escudo de 10% e ataque +20% para a equipe por 2 turnos. Entrega até 20 de energia por aliado. Escudo dura 2 ações do protegido; não soma com outro escudo.",
+        "description": "Escudo de 10% e ataque +20% para a equipe por 2 turnos. Entrega até 20 de energia por aliado. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.",
         "secondary": {
           "kind": "energy",
           "target": "allies",
@@ -644,7 +644,7 @@
       "classId": "arcano",
       "title": "Cartógrafa do vazio",
       "lore": "Desenha mapas de lugares que ainda não existem.",
-      "hp": 1040,
+      "hp": 978,
       "attack": 276,
       "defense": 70,
       "speed": 104,
@@ -696,7 +696,7 @@
       "title": "Tecelão de ecos",
       "lore": "Costura fragmentos de realidades que o Nexus deixou para trás.",
       "hp": 1340,
-      "attack": 183,
+      "attack": 198,
       "defense": 110,
       "speed": 78,
       "weapon": "sword",
@@ -720,7 +720,7 @@
         "effect": "mirror",
         "cost": 30,
         "cooldown": 2,
-        "description": "Escudo de 18% em um aliado, Espelho (reflete 20% do dano à vida) e Égide elemental por 2 turnos: −20% do dano direto que tenha vantagem de afinidade. Escudo dura 2 ações do protegido; não soma com outro escudo.",
+        "description": "Escudo de 18% em um aliado, Espelho (reflete 20% do dano à vida) e Égide elemental por 2 turnos: −20% do dano direto que tenha vantagem de afinidade. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.",
         "extraEffect": "elementalWard"
       },
       "ultimate": {
@@ -731,7 +731,7 @@
         "effect": "expose",
         "cost": 80,
         "cooldown": 0,
-        "description": "100% do ataque em área, mais 45% do escudo armazenado. Consome o escudo e expõe a defesa por 2 turnos. Concede escudo de 8% à equipe após a conversão. Escudo dura 2 ações do protegido; não soma com outro escudo.",
+        "description": "100% do ataque em área, mais 45% do escudo armazenado. Consome o escudo e expõe a defesa por 2 turnos. Concede escudo de 8% à equipe após a conversão. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.",
         "shieldScale": 0.45,
         "secondary": {
           "kind": "shield",
@@ -798,7 +798,7 @@
       "classId": "arcano",
       "title": "Peregrino dimensional",
       "lore": "Atravessou tantas portas que esqueceu qual delas levava para casa.",
-      "hp": 1070,
+      "hp": 1006,
       "attack": 241,
       "defense": 78,
       "speed": 110,
@@ -833,7 +833,7 @@
         "effect": "weaken",
         "cost": 80,
         "cooldown": 0,
-        "description": "150% do ataque em área e ataque inimigo −20% por 2 turnos. Concede escudo de 6% à equipe. Escudo dura 2 ações do protegido; não soma com outro escudo.",
+        "description": "150% do ataque em área e ataque inimigo −20% por 2 turnos. Concede escudo de 6% à equipe. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.",
         "secondary": {
           "kind": "shield",
           "target": "allies",
@@ -852,7 +852,7 @@
       "title": "Lâmina do eclipse",
       "lore": "Caça os ecos que escapam pela borda de cada eclipse.",
       "hp": 1320,
-      "attack": 195,
+      "attack": 211,
       "defense": 108,
       "speed": 76,
       "weapon": "scythe",
@@ -876,10 +876,10 @@
         "effect": "taunt",
         "cost": 30,
         "cooldown": 2,
-        "description": "Escudo próprio de 14%. Provocação e Riposta até o fim da próxima ação de Vesper (1 turno pessoal): atrai golpes individuais e responde com 30% do ataque. Área continua atingindo todos. Escudo dura 2 ações do protegido; não soma com outro escudo.",
+        "description": "Escudo próprio de 14%. Provocação e Riposta por 2 turnos pessoais: atrai golpes individuais e responde com 30% do ataque, mas a defesa de Vesper cai 25% enquanto provoca. Área continua atingindo todos. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.",
         "self": true,
         "extraEffect": "riposte",
-        "duration": 1
+        "duration": 2
       },
       "ultimate": {
         "id": "ultimate",
@@ -970,7 +970,7 @@
       "classId": "sombrio",
       "title": "Vigia sem rosto",
       "lore": "Permanece imóvel entre os mundos, esperando um chamado.",
-      "hp": 1140,
+      "hp": 1072,
       "attack": 240,
       "defense": 88,
       "speed": 82,
@@ -1034,7 +1034,7 @@
       "classId": "sombrio",
       "title": "Mercador de memórias",
       "lore": "Vende lembranças alheias para comprar o próprio passado.",
-      "hp": 1060,
+      "hp": 996,
       "attack": 263,
       "defense": 76,
       "speed": 107,
@@ -1084,9 +1084,7 @@
       "identity": "Executor que prepara a própria oportunidade",
       "synergy": "Sangramento aliado habilita seu combo. Alvos abaixo de 35% da vida ficam mais expostos à finalização.",
       "specialty": "Duelista de feridas"
-    }
-  ],
-  "archivedHeroes": [
+    },
     {
       "id": "auren",
       "index": 20,
@@ -1094,42 +1092,56 @@
       "classId": "lumi",
       "title": "Juramento solar",
       "lore": "Mantém um juramento feito ao sol, mesmo durante a noite.",
-      "hp": 1320,
-      "attack": 174,
-      "defense": 118,
-      "speed": 82,
+      "hp": 1410,
+      "attack": 180,
+      "defense": 120,
+      "speed": 78,
       "weapon": "spear",
       "animation": "lance",
-      "role": "Atacante",
+      "role": "Tanque",
       "basic": {
         "id": "basic",
         "name": "Lança radiante",
         "kind": "damage",
-        "power": 1,
+        "power": 0.75,
         "cost": 0,
         "cooldown": 0,
-        "description": "Causa dano a um rival e recupera 24 de energia."
+        "description": "75% do ataque e escudo próprio de 2% da vida máxima. Recupera 24 de energia. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.",
+        "secondary": {
+          "kind": "shield",
+          "target": "actor",
+          "power": 0.02
+        }
       },
       "skill": {
         "id": "skill",
         "name": "Aurora protetora",
-        "kind": "damage",
-        "power": 1.65,
-        "effect": "weaken",
+        "kind": "shield",
+        "power": 0.18,
+        "effect": "cleanse",
         "cost": 30,
         "cooldown": 2,
-        "description": "Causa 165% do ataque a um rival. Reduz o ataque do alvo em 20% por 2 turnos."
+        "description": "Escudo de 18% da vida máxima em um aliado, purifica efeitos negativos e concede Égide elemental por 2 turnos: −20% do dano direto com vantagem de afinidade. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.",
+        "extraEffect": "elementalWard"
       },
       "ultimate": {
         "id": "ultimate",
         "name": "Julgamento da aurora",
         "kind": "aoe",
-        "power": 2.05,
+        "power": 1.05,
         "effect": "weaken",
         "cost": 80,
         "cooldown": 0,
-        "description": "Causa 205% do ataque a todos os rivais. Reduz o ataque do alvo em 20% por 2 turnos."
-      }
+        "description": "105% do ataque em todos os rivais e ataque inimigo −20% por 2 turnos. Concede escudo de 6% da vida máxima a cada aliado. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.",
+        "secondary": {
+          "kind": "shield",
+          "target": "allies",
+          "power": 0.06
+        }
+      },
+      "identity": "Juramento que protege e purifica um aliado",
+      "synergy": "Remove aflições de quem precisa continuar agindo; sua égide resiste à vantagem de afinidade. Solen aproveita o enfraquecimento do julgamento.",
+      "specialty": "Juramento purificador"
     },
     {
       "id": "elyra",
@@ -1138,8 +1150,8 @@
       "classId": "lumi",
       "title": "Faroleira das almas",
       "lore": "Seu farol guia as almas que se perderam entre duas auroras.",
-      "hp": 1110,
-      "attack": 156,
+      "hp": 1100,
+      "attack": 159,
       "defense": 100,
       "speed": 98,
       "weapon": "staff",
@@ -1149,31 +1161,44 @@
         "id": "basic",
         "name": "Raio de alvorada",
         "kind": "damage",
-        "power": 1,
+        "power": 0.65,
         "cost": 0,
         "cooldown": 0,
-        "description": "Causa dano a um rival e recupera 24 de energia."
+        "description": "65% do ataque. Recupera 24 de energia."
       },
       "skill": {
         "id": "skill",
         "name": "Luz que acolhe",
         "kind": "heal",
-        "power": 0.36,
+        "power": 0.2,
         "effect": "cleanse",
         "cost": 30,
         "cooldown": 2,
-        "description": "Recupera 36% da vida máxima de um aliado. Remove efeitos negativos."
+        "description": "Cura 20% da vida máxima de um aliado, depois purifica efeitos negativos e concede escudo de 4%. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.",
+        "secondary": {
+          "kind": "shield",
+          "target": "target",
+          "power": 0.04
+        }
       },
       "ultimate": {
         "id": "ultimate",
         "name": "Segundo amanhecer",
         "kind": "healAll",
-        "power": 0.42,
+        "power": 0.16,
         "effect": "cleanse",
         "cost": 80,
         "cooldown": 0,
-        "description": "Recupera 42% da vida máxima de toda a equipe e purifica efeitos negativos."
-      }
+        "description": "Cura 16% da vida máxima da equipe, depois purifica efeitos negativos e concede escudo de 6% a cada aliado vivo. Cada aplicação dura 2 rodadas globais; camadas somam até 25% da vida, com expiração independente.",
+        "secondary": {
+          "kind": "shield",
+          "target": "allies",
+          "power": 0.06
+        }
+      },
+      "identity": "Faroleira que acolhe feridas antes da próxima travessia",
+      "synergy": "Cura antes de purificar, preservando a regra do sangramento. Barreiras pequenas dão tempo para aliados frágeis responderem.",
+      "specialty": "Renovação protegida"
     },
     {
       "id": "solen",
@@ -1182,13 +1207,13 @@
       "classId": "lumi",
       "title": "Monge do horizonte",
       "lore": "Treina para alcançar um horizonte que se afasta a cada passo.",
-      "hp": 1200,
-      "attack": 185,
-      "defense": 103,
-      "speed": 91,
+      "hp": 1040,
+      "attack": 249,
+      "defense": 84,
+      "speed": 106,
       "weapon": "gauntlet",
       "animation": "rays",
-      "role": "Controlador",
+      "role": "Dano",
       "basic": {
         "id": "basic",
         "name": "Palma luminosa",
@@ -1196,28 +1221,35 @@
         "power": 1,
         "cost": 0,
         "cooldown": 0,
-        "description": "Causa dano a um rival e recupera 24 de energia."
+        "description": "100% do ataque. Recupera 24 de energia."
       },
       "skill": {
         "id": "skill",
         "name": "Selo do horizonte",
         "kind": "aoe",
-        "power": 1.05,
+        "power": 0.9,
         "effect": "weaken",
         "cost": 30,
         "cooldown": 2,
-        "description": "Causa 105% do ataque a todos os rivais. Reduz o ataque do alvo em 20% por 2 turnos."
+        "description": "90% do ataque em todos os rivais e ataque inimigo −20% por 2 turnos."
       },
       "ultimate": {
         "id": "ultimate",
         "name": "Mil sóis",
         "kind": "aoe",
-        "power": 2.05,
-        "effect": "weaken",
+        "power": 1.65,
         "cost": 80,
         "cooldown": 0,
-        "description": "Causa 205% do ataque a todos os rivais. Reduz o ataque do alvo em 20% por 2 turnos."
-      }
+        "description": "165% do ataque em todos os rivais. Contra enfraquecimento: +20% e consome apenas esse efeito.",
+        "combo": {
+          "status": "weaken",
+          "multiplier": 1.2,
+          "consume": true
+        }
+      },
+      "identity": "Monge que abre e consome janelas de enfraquecimento",
+      "synergy": "Seu selo reduz o ataque rival. Mil sóis consome essa abertura, inclusive quando criada por Oren, Saira ou Auren.",
+      "specialty": "Horizonte vulnerável"
     },
     {
       "id": "zaya",
@@ -1226,9 +1258,9 @@
       "classId": "lumi",
       "title": "Mensageira dourada",
       "lore": "Leva mensagens de uma era que ainda não começou.",
-      "hp": 1050,
-      "attack": 178,
-      "defense": 80,
+      "hp": 1010,
+      "attack": 182,
+      "defense": 78,
       "speed": 113,
       "weapon": "bow",
       "animation": "wings",
@@ -1237,33 +1269,46 @@
         "id": "basic",
         "name": "Flecha do poente",
         "kind": "damage",
-        "power": 1,
+        "power": 0.7,
         "cost": 0,
         "cooldown": 0,
-        "description": "Causa dano a um rival e recupera 24 de energia."
+        "description": "70% do ataque. Recupera 24 de energia."
       },
       "skill": {
         "id": "skill",
         "name": "Bênção do crepúsculo",
         "kind": "healAll",
-        "power": 0.22,
-        "effect": "cleanse",
+        "power": 0.1,
         "cost": 30,
         "cooldown": 2,
-        "description": "Recupera 22% da vida máxima da equipe. Remove efeitos negativos."
+        "description": "Cura 10% da vida máxima da equipe e entrega até 6 de energia por aliado vivo.",
+        "secondary": {
+          "kind": "energy",
+          "target": "allies",
+          "amount": 6
+        }
       },
       "ultimate": {
         "id": "ultimate",
         "name": "Asas da eternidade",
         "kind": "healAll",
-        "power": 0.42,
+        "power": 0.18,
         "effect": "cleanse",
         "cost": 80,
         "cooldown": 0,
-        "description": "Recupera 42% da vida máxima de toda a equipe e purifica efeitos negativos."
-      }
+        "description": "Cura 18% da vida máxima da equipe, depois purifica efeitos negativos e entrega até 10 de energia por aliado vivo. Não ressuscita.",
+        "secondary": {
+          "kind": "energy",
+          "target": "allies",
+          "amount": 10
+        }
+      },
+      "identity": "Mensageira que devolve o ritmo à equipe",
+      "synergy": "Pequenas curas e energia distribuída ajudam aliados de qualquer afinidade a alcançar suas técnicas; a renovação continua limitada pela Fratura.",
+      "specialty": "Mensageira de energia"
     }
   ],
+  "archivedHeroes": [],
   "classes": [
     {
       "id": "igneo",
@@ -1275,7 +1320,7 @@
       "description": "Queimadura e crítico (+5 pontos de chance). Tanques e suportes refletem 10% do dano direto à vida.",
       "index": 0,
       "strongAgainst": "natural",
-      "weakAgainst": "sombrio"
+      "weakAgainst": "lumi"
     },
     {
       "id": "natural",
@@ -1322,8 +1367,20 @@
       "verb": "Drena",
       "description": "Roubo de vida (15% do dano direto à vida), marcas que drenam e explosão em um alvo.",
       "index": 4,
-      "strongAgainst": "igneo",
+      "strongAgainst": "lumi",
       "weakAgainst": "arcano"
+    },
+    {
+      "id": "lumi",
+      "name": "Lumi",
+      "color": "#e5c77c",
+      "soft": "#322d1d",
+      "icon": "sun",
+      "verb": "Purifica",
+      "description": "Proteção e renovação. Dissipa efeitos negativos e cura a equipe.",
+      "index": 5,
+      "strongAgainst": "igneo",
+      "weakAgainst": "sombrio"
     }
   ],
   "defaultTeams": [
@@ -1344,6 +1401,6 @@
     "kind": "guard",
     "cost": 0,
     "cooldown": 0,
-    "description": "Recebe 35% menos dano até seu próximo turno, ganha escudo de 6% da vida máxima por 2 ações e recupera 25 de energia. Escudos não somam."
+    "description": "Recebe 35% menos dano até seu próximo turno, ganha escudo de 6% da vida máxima por 2 rodadas globais e recupera 25 de energia. Camadas somam até 25% da vida, com expiração independente."
   }
 }

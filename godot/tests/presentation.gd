@@ -79,7 +79,7 @@ static func run(tree: SceneTree, scene: PackedScene, check: Callable) -> void:
 	var selectable: Array = app.hub.hero_buttons.keys()
 	ids.sort()
 	selectable.sort()
-	check.call(selectable == ids and selectable.size() == 20, "Heroes selector contains exactly the twenty active heroes")
+	check.call(selectable == ids and selectable.size() == 24, "Heroes selector contains exactly the twenty-four active heroes")
 	for hero in app.catalog.heroes:
 		app.hub.hero_buttons[hero.id].pressed.emit()
 		await _settle(tree)
@@ -128,6 +128,7 @@ static func run(tree: SceneTree, scene: PackedScene, check: Callable) -> void:
 	# combat. Only campaign units may receive the socket bonuses.
 	app.hub.open("story")
 	app.hub.mission_buttons[0].pressed.emit()
+	app.hub.preparation_button.pressed.emit()
 	await _settle(tree)
 	var campaign_hero: Dictionary = app.combat.unit(app.state, "0-veyra")
 	var baseline_hero: Dictionary = app.catalog.hero_by_id.veyra

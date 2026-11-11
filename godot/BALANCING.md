@@ -12,10 +12,110 @@ Os heróis e os parâmetros globais têm fontes editáveis separadas. O catálog
 | Crítico, mitigação, duração, energia, debuffs, Fratura | **`src/balance.json`** | Parâmetros globais, detalhados abaixo |
 | Uma regra nova ou a sequência da fórmula | `src/engine.js` **e** `godot/scripts/combat.gd` | Motores equivalentes; valide a paridade após editar ambos |
 | Gemas, cópias, engastes e bônus da campanha | `godot/scripts/campaign.gd` | `GEMS`, `SLOT_COUNT`, `STARTING_COPIES`, `bonuses()` e `battle()` |
-| Minions, chefe e dificuldade das missões | `godot/scripts/campaign.gd` | `register_enemies()` e `MISSIONS[].scale` |
+| Peças, patamares, especializações, custos e fragmentos | `godot/data/equipment.json` | Validação e bônus em `equipment.gd`; aplicação em `campaign.loadout_stats()` |
+| Rivais, dificuldade e fases de chefes | `godot/scripts/campaign.gd` e `godot/scripts/campaign_chapter_collapse.gd` | Perfis, escala do encontro e `bossPhase`; transição em `mission_boss_phases.gd` |
+| Tipo de objetivo, alvo e prazo | `godot/scripts/campaign.gd` e `godot/scripts/campaign_chapter_collapse.gd` | `MISSIONS[].objective`; resolução em `mission_objectives.gd` |
+| Prioridade de alvo, risco de aliados e reserva de energia na campanha | `godot/data/campaign-tactics.json` | Pesos `targetDamageWeight`, `ultimateReserveWeight`, `endangeredHealthRatio`; não usados no livre/PvP |
 | Entender os testes simulados | `godot/SIMULATIONS.md` | Amostras, filtros, limitações e exportação |
 
-`godot/data/catalog.json` e `godot/data/combat-rules.json` são **cópias geradas**: alterações manuais neles serão substituídas na sincronização. Os 20 heróis ativos vêm de `KITS`; os quatro arquivados mantêm seus dados e índices de arte. Não renumere o elenco para remover um personagem da seleção.
+`godot/data/catalog.json` e `godot/data/combat-rules.json` são **cópias geradas**: alterações manuais neles serão substituídas na sincronização. Os 24 heróis ativos vêm de `KITS`, com índices de arte estáveis. Não renumere o elenco para remover um personagem da seleção.
+
+## Amostra reproduzível dos objetivos de campanha
+
+No diretório raiz, com Godot 4.6.3 e diretório de usuário descartável:
+
+```sh
+XDG_DATA_HOME="$PWD/artifacts/objective-matrix/data" godot --headless --path godot --script res://tests/objective_matrix.gd
+```
+
+O script usa a política automática da campanha e três sementes por encontro.
+Com `--lumi`, amostra sete trios, sete encontros táticos originais, 39 novas missões
+principais, três secundárias e três desafios, totalizando 1.092 cenários por preparo. O padrão roda com
+peças básicas, sem gemas. Para comparar com assalto III, gemas I e treinos,
+use `--lumi assault --gems=1 --training --bonds`. O segundo preparo inclui três vitórias compartilhadas antes do encontro. Foram 999/1.092 vitórias no preparo básico e 1.052/1.092 no avançado, com zero erros de resolução. Os registros incluem condições,
+nível da equipe, vitória ou derrota, motivo, ações, vida, dano, cura e escudo.
+Os encontros originais partem das nove vitórias registradas. O Colapso recebe
+os pré-requisitos simulados ao longo da matriz, de modo que o nível comum pode
+subir durante o capítulo. A amostra não mede taxa de vitória humana.
+
+As suites `mission_objectives.gd`, `boss_phases.gd` e `campaign_collapse.gd`
+verificam regras, recompensas, transições e interface. Integram
+`npm run test:godot`. As suítes de campanha percorrem o fluxo real até a 48ª missão, com gravação
+e reabertura. O teste de O Colapso conserva também um recorte de 17 missões. As regras compartilhadas ficam
+independentes dos parâmetros da campanha.
+
+## Técnicas adquiridas
+
+As 24 receitas de campanha em `godot/data/pact-abilities.json` são aplicadas
+por `pact_abilities.gd`, após validar a jornada. Modificam ações copiadas do
+catálogo; não alteram Livre/PvP. Compare custo, alvo, dano, proteção e utilidade
+com a ação original e com Ímpeto. Os 109 checks validam o funcionamento e a
+prévia; não demonstram equilíbrio entre escolhas. A matriz de 2.184 cenários
+acima foi executada antes de selecionar as técnicas adquiridas.
+
+## Comparação das técnicas pessoais
+
+A matriz aceita `--all-heroes --journeys` para oito trios que cobrem os 24
+heróis, com as jornadas desses integrantes registradas. Mantendo o preparo,
+substitua `--journeys` por `--pacts` para selecionar as três técnicas pessoais.
+O outro treinamento continua igual. Exemplo de preparo: `assault --gems=1
+--training --bonds --all-heroes --pacts`. Os requisitos de cada encontro são
+preenchidos pelo ensaio; não é uma campanha jogada do zero.
+
+Em 1.248 cenários por preparo (52 encontros × 8 trios × 3 sementes), foram
+1.219 vitórias com os treinamentos de maestria e 1.202 com as técnicas pessoais,
+sem erros de resolução. A política automática usou 4.516 técnicas pessoais.
+Por trio, as vitórias foram, respectivamente: Veyra/Rhazen/Cindra 156/156;
+Torv/Oren/Sylva 150/150; Nima/Axion/Brin 152/147; Kira/Bast/Vektor 152/146;
+Astra/Elun/Saira 153/153; Ivo/Vesper/Maura 151/152; Noct/Auren/Elyra 149/144;
+Riven/Solen/Zaya 156/154. Cada trio tem 156 cenários.
+
+A amostra mostra contrapartidas, inclusive perdas em desafios de prazo e
+proteção. Não justifica trocar todas as técnicas ao adquirir os pactos.
+A comparação agrega três escolhas de cada vez; ainda não isola o impacto de
+cada herói ou a habilidade de um jogador humano. JSONs e logs ficam em
+`artifacts/renascimento-final-checks/matrix-personal/`.
+
+## Campanha contínua com recursos conquistados
+
+`tests/campaign_playthrough.gd` começa com perfil vazio, joga pela política
+pública da campanha, resgata apenas vitórias reais, melhora peças com os
+fragmentos recebidos, preenche engastes com estoque existente e seleciona
+somente treinamentos desbloqueados. Reabre o save após cada vitória e compara
+missões, peças, engastes, maestria e vínculos. Recusa sobrescrever um progresso
+já existente; use um `XDG_DATA_HOME` novo em cada ensaio.
+
+O trio inicial Veyra/Axion/Astra e os trios Veyra/Rhazen/Cindra,
+Astra/Elun/Saira e Riven/Solen/Zaya completaram 48/48, sem repetição para farmar.
+Torv/Oren/Sylva, Nima/Axion/Brin, Kira/Bast/Vektor, Ivo/Vesper/Maura e
+Noct/Auren/Elyra pararam no Guardião do relé após sete missões, sem erros da
+engine. Priorizar relíquia, manter habilidades base, trocar para gemas
+ofensivas ou concluir as três jornadas do trio não removeu esse bloqueio da
+política inicial. Os ensaios opcionais registram as jornadas efetivamente
+vencidas; não concedem os pactos por atribuição direta.
+
+Isso não demonstra inviabilidade dos trios. Um replay de Ivo/Vesper/Maura
+venceu a mesma luta com RNG normal ao priorizar a curadora nas duas primeiras
+rodadas. Uma busca offline encontrou uma sequência de Kira/Bast/Vektor que
+vence em cinco rodadas com críticos desativados. A busca é diagnóstica,
+custa mais que a política de jogo e não foi incorporada à IA.
+
+### Apoio ofensivo em objetivos com prazo
+
+A política antes descartava ações amigáveis fora de emergência. Agora compara
+a melhor ação ofensiva que cada aliado poderá executar antes do prazo após
+transferência de energia, fortalecimento ou purificação. A prévia normal
+preserva o RNG. O próprio motor projeta o início do turno aliado, incluindo
+recargas, dano periódico e expiração dos escudos; ações intermediárias não
+são simuladas. Uma finalização imediata confirmada pelas regras da missão
+tem prioridade sobre a soma dos benefícios futuros. Proteção de portador e
+a política normal de Livre/PvP permanecem com seus donos.
+
+As doze verificações específicas cobrem transferência que habilita um
+supremo decisivo, recuperação da recarga, limite do prazo, preservação de
+estado/RNG e preferência por vitória imediata. Continuam pendentes a escolha
+mais ampla de alvos auxiliares e a avaliação humana das equipes que exigem
+mudança de tática. Logs e JSONs em `artifacts/renascimento-final-checks/`.
 
 ## Parâmetros globais: `src/balance.json`
 
@@ -29,7 +129,7 @@ Valores `Ratio` são frações da quantidade indicada: `0.25` = 25%. Um `Multipl
 | `critical` | `chance: 0.1`, `damageMultiplier: 1.4` | 10% de chance; 140% do dano no crítico |
 | `damage` | `defenseBaseline: 100`, `defenseWeight: 0.5`, `minimumHit: 1` | Curva de mitigação por defesa e piso do golpe |
 | `energy` | `initial: 40`, `maximum: 100`, `basicGain: 24`, `guardGain: 25` | Recursos iniciais, limite e ganhos das ações básicas |
-| `shield` | `maxHpRatio: 0.25`, `durationActions: 2` | Teto de escudo por vida máxima e duração; escudos continuam sem acumular |
+| `shield` | `maxHpRatio: 0.25`, `durationRounds: 2` | Teto total de escudo; camadas somam, expiram separadamente no início da rodada de concessão + 2 e absorvem das mais antigas para as mais novas |
 | `guard` | `shieldMaxHpRatio: 0.06`, `incomingDamageMultiplier: 0.65` | Escudo da defesa e mitigação até o próximo turno |
 | `status` | `durationTurns: 2` | Duração padrão de buffs e debuffs aplicados |
 | `status` | `burnMaxHpRatio: 0.065`, `bleedMaxHpRatio: 0.065`, `regenMaxHpRatio: 0.04` | Dano de queimadura/sangramento e regeneração no início do turno |
@@ -42,7 +142,7 @@ Valores `Ratio` são frações da quantidade indicada: `0.25` = 25%. Um `Multipl
 | `fracture` | `startRound: 12`, `initialMaxHpRatio: 0.04`, `perRoundMaxHpRatio: 0.025`, `maxHpRatioCap: 0.85` | Fratura começa com 4% da vida máxima, cresce 2,5 pontos por rodada e limita em 85% |
 | `fracture` | `healingReductionPerRound: 0.1` | Cura reduzida em mais 10 pontos percentuais por rodada desde a primeira Fratura |
 | `difficulty.enemyStatMultiplier` | `easy: 0.82`, `normal: 1`, `hard: 1.15` | Multiplica vida e ataque da equipe adversária no combate livre |
-| `ai` | `healingHealthThreshold: 0.78`, `shieldRefreshMaxHpRatio: 0.14`, `supportEnergyThreshold: 75` | Quando a IA considera cura, reposição de escudo e entrega de energia |
+| `ai` | `supportPriority: 1.18`, `damagePriority: 1.08`, `killBonus: 700`, `healValue: 1.35`, `shieldValue: 0.8` | Pesos da avaliação de alvos, finalizações, cura efetiva e escudo adicional; não mudam atributos nem consomem RNG |
 
 Os limiares de `ai` mudam a política dos bots, não a força de uma habilidade. Isso pode alterar bastante o resultado das simulações. As constantes do gerador aleatório e a ordenação por velocidade permanecem no motor; não são ajustes de balanceamento.
 
@@ -52,7 +152,7 @@ Em `src/kits.js`, procure `"kira":`. Para reduzir apenas o ataque dela, altere `
 
 Cada ação é um objeto separado em `basic`, `skill` ou `ultimate`, com campos identificados `name`, `kind`, `power` e `description`. Adicionar `"cost": 35` e `"cooldown": 3` dentro dessa habilidade substitui os padrões somente dela. Outros campos já usados no elenco: `effect`, `extraEffect`, `combo`, `secondary`, `pierce`, `shieldScale`, `executeThreshold` e `executeMultiplier`. Preserve os campos existentes quando adicionar uma substituição.
 
-`speed` define a ordem de iniciativa. `defense` entra na curva de mitigação; não corresponde diretamente a uma porcentagem de redução. Um tanque não intercepta ataques automaticamente por ocupar a frente: Provocação e Cobertura são as regras que alteram os alvos/destinatários do dano.
+`speed` define a ordem de iniciativa. `defense` entra na curva de mitigação; não corresponde diretamente a uma porcentagem de redução. O primeiro tanque da formação concede Cobertura aos outros aliados por `tankProtection.openingTurns` (2 turnos pessoais de cada aliado). Não acumula protetores. AoE ignora Cobertura. A posição não impede escolher alvos. Vesper provoca por 2 turnos pessoais e recebe o multiplicador `status.tauntDefenseMultiplier: 0.75` na própria defesa durante a postura. O indicador vermelho `tauntRisk` deriva da provocação; não é um debuff purificável separado.
 
 ## Exemplo: ajustar uma fórmula global
 
@@ -82,7 +182,7 @@ Cura é limitada à vida ausente e recebe as reduções de sangramento e Fratura
 
 ## Campanha e dados das simulações
 
-Gemas e multiplicadores das missões são aplicados em `campaign.battle()` sobre cópias dos atributos de combate. O elenco base não é alterado. Combate livre, duelo local e laboratório continuam usando os atributos base, sem engastes; as partidas de campanha não entram na tabela de equilíbrio livre.
+Equipamentos, gemas e multiplicadores das missões são aplicados em `campaign.battle()` sobre cópias dos atributos de combate. O elenco base não é alterado. Combate livre, duelo local e laboratório continuam usando os atributos base, sem engastes; as partidas de campanha não entram na tabela de equilíbrio livre.
 
 Três gemas iguais somam os bônus antes de arredondar uma vez: três gemas de ataque dão +12% do ataque base, não três multiplicações sucessivas de 1,04. A vida adicional também aumenta valores baseados em vida máxima, incluindo o teto de escudo; avalie sustentação junto com dano e tempo até a eliminação.
 
@@ -116,3 +216,129 @@ O protótipo web importa `src/balance.json` como módulo JSON e precisa ser serv
 - `darkmark`, `elementalWard`, `sentinel`: marca drenante, mitigação contra vantagem e supressão do agressor. Veja [regras completas](CLASSES.md).
 
 A marca usa `status.darkmarkMaxHpRatio: 0.035` e `darkmarkDrainRatio: 0.6`; Égide usa `elementalWardIncomingMultiplier: 0.8`. Ígneo soma `igneoCriticalChance: 0.05`; tanques e suportes ígneos refletem `igneoReflectRatio: 0.1` do dano direto à vida. Reações não geram reações.
+
+
+## Equipamentos de campanha — incremento Renascimento
+
+Parâmetros próprios em `data/equipment.json`; validação, investimento e bônus em `scripts/equipment.gd`. Equipamentos e gemas somam percentuais sobre o atributo base antes de um único arredondamento. Defesa também entra na prévia; energia inicial usa os limites das regras compartilhadas. Trocar especialização devolve a gema antes de calcular o novo conjunto. Nenhum desses bônus é aplicado ao modo livre/PvP ou registrado no laboratório de equilíbrio livre.
+
+Compatibilidade: no formato 5, custos e taxas de fragmentos fazem parte do contrato de persistência. Para alterá-los ou reinterpretar os marcos históricos, crie uma migração versionada que preserve o investimento já conquistado; não rebalanceie a economia editando somente o JSON. Bônus de atributos permanecem parâmetros próprios da campanha.
+
+A economia concede 72 fragmentos nas nove primeiras vitórias, cobrindo exatamente nove peças no patamar III: 9 × (3 + 5). Repetições vitoriosas concedem 2 e não geram gemas. O teste de campanha começa vazio, completa as nove missões usando o motor real e melhora o trio gradualmente, chegando ao teto sem repetição obrigatória. Isso verifica um caminho com o trio inicial, não a campanha ampliada nem todos os heróis.
+
+Amostra reproduzível de 108 cenários: quatro trios × três sementes × três objetivos, comparando peças básicas, padrão III e Canalizador/Bastião/Âncora III. Sem gemas. Básico: **30/36** vitórias; padrão III: **30/36**; alternativas III: **27/36**; zero erros de resolução. Todos completaram ritual e defesa; as derrotas foram no Guardião do relé por prazo. O conjunto alternativo sacrifica ataque/vida por defesa/energia e não melhora automaticamente a política de reserva de supremo. Não equivale a uma recomendação de equipar a mesma especialização nos três integrantes, nem a equilíbrio final aprovado. Ajustes por herói, decisões manuais e campanha ampliada continuam pendentes.
+
+Reprodução: `godot --headless --path godot --script res://tests/objective_matrix.gd -- basic`, substituindo o último argumento por `assault` ou `channel`. Usar diretórios XDG isolados. O relatório identifica parâmetros, conjunto, sementes e recibos; evidências desta execução em `artifacts/renascimento-equipment/matrix`.
+
+
+## Fabricação e fusão — economia e amostra
+
+`data/gem-forge.json` define três cópias I por fragmento, fusão 3→1, teto III e bônus 4/5/6% ATQ, 5/6,5/8% VIDA e 8/10/12 EN inicial. Custos e receitas são contrato do save 6; alterações econômicas exigem migração que conserve investimento. `gem_forge.gd` deriva o estoque, verifica cada nível e protege cópias equipadas.
+
+`tests/gem_forge.gd` completa as nove missões com nove gemas básicas protegidas e peças melhoradas, sem fabricação obrigatória. Depois simula 12 vitórias reais repetidas, 24 lotes escolhidos e fusões até nove gemas III. Mantém os engastes antigos até cada substituição, termina sem dívida e conserva as nove cópias substituídas. Mede um teto opcional: não representa minutos humanos, nem campanha expandida.
+
+Matriz de 108 cenários com equipamento padrão III: quatro trios × três sementes × três objetivos, comparando uma gema de cada tipo por herói nos níveis I, II e III. Estoque, receitas e orçamento de cada conjunto passam pela validação real. Resultado: **33/36 vitórias em cada nível**, zero erros; médias de **15,03 / 14,92 / 14,81 ações**. As três derrotas continuam por prazo no Guardião. Não prova equilíbrio universal nem elimina a necessidade de escolhas manuais e testes humanos.
+
+Reprodução: `godot --headless --path godot --script res://tests/objective_matrix.gd -- assault --gems=1`, trocando o último valor por 2 ou 3. Evidências em `artifacts/renascimento-gems/matrix`.
+
+
+## Nível comum e maestria — incremento seguinte
+
+`data/progression.json` separa a curva de campanha das regras livres. Nível 1–6 com 0/100/250/450/700/1000 EXP; primeiras vitórias rendem 100, repetições 25. Cada nível após o primeiro soma 2% VIDA, 1% ATQ e 1% DEF base, com teto explícito. Vitórias históricas contam para o treinamento comum. Maestria só registra participação conhecida: 10 pontos por integrante que iniciou uma missão vencida, marcos 10/30/60 e teto 60. Dano ganha até 1,5% ATQ, tanque 3% VIDA e suporte 3 EN inicial; nenhum valor cresce após o teto.
+
+Esses bônus somam com peças/gemas antes do arredondamento. O snapshot da batalha encerrada não é reescrito ao receber recompensas. `tests/mastery.gd` verifica os três papéis em uma vitória real, troca de trio antes do recibo, crédito idêntico, migração, recuperação, falha de disco, limites e UI. O nível comum evita repetir a evolução básica ao experimentar outro herói. Nenhum parâmetro entra no PvP/laboratório livre.
+
+Amostra de 108 cenários por preparo: básico com nível comum; peças III/gemas I; peças III/gemas III/maestria III. Quatro trios × três sementes × três objetivos. **30/36, 33/36 e 33/36** vitórias; médias **17,08 / 14,75 / 14,39 ações**, zero erros. Os estágios combinam fatores de progressão e não isolam causalmente um bônus específico. As derrotas por prazo permanecem; variedade de composições e controle manual continuam a exigir avaliação. Relatórios em `artifacts/renascimento-mastery/matrix`. O argumento `--mastery=3` ativa o marco final da amostra.
+
+## Habilidades treináveis — incremento Renascimento
+
+`data/ability-training.json` define Ímpeto (fator ×1,15, +10 EN), Economia (fator ×0,90, −10 EN) e Ritmo (fator ×0,90, +4 EN por básico), por marcos I/II/III. Técnica de energia sem poder principal ajusta a transferência. Restante do kit preservado; livre/PvP seguem originais. As 60 formas alternativas são executadas na suíte `ability_training.gd`, com prévia pública igual aos recibos.
+
+108 cenários: peças III/gemas I/maestria III sem alternativas, mesmo preparo com as três alternativas, e peças III/gemas III/alternativas. Quatro trios × três sementes × três objetivos; **33/36** vitórias em cada grupo, médias **14,64 / 13,75 / 13,75 ações**, zero erros. As três derrotas por prazo persistem. Não é prova de equilíbrio de todos os kits, nem recomendação de ativar as três opções simultaneamente. Relatórios em `artifacts/renascimento-training/matrix`; `--training` habilita a amostra.
+
+## Retorno Lumi — regras 0.16.0
+
+Auren protege/purifica um aliado e enfraquece em área; Elyra cura antes de limpar e acrescenta barreiras pequenas; Solen abre enfraquecimento e o consome no supremo; Zaya distribui cura/energia limitadas, sem reviver. A afinidade acrescenta o elo Sombrio → Lumi → Ígneo, tornando Sombrio/Ígneo neutro. Os vinte kits anteriores ficaram idênticos. Não foi adicionada uma passiva Lumi oculta.
+
+A matriz `--lumi` acrescenta Auren/Solen/Elyra, Auren/Zaya/Veyra e Solen/Saira/Axion aos quatro trios anteriores. Sete trios × três sementes × três objetivos: **48/63** vitórias com peças básicas/gemas I/nível comum; **51/63** com peças III/gemas III/maestria III e treinamento. Médias **18,76 / 17,11 ações**, zero erros. Os três novos trios vencem 6/9 cenários cada; as três derrotas de cada um são por prazo no relé. A evolução não resolve todas as composições; exige revisar pressão/prazo e escolhas da IA, além de controle manual e playtests. Relatórios em `artifacts/renascimento-lumi/matrix`.
+
+O laboratório inclui os seis elos de afinidade e nove retornos, totalizando 282 partidas (72 variadas, 102 de sustentação e 108 de retornos em lados invertidos). Saves de laboratório 0.16 não sobrescrevem os 0.15. O hash PvP mudou com catálogo/regras; testes usam servidor local compatível, sem presumir atualização do servidor publicado.
+
+## Proteção de um portador — incremento Renascimento
+
+A estrada das cinzas mantém ID/recompensa e ganha proteção do primeiro integrante do trio, escolhido livremente. Ele deve sobreviver à eliminação dos rivais. Outras baixas são permitidas; queda do portador tem prioridade sobre matar o último oponente. Também funciona em objetivos de sobrevivência. O HUD nomeia o herói capturado ao preparar a batalha. Abaixo de 50% de vida, o automático procura cura/escudo/purificação útil para ele; pesos ficam em `campaign-tactics.json`, e previsão não muda estado/RNG. Após terminar, nenhuma nova ação é oferecida.
+
+22 verificações específicas e **404 verificações pertinentes** passaram, incluindo a campanha real e conservação de itens/XP. Matriz de 168 cenários em sete trios/quatro objetivos: **69/84** vitórias no preparo básico e **72/84** no evoluído, médias **20,79 / 18,54 ações**, zero erros. O portador foi protegido em **21/21** em cada preparo. As derrotas por prazo dos outros objetivos permanecem. Relatórios em `artifacts/renascimento-escort/matrix`. Não equivale à aprovação final das composições ou da campanha ampliada.
+
+## Ondas — incremento Renascimento
+
+A escadaria usa dois grupos dos mesmos três arquétipos: VIDA/ATQ a 65%/90% e 75%/100% do encontro base. Reinforços entram em uma nova rodada; o trio conserva perdas, energia e condições. Escudos expiram pela fronteira normal. O motor mantém a propriedade da ordem dos turnos e aceita o pedido de reagendamento do controlador. A morte por efeito periódico pode encerrar uma onda; derrota do trio tem prioridade sobre reforços. Vitória/recompensa é da tentativa completa.
+
+**32 verificações específicas** cobrem entradas inválidas/atômicas, duas/três ondas, reagendamento, escudos, baixas, recompensa única, resultado prematuro, reabertura e apresentação. Suíte completa e paridade livres passaram (36 partidas/2.018 ações; 282 logs/17.730 ações). Os caminhos reais de nove missões e orçamento de equipamento/gemas continuam concluíveis pelo trio padrão.
+
+Matriz de 210 cenários (sete trios × três sementes × cinco encontros, dois preparos): **90/105 e 93/105** vitórias, médias **22,88 / 20,16 ações**, zero erros. Ondas: **21/21** em cada preparo, médias **31,24 / 26,67 ações**. As derrotas anteriores por prazo persistem. Web completou duas ondas com Auren/Solen/Elyra em perfil descartável de nível 3: 10 rodadas/41 ações; a gravação concedeu uma primeira vitória e +10 maestria aos três participantes, mesmo com Elyra derrotada. Não é avaliação humana de equilíbrio. Evidências em `artifacts/renascimento-waves`.
+
+## Campo de energia — checkpoint
+
+Corrente do éter na guardiã da memória: básicos +4 EN recuperados, técnicas +5 EN de custo para as duas equipes; supremos inalterados. Treinamentos combinam uma vez (Ritmo 32 EN, Ímpeto 45 EN, Economia 70 EN), com limites e validação atômica antes de alterar qualquer ator. Previews fora da missão são identificados como base; HUD/cartões mostram o campo real. Dados de preparação e catálogo livre permanecem intactos.
+
+**168 verificações específicas**, incluindo os 24 heróis, os rivais, custos efetivamente pagos, limites, negativos, atomicidade, composição com treino/ondas e HUD. **601 verificações pertinentes** considerando as regressões de ondas, portador, equipamentos, gemas, maestria, treino e campanha/coleção. A suíte completa/paridade do incremento de ondas já passou; após adicionar o campo, foram executadas essas regressões pertinentes, sem alegar uma nova execução completa.
+
+Matriz de 252 cenários: **111/126 e 114/126** vitórias, médias **25,90 / 22,60 ações**, zero erros. O encontro com campo venceu 21/21 em cada preparo, médias 41,05 / 34,76 ações. Condições ficam registradas por cenário; não se deve comparar totais de amostras de tamanhos diferentes como efeito causal do campo. Web inspecionado em 1600×900/1280×720: Veyra com Pulso e treino começa em 48 EN, vê básico +32, técnica 45 e supremo 70; após o uso da técnica, o restante da equipe mostra básico +28/técnica 35. Evidências em `artifacts/renascimento-field`.
+
+## Padrões de chefes — incremento Renascimento 49
+
+Arquivista: Rebote da Ata, no limiar de 55% de vida, preserva potência 0,82,
+custo e recarga e acrescenta Exposição por dois turnos. Primeira Arquiteta:
+Colapso das Margens, no limiar de 60%, preserva potência 0,92 e acrescenta
+passagem de 35% do dano pelos escudos; o campo mantém custo final 34 EN.
+Defesa reduz o dano antes da absorção e da passagem parcial. Os parâmetros
+ficam nos capítulos; BossPhases valida os campos e delega ao motor existente.
+
+TDD reproduziu os efeitos/avisos ausentes. Passaram 25 verificações específicas,
+22 de fases, 171 de capítulos finais, 96 de Colapso e 168 de campos. Foram
+repetidas quatro campanhas do zero, sem injetar vitórias ou equipamento:
+Veyra/Axion/Astra, Veyra/Rhazen/Cindra, Astra/Elun/Saira e Riven/Solen/Zaya
+concluíram 48/48, com reabertura/conservação do progresso adquirido. Os dois
+chefes consumiram respectivamente 28/34, 25/35, 40/69 e 24/30 ações.
+São simulações legais da política automatizada descrita em
+`tests/campaign_playthrough.gd`, sem renderer ou controle humano. Não comprovam
+equilíbrio competitivo, todas as composições ou aprovação final da campanha.
+
+## Refluxo das marés — incremento Renascimento 76
+
+`tides-returns-proof` conserva limiar 0,55, potência 0,80, custo e recarga;
+a segunda fase acrescenta `skillEffect: weaken`. Usa o multiplicador global
+existente de ataque 0,8 e duração de dois turnos pessoais, sem alterar esses
+parâmetros. Purificação retira o status; a prévia real perde dano enquanto
+ele estiver presente. Preparação/HUD/Registro usam a descrição comum das
+fases. IDs, recompensas, progressão, save 10 e regras livres/PvP permanecem.
+
+TDD passou de 25 para 38 verificações de padrões, incluindo redução real,
+recibo de impacto, prévia sem mutação, purificação escolhida, cura do chefe,
+conservação do catálogo e preparação/HUD. Passaram 55 JS e a integrada
+1.301/1.272 UI, paridade 36/2.018 ações e replay 282/17.730 ações. Os quatro
+trios de campanha contínua completaram 48/48 novamente; o Executor consumiu
+24, 17, 38 e 25 ações, respectivamente, com progressão conquistada. Isso
+não comprova que todos enfrentaram cada técnica nem o equilíbrio de todas
+as composições. Inspeção nativa usa perfil desbloqueado, limiar/atores/EN
+de fixture, software e áudio Dummy; não representa aceite humano.
+
+## Políticas contínuas do relé — incremento Renascimento 77
+
+Sem alterar o jogo, 25 campanhas descartáveis repetiram os cinco trios que
+paravam no relé. A política atual reproduziu cinco derrotas após 7/48.
+Priorizar a curadora nas duas primeiras rodadas, com as mesmas decisões
+públicas de ataque/apoio e RNG normal, permitiu Kira/Bast/Vektor e
+Ivo/Vesper/Maura completarem 48/48, resgatando e reabrindo apenas progresso
+conquistado. As demais missões continuam usando a IA pública.
+
+Torv/Oren/Sylva, Nima/Axion/Brin e Noct/Auren/Elyra continuaram perdendo por
+prazo. Quinze casos adicionais (curadora por 3/6 rodadas; protetor por 2/3/6)
+também não concluíram o relé. Zero erros de resolução; saídas 1 desses casos
+significam derrota da campanha, não falha da engine. A prioridade temporária
+não foi incorporada à IA. Os quatro trios anteriores mais esses dois somam
+seis composições com percurso completo comprovado em simulação, usando
+políticas distintas; não equivale a seis vitórias da IA atual ou balanço
+aprovado. Roteiros, 25 logs/relatórios e verificação ficam em
+`artifacts/renascimento-final-checks/relay77-*`.

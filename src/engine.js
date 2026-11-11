@@ -44,6 +44,7 @@ export function createBattle(
         energy: RULES.energy.initial,
         shield: 0,
         shieldTurns: 0,
+        shieldLayers: [],
         guarding: false,
         statuses: [],
         cooldowns: {},
@@ -63,6 +64,12 @@ export function createBattle(
     turns: 0,
   };
   state.order = turnOrder(state);
+  // The first tank in formation protects the opening without forcing targets.
+  for (const side of [0, 1]) {
+    const guardian = units.find(u => u.side === side && HERO_BY_ID[u.heroId].role === 'Tanque');
+    if (guardian) for (const ally of units.filter(u => u.side === side && u !== guardian))
+      addStatus(ally, 'cover', guardian.id, RULES.tankProtection.openingTurns);
+  }
   beginTurn(state);
   return state;
 }
@@ -140,6 +147,16 @@ function beginTurn(state, turnEvents = []) {
       state.round++;
       state.cursor = 0;
       state.order = turnOrder(state);
+      for (const unit of state.units) {
+        const before = unit.shield;
+        normalizeShields(unit, state.round - 1);
+        unit.shieldLayers = unit.shieldLayers.filter(layer => layer.expiresRound > state.round);
+        syncShields(unit, state.round);
+        if (before > unit.shield) {
+          const event = {type:'shieldExpired',actor:unit.id,target:unit.id,amount:before-unit.shield,shieldAfter:unit.shield,hpAfter:unit.hp};
+          log(state,event); turnEvents.push(event);
+        }
+      }
     }
     const actor = currentUnit(state);
     if (!actor || actor.hp <= 0) {
@@ -147,7 +164,6 @@ function beginTurn(state, turnEvents = []) {
       continue;
     }
     actor.guarding = false;
-    if (actor.shield > 0 && actor.shieldTurns > 0) actor.shieldTurns--;
     const report = (event, recipient = actor) => {
       const detail = { ...event, hpAfter: recipient.hp, shieldAfter: recipient.shield };
       log(state, detail);
@@ -225,20 +241,32 @@ function beginTurn(state, turnEvents = []) {
 function has(unit, type) { return unit.statuses.some(s => s.type === type); }
 function matchingStatus(unit, config = {}) { return (config.statuses || [config.status]).find(type => has(unit,type)) || ''; }
 function remove(unit, type) { unit.statuses = unit.statuses.filter(s => s.type !== type); }
-// One finite shield per unit: stronger value wins; weaker applications do not extend it.
+// Independent round-based layers, capped in total. Oldest layers absorb first.
 export const SHIELD_CAP = RULES.shield.maxHpRatio;
-function shield(unit, power) {
+function normalizeShields(unit, round) {
+  unit.shieldLayers ||= [];
+  if (!unit.shield) unit.shieldLayers = [];
+  else if (!unit.shieldLayers.length) unit.shieldLayers.push({amount:unit.shield,expiresRound:round+(unit.shieldTurns || RULES.shield.durationRounds)});
+}
+function syncShields(unit, round) {
+  unit.shield = unit.shieldLayers.reduce((n,l)=>n+l.amount,0);
+  unit.shieldTurns = unit.shieldLayers.reduce((n,l)=>Math.max(n,l.expiresRound-round),0);
+}
+function shield(unit, power, round) {
+  normalizeShields(unit,round);
   const before = unit.shield;
-  const grant = Math.min(Math.round(unit.maxHp * SHIELD_CAP), Math.round(unit.maxHp * power));
-  const remaining = unit.shieldTurns === 0 ? 0 : before;
-  if (grant >= remaining) unit.shieldTurns = RULES.shield.durationActions;
-  unit.shield = Math.max(remaining, grant);
-  return {type:'shield',target:unit.id,amount:unit.shield-remaining,shieldBefore:before,shieldAfter:unit.shield,shieldTurns:unit.shieldTurns};
+  const grant = Math.max(0,Math.min(Math.round(unit.maxHp * SHIELD_CAP)-before,Math.round(unit.maxHp * power)));
+  if (grant) unit.shieldLayers.push({amount:grant,expiresRound:round+RULES.shield.durationRounds});
+  syncShields(unit,round);
+  return {type:'shield',target:unit.id,amount:grant,shieldBefore:before,shieldAfter:unit.shield,shieldTurns:unit.shieldTurns};
 }
 function hit(target, total, pierce = 0, metadata = {}) {
   const before = target.shield;
   const absorbed = Math.min(before, total - Math.round(total * pierce));
   target.shield -= absorbed;
+  let remaining = absorbed;
+  for (const layer of target.shieldLayers || []) { const n = Math.min(layer.amount,remaining); layer.amount -= n; remaining -= n; }
+  target.shieldLayers = (target.shieldLayers || []).filter(l=>l.amount>0);
   if (target.shield === 0) target.shieldTurns = 0;
   target.stats.shieldAbsorbed += absorbed;
   const amount = Math.min(target.hp, total - absorbed);
@@ -262,10 +290,10 @@ export function act(state, actionId, targetId, criticalOverride = null) {
   const boostedSecondary = action.secondary && recipients.some(t => matchingStatus(t,{statuses:action.secondary.whenStatuses || [action.secondary.whenStatus]}));
   const spreading = action.spread && selected.statuses.find(s => ['burn','bleed','darkmark'].includes(s.type) && s.turns > 0);
   const storedShield = action.shieldScale ? actor.shield : 0;
-  if (storedShield) { actor.shield = 0; actor.shieldTurns = 0; emit({type:'converted',target:actor.id,shieldSpent:storedShield}); }
+  if (storedShield) { actor.shield = 0; actor.shieldTurns = 0; actor.shieldLayers = []; emit({type:'converted',target:actor.id,shieldSpent:storedShield}); }
   if (action.kind === 'guard') {
     actor.guarding = true;
-    const e = shield(actor,RULES.guard.shieldMaxHpRatio); e.type = 'guard'; emit(e);
+    const e = shield(actor,RULES.guard.shieldMaxHpRatio,state.round); e.type = 'guard'; emit(e);
     actor.stats.shieldGranted += e.amount;
     actor.energy = Math.min(RULES.energy.maximum,actor.energy+RULES.energy.guardGain);
   } else {
@@ -275,12 +303,12 @@ export function act(state, actionId, targetId, criticalOverride = null) {
         event = heal(state,target,target.maxHp*action.power);
         actor.stats.healing += event.amount;
       } else if (action.kind.startsWith('shield')) {
-        event = shield(target,action.power); actor.stats.shieldGranted += event.amount;
+        event = shield(target,action.power,state.round); actor.stats.shieldGranted += event.amount;
       } else if (action.kind.startsWith('support')) {
         event = {type:'support',target:target.id,amount:0};
       } else {
         const weak = has(actor,'weaken') ? RULES.status.weakenAttackMultiplier : 1, empowered = has(actor,'empower') ? RULES.status.empowerAttackMultiplier : 1;
-        const defense = target.defense * (has(target,'expose') ? RULES.status.exposeDefenseMultiplier : 1) * (hero.classId === 'arcano' ? RULES.classPassives.arcanoDefenseMultiplier : 1);
+        const defense = target.defense * (has(target,'expose') ? RULES.status.exposeDefenseMultiplier : 1) * (has(target,'taunt') ? RULES.status.tauntDefenseMultiplier : 1) * (hero.classId === 'arcano' ? RULES.classPassives.arcanoDefenseMultiplier : 1);
         const multiplier = advantage(hero.classId,HERO_BY_ID[target.heroId].classId);
         let critical = random(state) < Math.min(1,RULES.critical.chance + (hero.classId === 'igneo' ? RULES.classPassives.igneoCriticalChance : 0) + (action.criticalChance || 0));
         if (criticalOverride !== null) critical = criticalOverride;
@@ -360,15 +388,11 @@ export function act(state, actionId, targetId, criticalOverride = null) {
         if (target.hp <= 0) continue;
         const power = (extra.power||0) * (boostedSecondary ? extra.multiplier : 1);
         if (extra.kind === 'heal') { const receipt = heal(state,target,target.maxHp*power,{source:'secondary'}); actor.stats.healing += receipt.amount; emit(receipt); }
-        if (extra.kind === 'shield') { const e = shield(target,power); actor.stats.shieldGranted += e.amount; emit(e); }
+        if (extra.kind === 'shield') { const e = shield(target,power,state.round); actor.stats.shieldGranted += e.amount; emit(e); }
         if (extra.kind === 'energy') { const amount = Math.min(RULES.energy.maximum-target.energy,extra.amount); target.energy += amount; actor.stats.energyGiven += amount; emit({type:'energy',target:target.id,amount,energyAfter:target.energy}); }
       }
     }
     if (actionId === 'basic') actor.energy = Math.min(RULES.energy.maximum,actor.energy+RULES.energy.basicGain);
-  }
-  if (actor.shield > 0 && actor.shieldTurns === 0) {
-    const amount = actor.shield; actor.shield = 0;
-    emit({type:'shieldExpired',target:actor.id,amount,shieldAfter:0});
   }
   actor.statuses = actor.statuses.filter(s => s.turns > 0);
   const impactUnits = structuredClone(state.units), turnEvents = [];
@@ -378,33 +402,65 @@ export function act(state, actionId, targetId, criticalOverride = null) {
 export function preview(state, actionId, targetId) {
   return {normal:act(structuredClone(state),actionId,targetId,false),critical:act(structuredClone(state),actionId,targetId,true)};
 }
+// One-ply utility: deterministic, never draws RNG or mutates the live battle.
+function aiThreat(unit) { return 1 + Math.max(0, .7-unit.hp/unit.maxHp)*2; }
+function aiEffect(state, actor, target, type) {
+  if (!type) return 0;
+  if (type === 'cleanse') return target.statuses.filter(s=>!POSITIVE.includes(s.type)).length*70;
+  if (has(target,type)) return 0;
+  if (type === 'taunt') return state.units.filter(u=>u.side===actor.side && u.hp>0 && u!==actor).reduce((n,u)=>n+55*aiThreat(u),0)*(actor.hp/actor.maxHp);
+  if (type === 'cover') return 75*aiThreat(target);
+  return ({burn:90,bleed:110,darkmark:85,weaken:65,expose:50,focus:65,seed:55,regen:65,fortify:55,empower:65,riposte:40,mirror:45,emberguard:45,sentinel:65,elementalWard:45})[type] || 0;
+}
+function aiDamage(state, actor, target, action) {
+  const hero=HERO_BY_ID[actor.heroId], affinity=advantage(hero.classId,HERO_BY_ID[target.heroId].classId);
+  let defense=target.defense*(has(target,'expose')?RULES.status.exposeDefenseMultiplier:1)*(has(target,'taunt')?RULES.status.tauntDefenseMultiplier:1)*(hero.classId==='arcano'?RULES.classPassives.arcanoDefenseMultiplier:1);
+  let bonus=action.combo && matchingStatus(target,action.combo)?action.combo.multiplier:1;
+  if(has(target,'focus'))bonus*=RULES.status.focusDamageMultiplier;
+  if(action.executeThreshold && target.hp/target.maxHp<action.executeThreshold)bonus*=action.executeMultiplier;
+  let total=Math.max(1,Math.round((actor.attack*(has(actor,'weaken')?RULES.status.weakenAttackMultiplier:1)*(has(actor,'empower')?RULES.status.empowerAttackMultiplier:1)*action.power+actor.shield*(action.shieldScale||0))*RULES.damage.defenseBaseline/(RULES.damage.defenseBaseline+defense*RULES.damage.defenseWeight)*affinity*(target.guarding?RULES.guard.incomingDamageMultiplier:1)*(has(target,'fortify')?RULES.status.fortifyIncomingDamageMultiplier:1)*(has(target,'elementalWard')&&affinity>1?RULES.status.elementalWardIncomingMultiplier:1)*bonus));
+  const cover=target.statuses.find(s=>s.type==='cover');
+  if(action.kind==='damage' && cover && state.units.some(u=>u.id===cover.owner && u.hp>0 && u.side===target.side))total-=Math.round(total*RULES.status.coverRedirectRatio);
+  const absorbed=Math.min(target.shield,total-Math.round(total*(action.pierce||0))), hpDamage=Math.max(0,total-absorbed);
+  const priority=HERO_BY_ID[target.heroId].role==='Suporte'?RULES.ai.supportPriority:HERO_BY_ID[target.heroId].role==='Dano'?RULES.ai.damagePriority:1;
+  return Math.min(target.hp,hpDamage)*priority + absorbed*.6 + (hpDamage>=target.hp?RULES.ai.killBonus:0) + (target.maxHp-target.hp)*.08;
+}
+function aiValue(state, actor, target, action) {
+  let value=0;
+  if(action.kind.startsWith('heal')) value=Math.min(target.maxHp-target.hp,Math.round(target.maxHp*action.power*healingMultiplier(state,target)))*RULES.ai.healValue*aiThreat(target);
+  else if(action.kind.startsWith('shield')) value=Math.max(0,Math.min(Math.round(target.maxHp*RULES.shield.maxHpRatio)-target.shield,Math.round(target.maxHp*action.power)))*RULES.ai.shieldValue*aiThreat(target);
+  else if(!action.kind.startsWith('support'))value=aiDamage(state,actor,target,action);
+  value+=aiEffect(state,actor,target,action.effect)+aiEffect(state,actor,target,action.extraEffect);
+  return value;
+}
 export function chooseAI(state) {
-  const actor = currentUnit(state);
-  if (!actor || state.phase !== 'playing') return null;
-  const hero = HERO_BY_ID[actor.heroId];
-  for (const actionId of ['ultimate','skill','basic']) {
-    if (!canUse(actor,actionId)) continue;
-    const action = getAction(actor,actionId), targets = legalTargets(state,actor,action);
-    if (!targets.length) continue;
-    if (friendly(action)) {
-      let target;
-      if (action.kind.startsWith('heal')) {
-        target = [...targets].sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0];
-        if (action.effect === 'cleanse' && target.hp/target.maxHp >= RULES.ai.healingHealthThreshold) target = targets.find(t=>t.statuses.some(s=>!POSITIVE.includes(s.type))) || target;
-        const cleansing = action.effect === 'cleanse' && targets.some(t=>t.statuses.some(s=>!POSITIVE.includes(s.type)));
-        if ((target.hp/target.maxHp >= RULES.ai.healingHealthThreshold || healingMultiplier(state,target) === 0) && !cleansing) continue;
-      } else if (action.kind.startsWith('shield')) {
-        target = [...targets].sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp).find(t=>t.shield<t.maxHp*RULES.ai.shieldRefreshMaxHpRatio || (action.effect && !has(t,action.effect)));
-        if (!target) continue;
-      } else {
-        target = [...targets].sort((a,b)=>a.energy-b.energy)[0];
-        if (target.energy > RULES.ai.supportEnergyThreshold && !targets.some(t=>t.statuses.some(s=>!POSITIVE.includes(s.type)))) continue;
+  const actor=currentUnit(state);
+  if(!actor || state.phase!=='playing')return null;
+  let best=null, bestScore=-Infinity;
+  // Basic wins an exact tie, conserving energy for a meaningful later action.
+  for(const actionId of ['basic','skill','ultimate']) {
+    if(!canUse(actor,actionId))continue;
+    const action=getAction(actor,actionId),targets=legalTargets(state,actor,action);
+    if(friendly(action))targets.sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp || a.slot-b.slot);
+    for(const target of targets) {
+      const recipients=['aoe','healAll','shieldAll','supportAll'].includes(action.kind)?targets:[target];
+      let score=recipients.reduce((n,t)=>n+aiValue(state,actor,t,action),0)-action.cost*.25;
+      if(actionId==='basic')score+=8;
+      if(action.spread && target.statuses.some(s=>['burn','bleed','darkmark'].includes(s.type)))score+=60;
+      const extra=action.secondary;
+      if(extra) {
+        const allies=state.units.filter(u=>u.side===actor.side&&u.hp>0);
+        const destinations=extra.target==='allies'?allies:extra.target==='actor'?[actor]:extra.target==='lowestAlly'?[[...allies].sort((a,b)=>a.hp/a.maxHp-b.hp/b.maxHp)[0]]:[target];
+        const boost=recipients.some(t=>matchingStatus(t,{statuses:extra.whenStatuses||[extra.whenStatus]}))?(extra.multiplier||1):1;
+        for(const t of destinations) {
+          if(extra.kind==='energy')score+=Math.min(RULES.energy.maximum-t.energy,extra.amount)*.8;
+          else score+=aiValue(state,actor,t,{kind:extra.kind,power:(extra.power||0)*boost});
+        }
       }
-      return {actionId,targetId:target.id};
+      // Integer scores make stable JS/Godot comparisons independent of float noise.
+      score=Math.round(score*100);
+      if(score>bestScore){bestScore=score;best={actionId,targetId:target.id};}
     }
-    const score = t => (t.hp+t.shield) / (advantage(hero.classId,HERO_BY_ID[t.heroId].classId) * (action.combo && matchingStatus(t,action.combo) ? action.combo.multiplier : 1) * (action.spread && t.statuses.some(s=>['burn','bleed','darkmark'].includes(s.type) && s.turns > 0) ? 1.4 : 1));
-    const target = [...targets].sort((a,b)=>score(a)-score(b))[0];
-    return {actionId,targetId:target.id};
   }
-  return {actionId:'guard',targetId:actor.id};
+  return best || {actionId:'guard',targetId:actor.id};
 }

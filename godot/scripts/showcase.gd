@@ -5,11 +5,12 @@ const Backdrop = preload("res://scripts/arena_backdrop.gd")
 const Art = preload("res://scripts/ability_art.gd")
 const Combat = preload("res://scripts/combat.gd")
 const CombatUI = preload("res://scripts/combat_ui.gd")
-const HEROES = ["veyra", "rhazen", "cindra", "sylva", "oren", "nima", "axion", "kira", "vektor", "astra", "elun", "saira", "vesper", "maura", "riven", "torv", "brin", "bast", "ivo", "noct"]
-const REPRESENTATIVES = ["veyra", "sylva", "axion", "astra", "vesper"]
+const HEROES = ["veyra", "rhazen", "cindra", "sylva", "oren", "nima", "axion", "kira", "vektor", "astra", "elun", "saira", "vesper", "maura", "riven", "torv", "brin", "bast", "ivo", "noct", "auren", "elyra", "solen", "zaya"]
+const REPRESENTATIVES = ["veyra", "sylva", "axion", "astra", "vesper", "auren"]
 var hero_picker: OptionButton
 var catalog
 var audio
+var voice
 var director = Director.new()
 var selected_hero := "veyra"
 var playing := false
@@ -28,12 +29,13 @@ var preview_state: Dictionary = {}
 var omitted_receipts := 0
 
 func _ready() -> void:
-	title = "Galeria de golpes · todos os 20 personagens"
+	title = "Galeria de golpes · todos os 24 personagens"
 	ok_button_text = "Voltar ao combate"
 	visibility_changed.connect(func():
 		if not visible:
 			version += 1
 			director.cancel()
+			if is_instance_valid(voice): voice.stop_line()
 			playing = false)
 	var content := VBoxContainer.new()
 	content.texture_filter = CanvasItem.TEXTURE_FILTER_LINEAR_WITH_MIPMAPS
@@ -116,6 +118,7 @@ func _ready() -> void:
 	_select_hero(selected_hero)
 
 func _select_hero(id: String) -> void:
+	if is_instance_valid(voice): voice.stop_line()
 	version += 1
 	director.cancel()
 	playing = false
@@ -159,7 +162,8 @@ func _position() -> void:
 	for pair in [["actor", 0.25], ["target", 0.75]]:
 		var fighter = fighters[pair[0]]
 		fighter.position = Vector2(stage.size.x * pair[1] - 93, stage.size.y - 164 - 257)
-		fighter.set_depth(0.95)
+		# Keep headroom for anticipation above the authored full-cell drawing.
+		fighter.set_depth(minf(0.95,(stage.size.y-188.0)/244.0))
 		fighter.plate.position = Vector2(-5, stage.size.y - fighter.plate.size.y - 4 - fighter.position.y)
 
 func _play(action_id: String) -> void:
@@ -170,6 +174,7 @@ func _play(action_id: String) -> void:
 	for button in action_buttons: button.disabled = true
 	var hero: Dictionary = catalog.hero_by_id[selected_hero]
 	var action: Dictionary = hero[action_id]
+	if is_instance_valid(voice) and action_id in ["skill","ultimate"]: voice.speak(hero.id,action_id)
 	caption.text = "%s · %s" % [hero.name, action.name]
 	explanation.text = action.description
 	if reduced_motion: explanation.text += " Animações reduzidas estão ativadas."
@@ -218,7 +223,7 @@ func _play(action_id: String) -> void:
 		if is_instance_valid(audio): audio.strike(hero,action,mapped,action_id)
 		for pair in [["actor", actor_id], ["target", target_id]]:
 			var data: Dictionary = result.impactUnits.filter(func(u): return u.id == pair[1])[0]
-			fighters[pair[0]].refresh(data, pair[0] == "actor", false, false)
+			fighters[pair[0]].refresh(data, pair[0] == "actor", false, false, not reduced_motion)
 		report.text = "\n".join(mapped.filter(func(e): return e.has("amount")).map(func(e): return CombatUI.event_detail(e)))
 		report.tooltip_text = CombatUI._plain(report.text))
 	if stamp != version or not completed: return

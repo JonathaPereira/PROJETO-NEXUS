@@ -5,7 +5,9 @@ signal connection_changed
 signal failed(message: String)
 var BUILD: Dictionary = JSON.parse_string(FileAccess.get_file_as_string("res://data/pvp-build.json"))
 const STORE := "user://pvp-connection.cfg"
-var endpoint := "ws://127.0.0.1:8787/pvp"
+const DEFAULT_ENDPOINT := "wss://nexus-pvp.onrender.com/pvp"
+const RETIRED_ENDPOINT := "wss://nexus-mn.onrender.com/pvp"
+var endpoint := DEFAULT_ENDPOINT
 var nickname := "Jogador"
 var room: Dictionary = {}
 var session: Dictionary = {}
@@ -28,9 +30,15 @@ func _ready() -> void:
 		var code: String=str(config.get_value("session","code",""))
 		var token: String=str(config.get_value("session","token",""))
 		if code!="" and token!="": session={"code":code,"token":token,"seat":int(config.get_value("session","seat",0))}
+	# Migrate the retired deployment without overwriting custom/local test servers.
+	if endpoint == RETIRED_ENDPOINT:
+		endpoint = DEFAULT_ENDPOINT
+		session = {}
+		_save()
 	if OS.has_feature("web"):
 		var custom: Variant=JavaScriptBridge.eval("new URLSearchParams(window.location.search).get('pvp_server') || window.NEXUS_PVP_SERVER || null",true)
 		if custom is String and (custom.begins_with("wss://") or custom.begins_with("ws://localhost:") or custom.begins_with("ws://127.0.0.1:")):
+			if custom == RETIRED_ENDPOINT: custom = DEFAULT_ENDPOINT
 			if endpoint!=custom:session={}
 			endpoint=custom
 			_save()

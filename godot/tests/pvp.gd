@@ -29,9 +29,10 @@ func run() -> void:
 	b._open_pvp()
 	a.pvp_lobby.profile=Profile.new(a.catalog,"user://pvp-a-test.json")
 	b.pvp_lobby.profile=Profile.new(b.catalog,"user://pvp-b-test.json")
-	b.pvp_lobby.profile.team=b.catalog.default_teams[1].duplicate()
+	a.pvp_lobby.profile.team=["auren","solen","elyra"]
+	b.pvp_lobby.profile.team=["zaya","veyra","axion"]
 	var campaign_before: Dictionary={"team":a.campaign.team.duplicate(),"equipped":a.campaign.equipped.duplicate(true),"cleared":a.campaign.cleared}
-	check(a.pvp_lobby.hero_buttons.size()==20 and a.pvp_lobby.gem_pickers.size()==3,"Exclusive PvP screen exposes all twenty heroes and three sockets")
+	check(a.pvp_lobby.hero_buttons.size()==24 and a.pvp_lobby.gem_pickers.size()==3,"Exclusive PvP screen exposes all twenty-four heroes and three sockets")
 	var first: String=a.pvp_lobby.profile.team[0]
 	for slot in range(3):check(a.pvp_lobby.profile.equip(first,slot,"ember"),"Repeated PvP gems have unlimited copies")
 	var base: Dictionary=a.catalog.hero_by_id[first]

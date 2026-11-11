@@ -33,8 +33,8 @@ function scenario(name, teams, difficulty, seed, patch = {}, defensive = false) 
   assert.equal(state.phase, "finished", name);
   fixtures.push({ name, teams, difficulty, seed, patch, initial, commands, final: state });
 }
-for (let group = 0; group < 5; group++) {
-  const teams = [0,1].map(offset => HEROES.filter(h=>h.classId===Object.keys(CLASS_BY_ID)[(group+offset)%5]).slice(0,3).map(h=>h.id));
+for (let group = 0; group < Object.keys(CLASS_BY_ID).length; group++) {
+  const teams = [0,1].map(offset => HEROES.filter(h=>h.classId===Object.keys(CLASS_BY_ID)[(group+offset)%Object.keys(CLASS_BY_ID).length]).slice(0,3).map(h=>h.id));
   for (const [index,difficulty] of ['easy','normal','hard'].entries())
     scenario(`class-${group}-${difficulty}`,teams,difficulty,73+group*139+index*113);
 }
@@ -52,7 +52,7 @@ for (const [index,foe] of [['saira','maura','sylva'],['nima','riven','kira'],['v
 scenario('bleeding-heals-and-cleanses', [['saira','maura','sylva'],['nima','riven','kira']], 'normal',331, Object.fromEntries(
  ['saira','maura','sylva'].map(id=>[`0-${id}`,{hp:400,energy:100,statuses:['bleed','regen'].map(type=>({type,turns:2}))}])
 ));
-for (const [i,id] of ['torv','brin','bast','ivo','noct'].entries()) {
+for (const [i,id] of ['torv','brin','bast','ivo','noct','auren','elyra','solen','zaya'].entries()) {
   scenario(`returned-${id}`,[[id,'sylva','axion'],['nima','maura','elun']],'normal',799+i*131,{
     [`0-${id}`]:{energy:100}, '1-nima':{statuses:[{type:'darkmark',owner:`0-${id}`,turns:2},{type:'bleed',turns:1}]}
   });
@@ -79,9 +79,19 @@ function run(args, timeout = 240000, commandEnv = env) {
 }
 console.log("Importando o projeto com Godot…");
 run(["--headless", "--path", "godot", "--editor", "--import", "--quit"]);
-for (const suite of ["damage_receipt", "progression", "polish_012", "two_d", "stage_3d", "vesper"]) {
+for (const suite of ["collection_navigation", "advanced_lessons", "showcase_framing", "pose_transition", "hero_choreography", "defeat_presentation", "keyboard_controls", "animation_skip", "campaign_playthrough", "mission_support_ai", "achievements", "pact_abilities", "bonds", "hero_journeys", "boss_phases", "boss_patterns", "campaign_collapse", "campaign_finale", "mission_field", "mission_waves", "escort", "lumi", "ability_training", "mastery", "gem_forge", "equipment", "mission_objectives", "mission_progress", "save_recovery", "damage_receipt", "progression", "polish_012", "polish_014", "polish_015", "two_d", "stage_3d", "vesper"]) {
   const suiteEnv={...env,XDG_DATA_HOME:resolve(scratch,suite,"data"),XDG_CONFIG_HOME:resolve(scratch,suite,"config"),XDG_CACHE_HOME:resolve(scratch,suite,"cache")};
-  console.log(run(["--headless", "--audio-driver", "Dummy", "--path", "godot", "--script", `res://tests/${suite}.gd`],240000,suiteEnv).trim());
+  const suiteLog=run(["--headless", "--audio-driver", "Dummy", "--path", "godot", "--script", `res://tests/${suite}.gd`],suite==="hero_choreography"?600000:240000,suiteEnv);
+  if(suite==="collection_navigation")assert.match(suiteLog,/Collection navigation: \d+ checks, 0 failures/);
+  if(suite==="advanced_lessons")assert.match(suiteLog,/Advanced lessons: \d+ checks, 0 failures/);
+  if(suite==="animation_skip")assert.match(suiteLog,/Animation skip: \d+ checks, 0 failures/);
+  if(suite==="keyboard_controls")assert.match(suiteLog,/Keyboard controls: \d+ checks, 0 failures/);
+  if(suite==="defeat_presentation")assert.match(suiteLog,/Defeat presentation: \d+ checks, 0 failures/);
+  if(suite==="boss_patterns")assert.match(suiteLog,/Boss patterns: \d+ checks, 0 failures/);
+  if(suite==="showcase_framing")assert.match(suiteLog,/Showcase framing: \d+ checks, 0 failures/);
+  if(suite==="pose_transition")assert.match(suiteLog,/Pose transitions: \d+ checks, 0 failures/);
+  if(suite==="hero_choreography")assert.match(suiteLog,/Hero choreography: \d+ checks, 0 failures/);
+  console.log(suiteLog.trim());
 }
 console.log("Executando paridade do motor e teste de interface…");
 const log = run(["--headless", "--audio-driver", "Dummy", "--path", "godot", "--script", "res://tests/run.gd", "--", fixturePath, outputPath]);
@@ -99,7 +109,7 @@ for (const path of actual.exports) {
   const contents = await readFile(path, "utf8");
   if (path.endsWith('.csv')) {
     const lines = contents.trim().split(/\r?\n/);
-    assert.equal(lines.length, 21, "CSV contains the header and all twenty heroes");
+    assert.equal(lines.length, HEROES.length + 1, "CSV contains the header and all active heroes");
     assert(lines.every(line=>line.split(';').length===12), "CSV columns remain aligned");
     continue;
   }
@@ -107,7 +117,7 @@ for (const path of actual.exports) {
   assert.equal(report.rulesVersion, RULES.rulesVersion, 'Exports identify the current ruleset');
   assert.equal(report.fullLogMatches, report.matches.length);
   assert.equal(report.summaryMatches, report.historicalSummaries.length);
-  assert.equal(report.heroSummary.length, 20);
+  assert.equal(report.heroSummary.length, HEROES.length);
   for (const match of report.matches) {
     const state = createBattle(...match.teams, {difficulty:match.difficulty, seed:match.seed});
     assert.deepEqual(state,match.initial,'Exported seed and teams reconstruct the initial battle');
@@ -118,7 +128,7 @@ for (const path of actual.exports) {
       assert.deepEqual(result.events,step.events,'Exported action receipts replay exactly');
       assert.deepEqual(result.turnEvents,step.turnEvents,'Exported periodic damage and healing replay exactly');
       assert.deepEqual(step.after,{round:state.round,phase:state.phase,winner:state.winner,random:state.random,nextActor:state.phase==='playing'?currentUnit(state).id:null,
-        units:state.units.map(u=>({id:u.id,hp:u.hp,shield:u.shield,shieldTurns:u.shieldTurns,energy:u.energy,statuses:u.statuses,cooldowns:u.cooldowns}))});
+        units:state.units.map(u=>({id:u.id,hp:u.hp,shield:u.shield,shieldTurns:u.shieldTurns,shieldLayers:u.shieldLayers,energy:u.energy,statuses:u.statuses,cooldowns:u.cooldowns}))});
       exportedActions++;
     }
     assert.equal(state.phase,'finished');
@@ -128,7 +138,7 @@ for (const path of actual.exports) {
     exportedMatches++;
   }
 }
-assert.equal(exportedMatches,216);
+assert.equal(exportedMatches,282);
 console.log(log.trim());
 console.log(`✓ ${fixtures.length} partidas reproduzidas com resultados idênticos ao JavaScript (${fixtures.reduce((n, f) => n + f.commands.length, 0)} ações).`);
 console.log(`✓ ${actual.checks} verificações nativas, incluindo ${actual.uiChecks} de interface: formação, persistência, IA, animação, partida completa e replay.`);

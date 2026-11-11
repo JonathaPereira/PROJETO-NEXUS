@@ -2,11 +2,14 @@ extends Control
 ## Animated painted stages. No combat rules or save-game changes live here.
 const ATMOSPHERE = preload("res://shaders/stage_atmosphere.gdshader")
 const SCREEN_FX = preload("res://shaders/screen_impact.gdshader")
+const Quality = preload("res://scripts/presentation_quality.gd")
+const GLOW = preload("res://assets/vfx/soft-glow.svg")
 var elapsed := 0.0
 var motion_enabled := true
-var encounter_kind := 0:
+const ENVIRONMENTS := ["sanctum","tides","forge"]
+var environment := "sanctum":
 	set(value):
-		encounter_kind = value
+		environment = value
 		if is_node_ready(): _set_environment()
 var painting: TextureRect
 var atmosphere: ShaderMaterial
@@ -15,6 +18,9 @@ var screen_material: ShaderMaterial
 var pulse_time := 1.0
 var theme_kind := 0
 var accent := Color("79ceef")
+var last_quality := -1
+var pulse_at := Vector2.ZERO
+var pulse_tint := Color.WHITE
 
 func floor_line() -> float: return size.y*0.30
 func configure(_units: Array, _catalog) -> void: pass
@@ -50,7 +56,7 @@ func _ready() -> void:
 	_set_environment()
 
 func _set_environment() -> void:
-	theme_kind = clampi(int(encounter_kind/3.0),0,2)
+	theme_kind = maxi(0,ENVIRONMENTS.find(environment))
 	accent = [Color("79ceef"),Color("70dfd7"),Color("f7ae79")][theme_kind]
 	var paths := ["res://assets/nexus-sanctum.png","res://assets/environments/tidal-observatory.png","res://assets/environments/last-foundry.png"]
 	painting.texture = load(paths[theme_kind]) if ResourceLoader.exists(paths[theme_kind]) else preload("res://assets/arena.png")
@@ -60,25 +66,35 @@ func _set_environment() -> void:
 func screen_impact(at: Vector2, color: Color, supreme: bool) -> void:
 	if not motion_enabled: return
 	pulse_time = 0
+	pulse_at=at
+	pulse_tint=color
 	screen_material.set_shader_parameter("progress",0.0)
 	screen_material.set_shader_parameter("focus",at/size.max(Vector2.ONE))
 	screen_material.set_shader_parameter("tint",color)
 	screen_material.set_shader_parameter("strength",0.60 if supreme else 0.28)
-	screen.show()
+	# Screen reads/chromatic distortion are reserved for high-quality supremes.
+	screen.visible = supreme and Quality.level==2
 
 func _process(delta: float) -> void:
 	if not is_visible_in_tree(): return
+	if last_quality!=Quality.level:
+		last_quality=Quality.level
+		painting.material=atmosphere if last_quality==2 else null
 	if motion_enabled: elapsed += delta
 	atmosphere.set_shader_parameter("clock",elapsed)
 	if screen.visible:
 		pulse_time += delta/0.55
 		screen_material.set_shader_parameter("progress",minf(1,pulse_time))
 		if pulse_time >= 1 or not motion_enabled: screen.hide()
+	elif pulse_time<1: pulse_time=minf(1,pulse_time+delta/.4)
 	queue_redraw()
 
 func _draw() -> void:
+	if pulse_time<1 and motion_enabled and Quality.level<2:
+		var glow_size := Vector2.ONE*(110+pulse_time*120)
+		draw_texture_rect(GLOW,Rect2(pulse_at-glow_size*.5,glow_size),false,Color(pulse_tint,(1-pulse_time)*.24))
 	# Feathered fog and embers form a separate moving layer over the painting.
-	for i in range(42):
+	for i in range(Quality.particles(32,18,10)):
 		var x := fposmod(i*137.91+sin(elapsed*.16+i)*22,maxf(1,size.x))
 		var y := fposmod(i*53.73-elapsed*(6+i%5)*(1.7 if theme_kind==2 else .7),maxf(1,size.y))
 		var opacity := (.08+sin(elapsed*.8+i)*.04)*(0.5+0.5*sin(float(i)))

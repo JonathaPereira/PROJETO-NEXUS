@@ -4,7 +4,7 @@ const Combat = preload("res://scripts/combat.gd")
 const PATH := "user://campaign-test.json"
 
 static func _clean() -> void:
-	for suffix in ["", ".tmp", ".v1.bak", ".v1.bak.1", ".v2.bak", ".invalid.bak", ".invalid.bak.1"]:
+	for suffix in ["", ".tmp", ".bak", ".bak.tmp", ".v1.bak", ".v1.bak.1", ".v2.bak", ".v3.bak", ".invalid.bak", ".invalid.bak.1"]:
 		DirAccess.remove_absolute(ProjectSettings.globalize_path(PATH + suffix))
 
 static func _write(value: String) -> void:
@@ -41,7 +41,7 @@ static func model(check: Callable) -> void:
 	check.call(is_equal_approx(progress.bonuses("veyra").attack, 0.12) and is_equal_approx(progress.bonuses("axion").health, 0.15) and progress.bonuses("astra").energy == 24, "Repeated gem bonuses add to 12 percent attack, 15 percent health and 24 energy")
 	var restored = Campaign.new(engine.catalog, PATH)
 	check.call(restored.team == progress.team and restored.equipped == progress.equipped, "Equipped gems and campaign team survive reopening")
-	check.call(JSON.parse_string(FileAccess.get_file_as_string(PATH)).schemaVersion == 3, "New equipment writes the three-chapter schema at the compatible save path")
+	check.call(JSON.parse_string(FileAccess.get_file_as_string(PATH)).schemaVersion == Campaign.SAVE_SCHEMA, "New equipment writes the three-chapter schema at the compatible save path")
 	var baseline: Dictionary = engine.new_battle(progress.team, engine.catalog.default_teams[1])
 	var mission: Dictionary = progress.battle(engine, 0)
 	for pair in [["0-axion", "maxHp", 1.15], ["0-veyra", "attack", 1.12]]:
@@ -49,7 +49,7 @@ static func model(check: Callable) -> void:
 	check.call(engine.unit(mission, "0-astra").energy == 64 and engine.unit(baseline, "0-astra").energy == 40, "Three energy gems change only campaign starting energy")
 	check.call(engine.unit(mission, "0-veyra").attack == 281 and engine.unit(mission, "0-axion").hp == engine.unit(mission, "0-axion").maxHp, "Triple gems avoid multiplicative or iterative rounding and begin at full health")
 	check.call(engine.unit(baseline, "0-veyra").attack == engine.catalog.hero_by_id.veyra.attack, "Gems never mutate catalog or free combat stats")
-	check.call(engine.catalog.heroes.size() == 20 and not engine.catalog.heroes.any(func(h): return h.role == "Minion"), "Campaign enemies do not enter the selectable roster")
+	check.call(engine.catalog.heroes.size() == 24 and not engine.catalog.heroes.any(func(h): return h.role == "Minion"), "Campaign enemies do not enter the selectable roster")
 	check.call(progress.complete(2).has("error") and progress.cleared == 0, "Locked missions cannot award gems")
 	var reward: Dictionary = progress.complete(0)
 	check.call(reward.first and reward.saved and progress.copies("ember") == 4 and progress.can_play(1), "First victory unlocks next mission and awards one gem")
@@ -63,7 +63,7 @@ static func model(check: Callable) -> void:
 	check.call(FileAccess.get_file_as_string(PATH) == legacy and not FileAccess.file_exists(PATH + ".v1.bak"), "Loading an old save does not replace the source file")
 	check.call(migrated.available("ember") == 3 and migrated.available("sap") == 2, "Migrated saves receive the new three-copy starter inventory plus earned rewards")
 	check.call(migrated.equip("veyra", "ember", 1) and FileAccess.get_file_as_string(PATH + ".v1.bak") == legacy, "The exact old save is backed up before its first version-two replacement")
-	check.call(JSON.parse_string(FileAccess.get_file_as_string(PATH)).schemaVersion == 3 and Campaign.new(engine.catalog, PATH).slots("veyra") == ["ember", "ember", ""], "Migrated three-slot equipment survives reopening")
+	check.call(JSON.parse_string(FileAccess.get_file_as_string(PATH)).schemaVersion == Campaign.SAVE_SCHEMA and Campaign.new(engine.catalog, PATH).slots("veyra") == ["ember", "ember", ""], "Migrated three-slot equipment survives reopening")
 	check.call(migrated.equip("veyra", "pulse", 2) and FileAccess.get_file_as_string(PATH + ".v1.bak") == legacy, "Later saves preserve the original migration backup")
 	var other_legacy: String = legacy.replace('"cleared":1', '"cleared":2')
 	_write(other_legacy)
@@ -135,6 +135,7 @@ static func run(tree: SceneTree, scene: PackedScene, check: Callable) -> void:
 	for index in range(3):
 		app.hub.open("story")
 		app.hub.mission_buttons[index].pressed.emit()
+		app.hub.preparation_button.pressed.emit()
 		await tree.process_frame
 		check.call(app.campaign_mission == index and app.combat_view.visible and not app.hub.visible, "Mission button enters the campaign battlefield")
 		check.call(app.state.units.filter(func(u): return u.side == 1).size() == 3 and app.fighters.size() == 6, "Mission spawns three real enemies and three heroes")
@@ -144,8 +145,8 @@ static func run(tree: SceneTree, scene: PackedScene, check: Callable) -> void:
 		app._start()
 		# Play every campaign fight with the real deterministic engine, including enemy AI.
 		while app.state.phase == "playing" and app.state.turns < 400:
-			var choice: Dictionary = app.combat.choose_ai(app.state)
-			var result: Dictionary = app.combat.act(app.state, choice.actionId, choice.targetId)
+			var choice: Dictionary = app.campaign.choose_ai(app.combat,app.state)
+			var result: Dictionary = app.campaign.act(app.combat,app.state, choice.actionId, choice.targetId)
 			check.call(not result.has("error"), "Campaign AI action is legal")
 		check.call(app.state.phase == "finished" and app.state.winner == 0, "Default trio can complete each chapter mission with starter gems")
 		app._refresh()
@@ -165,7 +166,7 @@ static func run(tree: SceneTree, scene: PackedScene, check: Callable) -> void:
 		if actor.side == 0: actor.hp = 1
 	app.state.cursor = app.state.order.find("1-minion-acolyte")
 	app.combat.current(app.state).energy = 100
-	app.combat.act(app.state, "ultimate", "0-veyra")
+	app.campaign.act(app.combat,app.state, "ultimate", "0-veyra")
 	app._refresh()
 	check.call(app.state.winner == 1 and app.result_dialog.dialog_text.contains("DERROTA") and app.campaign.cleared == 3 and app.campaign.copies("pulse") == 4, "Defeat preserves progress and cannot grant another gem")
 	app.result_dialog.hide()

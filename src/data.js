@@ -62,7 +62,7 @@ export const ALL_CLASSES = [
       "Proteção e renovação. Dissipa efeitos negativos e cura a equipe.",
   },
 ];
-export const CLASSES = ALL_CLASSES.filter(c => c.id !== "lumi");
+export const CLASSES = ALL_CLASSES;
 export const CLASS_BY_ID = Object.fromEntries(
   CLASSES.map((c, i) => [
     c.id,
@@ -74,7 +74,7 @@ export const CLASS_BY_ID = Object.fromEntries(
     },
   ]),
 );
-// Every row is a fully playable starter. Acquisition/progression is intentionally undecided.
+// Stable roster and artwork order. Campaign acquisition is a separate progression layer.
 const roster = [
   [
     "veyra",
@@ -648,5 +648,5 @@ export const GUARD = {
   cost: 0,
   cooldown: 0,
   description:
-    `Recebe ${rulePercent(1 - RULES.guard.incomingDamageMultiplier)}% menos dano até seu próximo turno, ganha escudo de ${rulePercent(RULES.guard.shieldMaxHpRatio)}% da vida máxima por ${RULES.shield.durationActions} ações e recupera ${RULES.energy.guardGain} de energia. Escudos não somam.`,
+    `Recebe ${rulePercent(1 - RULES.guard.incomingDamageMultiplier)}% menos dano até seu próximo turno, ganha escudo de ${rulePercent(RULES.guard.shieldMaxHpRatio)}% da vida máxima por ${RULES.shield.durationRounds} rodadas globais e recupera ${RULES.energy.guardGain} de energia. Camadas somam até 25% da vida, com expiração independente.`,
 };

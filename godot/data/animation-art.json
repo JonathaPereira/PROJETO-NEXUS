@@ -1,0 +1,819 @@
+{
+  "schemaVersion": 1,
+  "assets": [
+    {
+      "id": "rhazen-renascimento-v1",
+      "path": "assets/poses/rhazen-renascimento-v1.png",
+      "reference": "assets/characters/cutouts-a.png (Rhazen, top-left character)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-08",
+      "bytes": 1280833,
+      "sha256": "75d1f98e6972c78fa6ae082ea1071f2f061079d13015d7c82f1f9ea1aad54537",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "neutral",
+        "brace",
+        "overhead",
+        "downward_strike",
+        "ground_contact",
+        "recovery",
+        "defensive_brace",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "generationPrompt": "Use case: identity-preserve. Asset type: production 2D game animation sprite sheet for NEXUS, not concept art. The provided sheet is an identity/style reference ONLY: recreate ONLY the TOP LEFT warrior, Rhazen, no other characters. Preserve his massive black spiked plate armor with glowing orange lava fissures, sealed horned helmet, molten furnace chest, short tattered crimson cloth, enormous two-handed rectangular lava warhammer. Same polished hand-painted fantasy-anime rendering, full body in every frame, same proportions/armor/hammer throughout. Actual transparent background with clean alpha. Create ONE landscape sprite sheet with exactly 8 equally sized cells in a precise 4-column by 2-row grid, ideally 2048x1024; each cell is 512x512. No grid lines, no labels, no numbers, no text. All frames face right in consistent 3/4 side view, orthographic game camera; camera and character scale remain locked. Keep 25px empty margins within every cell, complete hammer and body unclipped, feet baseline at 470px within each cell. Eight DIFFERENT anatomical body poses, not translated/rotated copies. Row 1 left to right: (0) grounded neutral idle with hammer low; (1) deep braced anticipation, hips twist back and hammer drawn behind left shoulder; (2) overhead windup, hammer raised high, knees bent, weight coiled; (3) decisive down-forward hammer strike, torso and arms extend, weight shifts onto forward foot. Row 2 left to right: (4) full impact follow-through, both knees bent, hammer head grounded just forward and right, torso lowered; (5) recovery lifting the hammer back to waist, returning weight toward center; (6) defensive brace, hammer held diagonally across chest and furnace; (7) defeated kneeling pose on one knee, shoulders slumped, hammer grounded for support. No blood, no new insignia, no background or floor, no detached effects, no broad fire/smoke/glows around silhouettes. Do not include the female archers or stone golem from the reference. Keep character consistent across all eight frames, each isolated completely in its own cell.",
+      "correctionPrompt": "Precise sprite-sheet layout correction only. Preserve this exact Rhazen character, all eight different anatomical poses, black spiked lava armor, horned sealed helmet, two-handed rectangular lava hammer, red cloth and hand-painted rendering. Keep exactly four columns and two rows on a 2:1 transparent canvas. Each character AND COMPLETE WEAPON must fit fully inside its own cell, with at least 30 pixels of completely transparent padding on all four cell edges at this output size. The top-right hammer strike currently clips its hammer at the right image boundary: show the entire hammer head with empty space beyond it. The overhead hammer currently comes too near the top boundary: leave clear empty space above it. Reduce every sprite uniformly by about 15% within its own cell; do not stretch bodies or change poses. Align all feet to the same ground baseline 90% down each cell. Do not add shadows, floor, text, frames, grid lines, objects or new effects. Truly transparent background with no colored haze or glow outside the tight character silhouettes. All eight sprites must remain visually isolated, complete and unclipped. Do not modify the character identity or costume."
+    },
+    {
+      "id": "cindra-renascimento-v1",
+      "path": "assets/poses/cindra-renascimento-v1.png",
+      "reference": "assets/characters/cutouts-a.png (Cindra, top-right character)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-08",
+      "bytes": 1401341,
+      "sha256": "83a3c44a48c962a079ebbba2a6dfd6ee15380081323d2558f398a43b4f598b2d",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "neutral",
+        "raise_bow",
+        "full_draw",
+        "release",
+        "follow_through",
+        "recovery",
+        "defensive_crouch",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "generationPrompt": "Use case: identity-preserve. Asset type: production 2D game sprite animation sheet for NEXUS. The supplied image is an identity and style reference ONLY. Recreate ONLY the TOP RIGHT female fire archer, Cindra, no other characters. Preserve her adult face, long flowing orange-red hair, black fantasy armor with gold edges and orange lava seams, crimson torn cloak and enormous black-and-orange flame longbow, quiver and boots. Same polished painted fantasy-anime style and proportions; do not redesign or sexualize her outfit. Create one landscape RGBA sheet with true transparency and EXACTLY eight isolated full-body sprites on a four-column, two-row grid (2:1 canvas, ideally 2048x1024). Each complete figure, bow and arrow must fit inside its cell with generous 40px fully transparent padding on EVERY edge. Keep camera orthographic, 3/4 side view facing right, size and ground baseline consistent, no perspective zoom. No text, numbers, panels, grid, floor, shadows, background, fog or external glow. Eight genuinely different anatomical poses with articulated arms, hands, torso and knees, not shifted or rotated copies. Row 1 left to right: (0) relaxed ready stance, bow down; (1) plant feet and raise bow forward, reaching for arrow; (2) full bow draw, left arm extended toward right, right hand and string drawn back to cheek, taut arrow aimed horizontally; (3) release arrow, bow arm held firm, right fingers release string and follow through by cheek, bow limbs recoil. Row 2 left to right: (4) immediate shot follow-through, right hand just behind jaw and torso slightly turned, no loose arrow floating in cell; (5) recovery, lower bow and relax shoulders toward ready; (6) defensive crouched brace with bow kept close diagonally, no drawn arrow; (7) defeated kneeling on one knee, head bowed, lowered bow touching ground beside her. Maintain the same face, hair, armor, bow, equipment, body scale and rendering in all eight cells. Show every limb and the ENTIRE longbow in every cell without clipping or overlaps. Do not include the hammer warrior, stone golem or green archer from the reference.",
+      "correctionPrompt": "Precise production sprite-sheet padding correction only. Keep this exact adult Cindra character, armor, long orange-red hair, red cape, full black-and-orange longbow, quiver, eight anatomical animation poses and painted rendering unchanged. Keep four columns and two rows on a 2:1 RGBA canvas with actual transparency. All eight entire characters INCLUDING THE COMPLETE BOW must be fully visible and isolated within their own cell, with at least 35 pixels of completely transparent space on every cell edge. The bows in the top row currently touch or clip the top edge and some feet touch the lower edges: restore all cut-off bow tips and boots, and leave empty space around them. Shrink every complete sprite uniformly by about 20% within its cell, maintaining the character's consistent scale across frames and both rows. Use one ground baseline 88% down each cell, and center the body around the cell midpoint. No stretching, no extra limbs, no pose changes, no text/grid/floor/shadow/haze or loose effects. Preserve the eight poses in their present order: neutral, raise/reach, full draw with arrow, release, follow-through, recovery, defensive crouch, kneeling defeat. Drawn and released bow/string anatomy must remain mechanically coherent. All artwork must stay inside its own cell; no touching borders or neighboring sprites."
+    },
+    {
+      "id": "oren-renascimento-v1",
+      "path": "assets/poses/oren-renascimento-v1.png",
+      "reference": "assets/characters/cutouts-a.png (oren, bottom-left character)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-08",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "neutral",
+        "brace",
+        "fists_overhead",
+        "downward_slam",
+        "ground_contact",
+        "recovery",
+        "protective_brace",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "generationPrompt": "Use case: identity-preserve. Asset type: production 2D game animation sprite sheet for NEXUS. Reference image: recreate ONLY the BOTTOM LEFT stone-and-root guardian, Oren, no other character. Preserve his huge bulky moss-covered stone body, bark and roots around shoulders and limbs, leaf crown/beard, glowing amber eyes, thick rock hands and feet. He has no held weapon in this reference: use his heavy stone fists, do not invent a hammer or armor. Same polished painted fantasy-anime render and consistent proportions. Create ONE truly transparent RGBA sheet, four columns by two rows, eight isolated full-body sprites, 2:1 landscape canvas ideally 2048x1024. Each entire figure must occupy at most 78% of its cell height and width with at least 35px of fully transparent padding on ALL cell edges. Ground baseline at 88% cell height, same scale, fixed orthographic 3/4 side camera facing right. No text, labels, borders, grid, floor, detached effects, shadows or background haze. Eight genuinely different anatomical body poses: Row1 (0) neutral rooted standing; (1) braced anticipation, deep knees, torso twists back and both stone arms pulled behind; (2) both massive fists raised overhead preparing a downward blow; (3) strong down-forward double-fist slam, shoulders and torso rotate into the strike; Row2 (4) ground contact with bent knees and fists on the ground forward-right, heavy follow-through; (5) recovery, lifting fists and torso toward neutral; (6) protective brace, broad stone forearms held across chest, knees bent, readable shield-like silhouette; (7) defeated kneeling with one knee down, slumped mossy shoulders and one fist grounded. Maintain identical face, crown, moss, roots and body scale across every pose. All body parts complete, no clipping or overlaps. Keep the reference's solid guardian identity; no female archers, no lava warrior, no weapons, no gore.",
+      "correctionPrompt": "Layout correction only. Preserve this exact Oren stone/root guardian and all eight anatomical poses, moss, leaves, roots, amber eyes and painted rendering. Keep four columns and two rows on a 2:1 genuinely transparent RGBA canvas. Uniformly shrink each complete character about18% within its own cell. Leave at least35px fully transparent padding on EVERY cell edge, including above the overhead fists and below the lower-row feet. All figures, hands and feet must remain complete and isolated with no overlap. Ground baseline88% down every cell, consistent scale across both rows. No new effects, haze, glow, floor, shadow, text/grid or costume changes. Do not modify identity or pose order: neutral, brace, fists overhead, downward slam, ground contact, recovery, protective brace, kneeling defeat.",
+      "bytes": 1225422,
+      "sha256": "639527cfadf2ab49a1ebed509961e2c1adc84933119564fe5db3e25332cd045f"
+    },
+    {
+      "id": "nima-renascimento-v1",
+      "path": "assets/poses/nima-renascimento-v1.png",
+      "reference": "assets/characters/cutouts-a.png (nima, bottom-right character)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-08",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "neutral",
+        "raise_bow",
+        "full_draw",
+        "release",
+        "follow_through",
+        "recovery",
+        "defensive_crouch",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "generationPrompt": "Use case: identity-preserve. Asset type: production 2D game sprite animation sheet for NEXUS. Reference image: recreate ONLY the BOTTOM RIGHT adult green-haired nature archer, Nima, no other character. Preserve her long green hair, emerald/gold leaf-inspired fantasy armor, teal leaf cape, ornate green-and-gold bow, arrow quiver and boots. Preserve her adult face, proportions and costume without redesign or sexualization. Same polished painted fantasy-anime style. Create ONE genuinely transparent RGBA sprite sheet with exactly eight full-body sprites on a four-column, two-row grid, a 2:1 landscape canvas ideally 2048x1024. Every full body AND ENTIRE BOW must occupy at most 78% cell height and width, with generous minimum 35px fully transparent padding on EVERY cell edge. Ground baseline at88% cell height, consistent scale in both rows. Fixed orthographic 3/4 side camera, all face right. No text, labels, panels, grid, floor/shadow, haze, loose particles or outside glow. Eight different articulated body poses, not translated/rotated copies. Row1 left-to-right: (0) neutral bow-down ready stance; (1) feet planted, raising bow and reaching for arrow; (2) fully drawn bow with left arm extended forward-right, taut string and arrow, right hand at cheek; (3) arrow release, bow arm steady and right fingers relax, bow limbs recoil. Row2: (4) shot follow-through with drawing hand just behind jaw and torso slightly rotated, no floating arrow in the cell; (5) recovery lowering bow and relaxing shoulders; (6) defensive crouching brace with bow close diagonally, no taut arrow; (7) defeated kneeling on one knee, head bowed and lowered bow touching the ground. Preserve identical face, long green hair, armor, cape, bow and anatomy across all frames. Show complete limbs and bow tips in every cell without clipping or overlaps. No red-haired archer, no stone golem, no lava warrior.",
+      "correctionPrompt": "Precision alpha-edge and sprite layout correction. Preserve this exact adult Nima, all eight poses, green hair, green/gold costume, teal leaf cape, quiver, complete thorned bow and rendering. Remove ALL the white/gray matte, haze, colored fringe and background residue around the sprites. The background and every pixel outside the tight body/cape/weapon silhouettes must be genuinely transparent, not painted white or gray. Retain natural clean anti-aliased silhouette edges. Keep four columns/two rows on a 2:1 RGBA canvas. Uniformly shrink every complete figure AND BOW about20% within its own cell to leave at least35px fully transparent padding on EVERY cell edge. Show full bow tips and boots, same scale in both rows, ground baseline88% down each cell. No added text, lines, grid, floor/shadow, glow, particles or extra limbs. Do not redesign the face, costume, equipment or pose order: neutral, raise/reach, full bow draw, release, follow-through, recovery, defensive crouch, kneeling defeat. All eight sprites must remain isolated and unclipped.",
+      "bytes": 1829621,
+      "sha256": "fa54681eb4e4d8444d3524a6f113854888ad207027dba982727b0797b0cd6c3c"
+    },
+    {
+      "id": "kira-renascimento-v1",
+      "path": "assets/poses/kira-renascimento-v1.png",
+      "reference": "assets/characters/cutouts-b.png (kira, top-left character)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-09",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "neutral",
+        "raise_rifle",
+        "shoulder_aim",
+        "trigger_recoil",
+        "recoil_follow_through",
+        "recovery",
+        "defensive_crouch",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "generationPrompt": "Use case: identity-preserve. Asset type: production 2D game animation sprite sheet for NEXUS. Recreate ONLY the TOP LEFT adult riflewoman Kira from the reference sheet, no other characters. Preserve her SHORT tousled white/silver pixie hair, red eyes, exact black-and-gold armored outfit and jacket/cape panels, black boots and gloves, and the large black cyan-lit sci-fi rifle. No long hair, no costume redesign or sexualization. Same polished hand-painted fantasy-anime style. Create one truly transparent RGBA sheet with EXACTLY eight isolated full-body sprites in a four-column/two-row grid on a 2:1 landscape canvas, ideally2048x1024. Every complete character AND RIFLE must fit within78% of its cell width/height with at least35px completely transparent padding on ALL edges, including rifle muzzle and boots. Ground baseline88% down each cell, same scale, fixed orthographic three-quarter side camera facing right. No text, labels, grid, floor, shadows, haze or external effects. Eight different articulated body poses, not translated/rotated copies. Row1: (0) neutral ready, rifle held low diagonally; (1) feet braced and rifle raised toward shoulder, torso turns into aim; (2) full shoulder aim, cheek close to stock, support hand under barrel, muzzle points right; (3) trigger press and initial controlled recoil with shoulders and elbows reacting, no painted muzzle flash; Row2: (4) recoil follow-through, shoulder shifted slightly back, muzzle still controlled toward right; (5) recovery lowering rifle toward ready; (6) defensive crouching brace with rifle across chest, muzzle safely to right; (7) defeated kneeling on one knee, head bowed, rifle lowered toward ground. Keep exact hair/face/armor/weapon/proportions consistent across all8. Every limb and full rifle complete and unclipped. No drones, sword, staff, long-haired characters or gore.",
+      "correctionPrompt": null,
+      "bytes": 3091666,
+      "sha256": "4f0556c2d4c165b0ebdb3815f81b324f78a93f8582260bec87bfca28c5ff6a31"
+    },
+    {
+      "id": "vektor-renascimento-v1",
+      "path": "assets/poses/vektor-renascimento-v1.png",
+      "reference": "assets/characters/cutouts-b.png (vektor, top-right character)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-09",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "neutral",
+        "prepare_command",
+        "coil_command",
+        "release_command",
+        "follow_through",
+        "recovery",
+        "protective_stance",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "generationPrompt": "Use case: identity-preserve. Asset type: production 2D game animation sprite sheet for NEXUS. Recreate ONLY the TOP RIGHT adult male drone architect Vektor from the reference sheet. Preserve short black hair, black lower-face mask, exact black/gold/white armored coat and blue split coat-tails, black gloves/boots, and exactly THREE small spherical black-metal drones with cyan circular lights. No gun/sword/staff or new equipment. Same polished painted fantasy-anime rendering and proportions. Create ONE truly transparent RGBA sprite sheet, eight full-body sprites on a four-column/two-row grid, 2:1 landscape canvas ideally2048x1024. Each complete body AND ALL THREE DRONES must fit within78% of its own cell width/height, minimum35px fully transparent padding on ALL edges; no cropping or overlaps. All figures same scale and ground baseline88% down each cell. Orthographic three-quarter side camera, facing right. No text, labels, grid, floor/shadows, haze, beams or detached effects. Exactly eight distinct articulated anatomical body poses: Row1 (0) relaxed standing with one palm up, three drones around shoulders/waist as reference; (1) braced preparation, torso leans slightly back, both hands close toward wrist-console gesture; (2) arms and shoulders coil forward to command drones, gaze right, hand preparing to point; (3) release command with one arm fully extended toward right and deliberate finger gesture, three drones oriented right; Row2 (4) follow-through with wrist turning and weight forward; (5) recovery lowering hands to neutral; (6) protective/support stance with both palms open up near chest and the same three drones in a close formation; (7) defeated kneeling on one knee, shoulders slumped, drones lower near him but remain exactly three. Keep face/hair/mask/costume/drone design identical throughout. Show complete hands, legs, boots, coat-tails and drones. No female characters, no extra robots, no floating white/gray matte or glow around the cutouts.",
+      "correctionPrompt": null,
+      "bytes": 2071621,
+      "sha256": "dccc0ea2fc11607f651b9f1f534cb49636dac3672ba1386d23cbfa1b59780189"
+    },
+    {
+      "id": "axion-renascimento-v1",
+      "path": "assets/poses/axion-renascimento-v1.png",
+      "reference": "assets/characters/axion.png",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-09",
+      "bytes": 1207811,
+      "sha256": "d2dcb76258c7263989bccb1bd67703aca45553bbfd0ef6a66753001be463df90",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "neutral",
+        "prepare",
+        "anticipation",
+        "release",
+        "follow_through",
+        "recovery",
+        "protective_brace",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "generationPrompt": "Create a production 2D game animation sprite sheet for Project Nexus. Use the attached existing AXION illustration as the strict identity reference. Output ONE landscape RGBA image with fully transparent background, a precise 4 columns x 2 rows regular grid, eight equally sized cells in reading order, no text, no grid lines, no scenery, no ground plane or cast shadow. Exactly the same single character in all 8 cells: imposing fully CLOSED HELMET knight, no exposed face or hair, dark steel plate armor, ornate gold trim, cyan eye slit and round chest core, cobalt blue long cape and tabard, ONE long straight cyan energy sword with ornate gold/black hilt, no shield item. Match the painterly anime rendering and proportions in the reference. Every cell must contain the WHOLE body, whole sword and cape with at least 6% clear transparent padding on all sides; NOTHING touches or crosses cell boundaries. Keep consistent character scale, side-facing three-quarter view looking RIGHT, feet at a common baseline. The new anatomically distinct poses are: cell0 settled end-of-action stance with sword lowered; cell1 turn shoulders and draw sword backwards to prepare; cell2 sword raised diagonally behind the head, knees bent in full anticipation; cell3 release a horizontal sword cut to the RIGHT, extended arms and changed hips/legs, blade fully contained; cell4 follow-through with sword pointing down-right and weight on forward leg; cell5 relaxed recovery bringing sword back down; cell6 protective braced stance, sword upright close to torso and free hand raised to protect allies, no large effects; cell7 defeated NON-GRAPHIC kneeling on one knee with head bowed and sword tip resting near foot. These must be actual drawn changes of limbs and silhouette, not copies moved/rotated or glow effects replacing bodily motion. Use compact blade angles and ample empty margins to keep every tip/hand/boot intact. No blood, no other characters, no added weapons, no big energy trails, no opaque haze or checkerboard.",
+      "correctionPrompt": "Correct this production animation sheet without changing Axion's identity or the eight intended poses. Keep exact 4 columns by 2 rows regular grid and transparent background. The current image clips the raised sword in row1 cell3 at the top, the horizontal sword in row1 cell4 at the right, and the cape in row2 cell1 at the left. Repaint and recompose EVERY figure at 78% of current size with generous clear padding, whole boots, helmet, whole cape and FULL sword visible entirely INSIDE each cell with at least 25 pixels of empty border. Do NOT just add padding outside the sheet. Keep all eight cells same scale and their boots on a common baseline near 92% cell height. The same fully closed helmet knight, dark steel/gold/cyan details, blue cape, ONE cyan sword only. For the raised sword pose use a compact diagonal above/behind shoulder but far from top edge. For the horizontal cut pose use a compact blade angle that fits without shortening the reference weapon; scale figure down to fit whole sword. Restore the missing tips and cape naturally. No part including glow crosses any cell boundary. No opaque matte, checkerboard, text, grid, ground, cast shadow or new special effects. Keep authored anticipation, strike, follow-through, recovery, protective brace, kneeling defeat in current reading order."
+    },
+    {
+      "id": "astra-renascimento-v1",
+      "path": "assets/poses/astra-renascimento-v1.png",
+      "reference": "assets/characters/astra.png",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-09",
+      "bytes": 1887882,
+      "sha256": "0b69c3c7b465b36b95489eb57c687ff8ccda18a3f7f257f964c4191852e2bde1",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "neutral",
+        "prepare",
+        "anticipation",
+        "release",
+        "follow_through",
+        "recovery",
+        "protective_brace",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "generationPrompt": "Create a production 2D game animation sprite sheet for Project Nexus. Use the attached existing ASTRA illustration as the strict identity reference. Output ONE landscape RGBA image with fully transparent background, a precise 4 columns x 2 rows regular grid, eight equally sized cells in reading order, no text or grid lines or background scenery. Exactly the same single character in all eight cells: adult female astral sorceress with very long silver-white flowing hair, pointed ears, small gold star-like hair ornament, navy/white/gold ornate flowing split gown and navy/gold heeled sandals, THREE small violet celestial orbit spheres near the body. Preserve her face and costume from the reference. No staff, sword, gun, shield or extra person. Match the detailed painted anime illustration. Each cell shows the ENTIRE body, long hair, gown and all three orbit spheres with at least 6% clear transparent padding on all sides. NOTHING crosses or touches cell boundaries. Consistent character scale, facing RIGHT in three-quarter view, footwear kept on a consistent baseline, compact flowing fabric. Eight distinct anatomical poses in reading order: cell0 settled recovery, arms relaxed with small spheres orbiting; cell1 lift both hands and bend knees for gathering; cell2 draw hands toward chest then raise one hand, shoulders rotated for full casting anticipation; cell3 release spell to the RIGHT with right arm extended, left hand guiding near chest, changed hip stance, three spheres kept compact and distinct; cell4 follow-through with open palm toward target and forward lean; cell5 recover with lowered elbows and relaxed legs; cell6 protective brace with both hands cupped in front of chest and knees bent, small spheres held close, no huge magic effect; cell7 non-graphic defeated kneeling posture with bowed head and hands resting near knees, spheres dim but still visible. Draw genuine changes in limbs, body weight and silhouette, not repeated poses translated/rotated and not VFX in place of motion. No blood, no cropped feet or hair or orbit spheres, no giant spell bursts, no cast shadow, no opaque glow field, no checkerboard.",
+      "correctionPrompt": "Correct this eight-frame Astra production animation sheet, keeping exact 4 columns by 2 rows regular grid, fully transparent background, same identity/costume and eight poses. The current raised orbit in row1 cell3 touches/crops at the top, and row1 cell4's far right sphere reaches the right edge. Repaint/recompose ALL eight figures at 78% of current size INSIDE their existing cells with at least 25px clear empty padding on every side. Do not only add padding outside the sheet. Keep consistent scale, feet on a common baseline at about 92% cell height, full hair/gown/shoes and all THREE small orbit spheres entirely contained in each cell. Adjust the floating spheres nearer her hands/body so no orb/glow is cropped. Preserve adult silver-haired sorceress, pointed ears, gold star ornament, navy/white/gold dress and sandals, three violet celestial orbs; no staff or sword. Preserve changes of body/arms/knees and reading-order phases: settled, gathering1, gathering2, release toward RIGHT, follow-through, recovery, protective brace, kneeling defeat. No opaque haze, matte, grid, checkerboard, labels, scenery, ground or cast shadow."
+    },
+    {
+      "id": "elun-renascimento-v1",
+      "path": "assets/poses/elun-renascimento-v1.png",
+      "reference": "assets/characters/cutouts-b.png (bottom-left Elun)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-09",
+      "bytes": 1245513,
+      "sha256": "fb827030ca5a17a466f4b81248f27a9361be15db03c3f86c77a0ff1c4347f061",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "neutral",
+        "prepare",
+        "anticipation",
+        "release",
+        "follow_through",
+        "recovery",
+        "protective_brace",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "generationPrompt": "Production game sprite sheet for PROJECT NEXUS, use ONLY the bottom-left adult blue-haired swordsman ELUN from attached original four-character reference; ignore other three people. Preserve exact short blue hair, visible face, ornate black/gold/white armor and long blue-white gold patterned coat tails, ONE long purple energy sword. Painterly detailed fantasy anime style matching reference. Make a landscape transparent RGBA sheet, exact regular 4 columns by 2 rows, eight equally sized cells in reading order. No text, labels, grid, background, ground or cast shadow. CRITICAL LAYOUT: make figures SMALL inside cells: the COMPLETE character including sword, cape and boots fits in central 70% of each cell, leaving at least 12% clear transparent padding ALL around. All sword tips must be fully visible with clear space beyond. Same character scale throughout. Face RIGHT three-quarter view, feet on a consistent baseline near 85% cell height. Do not enlarge figures to fill cells. Eight genuinely distinct drawn anatomical poses: 0 settled end stance sword lowered diagonally beside body; 1 turn hips/shoulders and draw sword back at hip; 2 knees bent in coiled anticipation with blade diagonally across the shoulder, compact and fully inside cell, NOT above the head; 3 release a forward diagonal cut toward RIGHT with a small lunge, full long sword visible; 4 follow-through with torso rotated and blade down-right, weight on front leg; 5 recover by returning sword to low ready; 6 protective brace with sword diagonally in front of torso and free hand raised to guard; 7 non-graphic kneeling defeat, bowed head, sword tip resting beside the knee. Preserve sword length/proportions, full coat and consistent costume. Keep thin purple blade glow close to blade, no large effects or detached trails. No cropped tips/boots/cape/hair, no extra weapons or persons, no opaque matte or checkerboard. Important: actual limb and body changes, not copies translated/rotated.",
+      "correctionPrompt": null
+    },
+    {
+      "id": "saira-renascimento-v1",
+      "path": "assets/poses/saira-renascimento-v1.png",
+      "reference": "assets/characters/cutouts-b.png (bottom-right Saira)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-09",
+      "bytes": 1809139,
+      "sha256": "248e2a0e13b17c8e74177a4b960c1c7c9f0884fd42c1ed318766909ed0e06782",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "neutral",
+        "prepare",
+        "anticipation",
+        "release",
+        "follow_through",
+        "recovery",
+        "protective_brace",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "generationPrompt": "Production game animation sprite sheet for PROJECT NEXUS. Use ONLY the bottom-right adult healer SAIRA from the attached original four-character reference, ignore other three characters. Preserve long voluminous PURPLE hair, visible face, white/gold/navy flowing mage dress, gold sandals, and ONE tall ornate GOLD STAFF crowned by a circular spiked gold ring around a violet orb. No sword or gun, no extra people. Detailed painterly fantasy anime rendering matching original identity/costume. Output one landscape transparent RGBA image with exact regular 4 columns x 2 rows, eight equally sized cells, no text/grid/labels/scenery/ground/cast shadow. CRITICAL: every COMPLETE character, hair, gown, boots and WHOLE staff including top circle must fit well inside central 70% of each cell, leaving at least 12% clear empty padding on ALL sides. Same small scale throughout, face RIGHT three-quarter view, feet on consistent baseline near 85% cell height. Do not enlarge to fill cells. Eight distinct anatomical drawings in reading order: 0 settled stance holding staff upright; 1 lift free hand and shift weight back to gather a rune; 2 rotate shoulders, bend knees gently, raise staff forward with the free palm cupped near chest (staff remains compact inside cell); 3 release a rune to RIGHT with staff angled forward and open free palm guiding; 4 follow-through with forward lean and staff/palm extended without crossing edges; 5 recovery lowering elbow and returning staff upright; 6 protective/healing brace, staff vertical close beside body and free palm across heart, no large spell effects; 7 non-graphic defeated kneeling with head bowed, staff resting diagonally beside knee, still fully within cell. Preserve natural changes of legs, arms, hands and torso for a real animation storyboard. No giant magic bursts, no opaque haze/matte, no checkerboard, no cropped staff or hair, no copied poses merely translated or rotated.",
+      "correctionPrompt": null
+    },
+    {
+      "id": "veyra-renascimento-v1",
+      "path": "assets/poses/veyra-renascimento-v1.png",
+      "reference": "assets/characters/veyra.png",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-09",
+      "bytes": 3100337,
+      "sha256": "2741c50e1cb8908df94bbabf9f4e89d630a70e2490ebc62a5c44552e384a81c1",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "neutral",
+        "prepare",
+        "anticipation",
+        "release",
+        "follow_through",
+        "recovery",
+        "protective_brace",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "generationPrompt": "Production 2D game animation sheet for PROJECT NEXUS. Match the attached original character's identity and painterly fantasy anime rendering. ONE landscape RGBA image, fully transparent background, exact regular 4 columns x 2 rows, 8 equal cells in reading order. No text, labels, grid, scenery, ground plane, shadows, checkerboard or opaque haze. All 8 figures at the SAME small scale, facing RIGHT in three-quarter view; fit the COMPLETE body, hair/cape and whole weapons inside the central 70% of each cell with generous clear margins. No tip or glow may touch/cross any cell edge; do not enlarge figures to fill cells. Feet align near 85% of cell height. Draw distinct limbs/body/weight, not translated/rotated copies. Keep effects tiny and close to the weapon; no big VFX replacing movement. Reading order: 0 settled recovery stance, 1 initial anticipation, 2 full coiled anticipation, 3 release toward RIGHT, 4 follow-through, 5 relaxed recovery, 6 protective brace, 7 non-graphic defeated kneeling with head bowed and weapon grounded. VEyRA identity: adult red-haired elf warrior, very long RED hair, black/gold spiked fitted armor, crimson cloth/cape, black/gold heeled armored boots and exactly TWO short red-orange flaming blades, one in each hand, no shield or staff. Preserve reference face, colors, armor and both blades. Pose1 turns hips and pulls the two blades back; pose2 crouches and crosses blades near shoulders preparing a sweeping dual cut; pose3 lunges slightly and sweeps both blades to the right, no blade cropped; pose4 follows through low with arms open and weight shifted; pose5 returns blades down; pose6 defensive low brace with crossed blades in front of torso; pose7 kneels with both blades resting beside the body. Compact weapon angles and contained long hair. Show actual distinct feet/knee/arm/hip positions while preserving proportional scale.",
+      "correctionPrompt": null
+    },
+    {
+      "id": "sylva-renascimento-v2",
+      "path": "assets/poses/sylva-renascimento-v2.png",
+      "reference": "assets/characters/sylva.png",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-09",
+      "bytes": 1772531,
+      "sha256": "4eef1ade95fa6327d41ec1f1c68a30dd562fb270d8a38b9d28f0085f39daa590",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "neutral",
+        "prepare",
+        "anticipation",
+        "release",
+        "follow_through",
+        "recovery",
+        "protective_brace",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "generationPrompt": "Production 2D game animation sheet for PROJECT NEXUS. Match the attached original character's identity and painterly fantasy anime rendering. ONE landscape RGBA image, fully transparent background, exact regular 4 columns x 2 rows, 8 equal cells in reading order. No text, labels, grid, scenery, ground plane, shadows, checkerboard or opaque haze. All 8 figures at the SAME small scale, facing RIGHT in three-quarter view; fit the COMPLETE body, hair/cape and whole weapons inside the central 70% of each cell with generous clear margins. No tip or glow may touch/cross any cell edge; do not enlarge figures to fill cells. Feet align near 85% of cell height. Draw distinct limbs/body/weight, not translated/rotated copies. Keep effects tiny and close to the weapon; no big VFX replacing movement. Reading order: 0 settled recovery stance, 1 initial anticipation, 2 full coiled anticipation, 3 release toward RIGHT, 4 follow-through, 5 relaxed recovery, 6 protective brace, 7 non-graphic defeated kneeling with head bowed and weapon grounded. SYLVA identity: adult nature healer elf with VERY LONG SILVER-WHITE hair (not green hair), pointed ears, white flower and leaf crown, white/dark green/gold layered flowing dress, green/gold sandals, ONE tall twisted wooden staff with leaves/white flowers surrounding a luminous GREEN crystal in an oval branch ring. Preserve reference face and costume; no bow or sword. Pose1 gathers with free palm open, staff close beside body; pose2 bends knees gently and brings free hand toward crystal preparing a thorn; pose3 extends staff/free palm forward to launch toward right; pose4 follows through with rotated shoulders and extended palm; pose5 returns upright; pose6 healing/protective brace with free palm at heart and staff upright close to body; pose7 kneels with staff angled beside knees. Full entire staff crown, white hair and gown remain inside each cell with clear padding.",
+      "correctionPrompt": "Fix the TRANSPARENCY of this Sylva eight-frame game sprite sheet. Keep exactly the current character, costumes, white hair, wooden leafy staff, eight body poses, regular 4x2 cell layout, canvas dimensions and sprite coordinates/scale. REMOVE all the broad WHITE/GRAY BACKGROUND MATTE, haze, glow, outline halo and fog surrounding each figure. In the game renderer the current sheet has a bright fuzzy white cloud around Sylva's whole silhouette and under the hem; this must disappear. Outside the tight natural hair strands, dress, staff, flowers and hands, pixels must be genuinely transparent alpha ZERO, not white/gray color with partial alpha. Preserve opaque detailed white hair and white/gold cloth INSIDE the character; do not erase her white details. Crisp antialiased natural edges without an artificial white stroke. Keep tiny green crystal highlights inside the staff crown only, no external light cloud. No ground shadow, no other characters, no grid/text/checkerboard. Every full body and complete staff remains inside its existing cell with the original clear margins. Do not move, rescale, rotate or crop any sprite; this is an alpha/background clean-up only."
+    },
+    {
+      "id": "vesper-renascimento-v1",
+      "path": "assets/poses/vesper-renascimento-v1.png",
+      "reference": "assets/characters/vesper.png",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-09",
+      "bytes": 1340949,
+      "sha256": "6100dd4da01e53b3e6845eafe90bbcc10895a7311b085e796ab0653c6714424b",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "neutral",
+        "prepare",
+        "anticipation",
+        "release",
+        "follow_through",
+        "recovery",
+        "protective_brace",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "generationPrompt": "Production 2D game animation sheet for PROJECT NEXUS. Match the attached original character's identity and painterly fantasy anime rendering. ONE landscape RGBA image, fully transparent background, exact regular 4 columns x 2 rows, 8 equal cells in reading order. No text, labels, grid, scenery, ground plane, shadows, checkerboard or opaque haze. All 8 figures at the SAME small scale, facing RIGHT in three-quarter view; fit the COMPLETE body, hair/cape and whole weapons inside the central 70% of each cell with generous clear margins. No tip or glow may touch/cross any cell edge; do not enlarge figures to fill cells. Feet align near 85% of cell height. Draw distinct limbs/body/weight, not translated/rotated copies. Keep effects tiny and close to the weapon; no big VFX replacing movement. Reading order: 0 settled recovery stance, 1 initial anticipation, 2 full coiled anticipation, 3 release toward RIGHT, 4 follow-through, 5 relaxed recovery, 6 protective brace, 7 non-graphic defeated kneeling with head bowed and weapon grounded. VESPER identity: mysterious fully hooded reaper in black/silver spiked armor and ragged violet-black cape; face fully hidden by hood and angular violet glowing mask, no exposed skin or human face/hair. ONE enormous purple crescent SCYTHE with dark ornate shaft, violet gems and a small hanging chain at the head. Preserve reference weapon length/shape and armor. CRITICAL shrink whole figure and scythe enough so the ENTIRE curved blade, shaft, chain and robe fit comfortably INSIDE each cell, with empty space beyond each tip; no sword substitution, no cropping. Pose1 draws scythe diagonally backward near hip, pose2 coils knees and shoulders with compact scythe diagonal across shoulder (not above cell boundary), pose3 swings a diagonal crescent cut toward right; pose4 follows through low with weight on forward leg; pose5 recovers to scythe upright; pose6 defensive brace holding shaft across torso; pose7 kneels with scythe grounded diagonally. No blood, no dismemberment, no giant purple cloud.",
+      "correctionPrompt": "Correct only the layout of this Vesper 8-frame production animation sheet, preserving the exact hooded black/silver/violet armored reaper, one complete large crescent scythe, hanging chain, purple hidden face and all eight poses. Keep exact 4 columns by 2 rows regular grid on a transparent landscape RGBA canvas. CURRENT BUG: row2 cell1 follow-through scythe crosses the right edge of its cell into row2 cell2; remove the neighboring scythe fragments currently contaminating the left edge of row2 cell2. REPAINT/RECOMPOSE each complete figure and weapon SMALLER, about 75% of current size, inside its own existing cell with at least 30 pixels of CLEAR empty padding on ALL four sides. Restore any missing tips naturally. Do NOT just add padding around the outer sheet. Each sprite including full blade, shaft, chain and trailing robe must be entirely isolated in its own cell, same scale across all eight frames, boots baseline near85% cell height. Keep release/follow-through compact by using diagonal blade angles that fit; keep the original weapon long, shrink whole figure rather than shortening the scythe. Row reading order unchanged: settled, anticipation1, anticipation2, forward cut, follow-through, recovery, defensive brace, kneeling defeat. No other weapons or characters, no blood, no text/grid/checkerboard, no opaque background or purple haze. No fragment from any frame may appear in a neighboring cell."
+    },
+    {
+      "id": "auren-renascimento-v1",
+      "path": "assets/poses/auren-renascimento-v1.png",
+      "reference": "assets/characters/auren.png",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-09",
+      "bytes": 1468259,
+      "sha256": "95427537b473686565025d494b4bba51b5f534d8f661bc4c4da5f3c09d3d1e3d",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "neutral",
+        "prepare",
+        "anticipation",
+        "release",
+        "follow_through",
+        "recovery",
+        "protective_brace",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "generationPrompt": "Production 2D game animation sheet for PROJECT NEXUS. Match the attached original character's identity and painterly fantasy anime rendering. ONE landscape RGBA image, fully transparent background, exact regular 4 columns x 2 rows, 8 equal cells in reading order. No text, labels, grid, scenery, ground plane, shadows, checkerboard or opaque haze. All 8 figures at the SAME small scale, facing RIGHT in three-quarter view; fit the COMPLETE body, hair/cape and whole weapons inside the central 70% of each cell with generous clear margins. No tip or glow may touch/cross any cell edge; do not enlarge figures to fill cells. Feet align near 85% of cell height. Draw distinct limbs/body/weight, not translated/rotated copies. Keep effects tiny and close to the weapon; no big VFX replacing movement. Reading order: 0 settled recovery stance, 1 initial anticipation, 2 full coiled anticipation, 3 release toward RIGHT, 4 follow-through, 5 relaxed recovery, 6 protective brace, 7 non-graphic defeated kneeling with head bowed and weapon grounded. AUREN identity: adult young male Lumi knight with SHORT SILVER-WHITE hair, visible face and blue eyes, ornate WHITE/GOLD armor, navy/gold tunic and long white/gold cloak, gold boots, ONE long GOLDEN SPEAR crowned with a sun/star ring and long straight spear tip. Preserve reference face and proportions. No helmet, no shield or sword. Entire spear from top tip to bottom end MUST be visible inside every cell; make the whole figure smaller if needed, not the weapon shorter. Pose1 draws spear back beside hip; pose2 knees coiled with spear diagonal near shoulder preparing a thrust; pose3 releases a forward spear thrust toward right with small lunge; pose4 follows through with front knee bent and spear down-right; pose5 recovers upright; pose6 protective brace with spear upright close beside chest and free palm raised; pose7 kneels with spear angled and grounded beside knee. Keep all cloak and spear extremities away from cell boundaries.",
+      "correctionPrompt": null
+    },
+    {
+      "id": "torv-renascimento-v1",
+      "path": "assets/poses/torv-renascimento-v1.png",
+      "reference": "assets/characters/returned-five.png (torv)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-09",
+      "bytes": 1179131,
+      "sha256": "3de0a8ff20ecf7ace46342bb6253d6f96e9686d4e2165b92f0d40b03364e9983",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "settled",
+        "anticipation",
+        "coiled_anticipation",
+        "release",
+        "follow_through",
+        "recovery",
+        "support_brace",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "prompt": "Use case: illustration. Asset type: production 2D full-body animation sprite sheet for NEXUS. Input image: identity and style reference ONLY, the existing five-character lineup; isolate ONLY the specified character. Preserve the original character design exactly, polished hand-painted fantasy anime rendering. Create one landscape 2:1 RGBA sprite sheet with true transparent background, exactly FOUR equal columns and TWO equal rows, eight isolated complete full-body drawings. Locked camera, right-facing 3/4 side view in ALL eight cells, same body scale and costume throughout. Keep at least 35px transparent padding INSIDE EVERY cell at output size; reduce figures enough to keep all hands, weapons, capes, effects and heads fully inside their own cells; absolutely no overlap across cells. No floor, shadow, background, white matte, text, labels, borders or grid lines. Eight genuinely different anatomical poses; no rotated copies. Glows confined tightly to the weapon, no broad haze. Subject: ONLY the FIRST character at far LEFT: Torv, adult muscular bald tan man with short dark beard, bare tattooed torso, enormous black volcanic gauntlets with orange magma cracks, large red/dark bead necklace, black/red loose trousers, white/red cloth at waist and sandals. No axe or sword. Row 1 left to right: (0) neutral grounded fists down; (1) crouching back-weighted boxing anticipation with right magma fist drawn back; (2) deep coiled torso twist drawing both fists back; (3) long decisive straight forward magma punch, rear shoulder extended and opposite hand guarding. Row 2 left to right: (4) punch follow-through with weight on forward leg and extended fist, (5) recovery retracting fist and untwisting torso, (6) defensive crossed gauntlets brace, (7) defeated one-knee kneeling shoulders slumped with both gauntlets touching ground. Keep physique, beard, magma gauntlets and bead necklace in every cell. DO NOT include the other four characters.",
+      "correctionPrompt": "Fix only transparent background and cell padding of this Torv 8-frame animation sheet. Preserve the exact bald muscular tattooed man, dark beard, massive orange magma gauntlets, bead necklace, black/red pants and red-white waist cloth, all eight anatomical poses, hand-painted rendering. Keep exact FOUR columns by TWO rows on a 2:1 landscape canvas. COMPLETELY REMOVE ALL gray, white, orange smoke, reddish haze and diffuse cloudy material between and around characters. It is unwanted background, NOT part of character. Deliver TRUE RGBA transparency everywhere outside tight body/gauntlet/cloth silhouettes, no matte and no residual haze or shadow. Preserve orange fissures INSIDE gauntlets only, no broad fire aura. Every complete figure must also be reduced uniformly to about 78% of its current size within its OWN cell so all extremities have at least 35px of clear padding on all four sides at output size. No tips/cloth may touch or cross cell boundaries. Keep whole gauntlets, heads and sandals visible in each cell, identical body scale across cells. Do not only pad outer image. Same reading order: neutral, windup1, coiled windup2, long forward punch, follow-through, recovery, crossed-gauntlet guard, kneeling defeat. All face right, no new poses or redesign. No floor, shadows, checkerboard, text, labels or grid."
+    },
+    {
+      "id": "brin-renascimento-v1",
+      "path": "assets/poses/brin-renascimento-v1.png",
+      "reference": "assets/characters/returned-five.png (brin)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-09",
+      "bytes": 1129448,
+      "sha256": "2f0f99aac0ae0ff22932ce6cb24bacb24a2cf4986abe14813bd2d59fd39d244d",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "settled",
+        "anticipation",
+        "coiled_anticipation",
+        "release",
+        "follow_through",
+        "recovery",
+        "support_brace",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "prompt": "Use case: illustration. Asset type: production 2D full-body animation sprite sheet for NEXUS. Input image: identity and style reference ONLY, the existing five-character lineup; isolate ONLY the specified character. Preserve the original character design exactly, polished hand-painted fantasy anime rendering. Create one landscape 2:1 RGBA sprite sheet with true transparent background, exactly FOUR equal columns and TWO equal rows, eight isolated complete full-body drawings. Locked camera, right-facing 3/4 side view in ALL eight cells, same body scale and costume throughout. Keep at least 35px transparent padding INSIDE EVERY cell at output size; reduce figures enough to keep all hands, weapons, capes, effects and heads fully inside their own cells; absolutely no overlap across cells. No floor, shadow, background, white matte, text, labels, borders or grid lines. Eight genuinely different anatomical poses; no rotated copies. Glows confined tightly to the weapon, no broad haze. Subject: ONLY the SECOND character from LEFT: Brin, adult young male nature oracle, short brown hair, small branch crown, pointed ears, green/gold leaf shoulder armor, long white-and-green robes with gold trim and brown boots, gnarled wooden staff with round green crystal in one hand, one small green orb over other hand. Not the white-haired female Sylva. Row 1 left to right: (0) neutral staff grounded; (1) back-weighted stance raising staff while pulling free palm inward; (2) knees bent and torso coiled, gathering green orb close to staff; (3) forward casting stance with free palm extended, releasing small green orb forward while complete staff remains visible; Row 2 left to right: (4) forward cast follow-through hand open and staff angled, (5) recovery lowering free palm and staff, (6) upright blessing posture staff raised and open palm up near chest, (7) defeated one-knee kneeling leaning on grounded staff. Keep male face, brown hair, branch crown, robes and full staff consistent in every cell. DO NOT include other characters.",
+      "correctionPrompt": "Precise layout and clean-alpha correction ONLY of this production animation sprite sheet. Preserve Brin, male brown-haired nature oracle with branch crown, green/gold armor, white-green robes, wooden staff with green crystal and green orb. Preserve full staff and crown, both currently too close to top cell boundary. Keep exact eight anatomical poses, same rendering, right-facing orientation and fixed 4 columns by 2 rows grid on a 2:1 landscape RGBA canvas. Repaint EVERY whole figure and ALL accessories uniformly about 78% of current size, centered INSIDE its own existing cell. Each body, full weapon, robe, hands, hair, glow must have at least 35 pixels of completely transparent padding on ALL FOUR sides of EVERY cell. No pixel may touch a cell edge or intrude into neighboring cells. Do not only add padding to outer canvas, do not shorten weapons or change proportions. Keep all frames at consistent figure scale, feet near 85% of cell height. Reading order unchanged: settled, anticipation1, anticipation2, forward release, follow-through, recovery, support/defensive brace, defeated kneeling. Preserve character identity and complete anatomy; restore any cropped extremity. True clean transparent alpha, no white/gray matte, haze, floor, cast shadow, grid, text, labels or other characters."
+    },
+    {
+      "id": "bast-renascimento-v1",
+      "path": "assets/poses/bast-renascimento-v1.png",
+      "reference": "assets/characters/returned-five.png (bast)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-09",
+      "bytes": 1022192,
+      "sha256": "f276644062294372d38e422909ff117deaba3d10cbd75441551e5f4b17ddd0b6",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "settled",
+        "anticipation",
+        "coiled_anticipation",
+        "release",
+        "follow_through",
+        "recovery",
+        "support_brace",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "prompt": "Use case: illustration. Asset type: production 2D full-body animation sprite sheet for NEXUS. Input image: identity and style reference ONLY, the existing five-character lineup; isolate ONLY the specified character. Preserve the original character design exactly, polished hand-painted fantasy anime rendering. Create one landscape 2:1 RGBA sprite sheet with true transparent background, exactly FOUR equal columns and TWO equal rows, eight isolated complete full-body drawings. Locked camera, right-facing 3/4 side view in ALL eight cells, same body scale and costume throughout. Keep at least 35px transparent padding INSIDE EVERY cell at output size; reduce figures enough to keep all hands, weapons, capes, effects and heads fully inside their own cells; absolutely no overlap across cells. No floor, shadow, background, white matte, text, labels, borders or grid lines. Eight genuinely different anatomical poses; no rotated copies. Glows confined tightly to the weapon, no broad haze. Subject: ONLY the THIRD CENTER character: Bast, huge broad mechanical armored guardian, sealed blue-black helmet with cyan visor, white/silver and gold bulky riveted armor with cyan glowing circular chest core, huge metal fists, two squat shoulder/back cylinders. No human face, no weapon, no hammer, no shield accessory. Row 1 left to right: (0) heavy grounded neutral fists down; (1) low braced windup pulling right metal fist back; (2) deeply coiled hydraulic punch anticipation with elbows bent and torso turning; (3) decisive long forward metal punch with cyan energy confined to knuckles; Row 2 left to right: (4) heavy punch follow-through and front knee bent, (5) recovery retracting hydraulic fist, (6) defensive crossed metal forearms protecting cyan chest core, (7) defeated one-knee kneeling lowered helmet and one fist on ground. Keep enormous mechanical silhouette, colors, chest core and cylinders in every cell. DO NOT include other characters.",
+      "correctionPrompt": "Precise layout and clean-alpha correction ONLY of this production animation sprite sheet. Preserve Bast, huge closed-helmet mechanical guardian in silver/gold armor with cyan chest core and cylindrical shoulder pipes. Preserve all metal gauntlets and knuckle energy, especially top-right punching fist currently clipped at outer right boundary. Keep exact eight anatomical poses, same rendering, right-facing orientation and fixed 4 columns by 2 rows grid on a 2:1 landscape RGBA canvas. Repaint EVERY whole figure and ALL accessories uniformly about 78% of current size, centered INSIDE its own existing cell. Each body, full weapon, robe, hands, hair, glow must have at least 35 pixels of completely transparent padding on ALL FOUR sides of EVERY cell. No pixel may touch a cell edge or intrude into neighboring cells. Do not only add padding to outer canvas, do not shorten weapons or change proportions. Keep all frames at consistent figure scale, feet near 85% of cell height. Reading order unchanged: settled, anticipation1, anticipation2, forward release, follow-through, recovery, support/defensive brace, defeated kneeling. Preserve character identity and complete anatomy; restore any cropped extremity. True clean transparent alpha, no white/gray matte, haze, floor, cast shadow, grid, text, labels or other characters."
+    },
+    {
+      "id": "ivo-renascimento-v1",
+      "path": "assets/poses/ivo-renascimento-v1.png",
+      "reference": "assets/characters/returned-five.png (ivo)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-09",
+      "bytes": 1009915,
+      "sha256": "1538b3e0375cb44433cc0f61fbd6388b4136ea0d4ecf6483280b4b6a4515d603",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "settled",
+        "anticipation",
+        "coiled_anticipation",
+        "release",
+        "follow_through",
+        "recovery",
+        "support_brace",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "prompt": "Use case: illustration. Asset type: production 2D full-body animation sprite sheet for NEXUS. Input image: identity and style reference ONLY, the existing five-character lineup; isolate ONLY the specified character. Preserve the original character design exactly, polished hand-painted fantasy anime rendering. Create one landscape 2:1 RGBA sprite sheet with true transparent background, exactly FOUR equal columns and TWO equal rows, eight isolated complete full-body drawings. Locked camera, right-facing 3/4 side view in ALL eight cells, same body scale and costume throughout. Keep at least 35px transparent padding INSIDE EVERY cell at output size; reduce figures enough to keep all hands, weapons, capes, effects and heads fully inside their own cells; absolutely no overlap across cells. No floor, shadow, background, white matte, text, labels, borders or grid lines. Eight genuinely different anatomical poses; no rotated copies. Glows confined tightly to the weapon, no broad haze. Subject: ONLY the FOURTH character from LEFT, second from right: Ivo, lean adult young male with short tousled SILVER-WHITE hair, open face, black and silver jagged fitted armor with open chest, torn violet cape, TWO purple energy short blades held in hands. Not the far-right monster. Row 1 left to right: (0) neutral grounded blades lowered; (1) back-weighted crouch drawing one blade behind shoulder; (2) deep crossed-blade windup with bent knees and coiled torso; (3) forward cutting lunge, front purple blade fully extended forward and rear blade drawn back, no blade leaves its cell; Row 2 left to right: (4) low crossing slash follow-through weight on front foot, (5) recovery retracting blades, (6) defensive crossed purple blades in front of chest, (7) defeated one-knee kneeling head lowered, blade tips grounded. Preserve short white hair, open face, torn purple cape and TWO blades in every cell. DO NOT include the other characters.",
+      "correctionPrompt": "Correct ONLY the layout/transparency of this exact Ivo production sprite sheet. Preserve the exact silver-haired open-faced male, TWO purple blades, torn violet cape, black/silver armor, all eight distinct poses, rendering, precise FOUR columns and TWO rows on a landscape 2:1 canvas. The TOP RIGHT forward blade is clipped by the outer canvas boundary, and several other hands/weapons come too near individual cell boundaries. Repaint every whole figure and complete weapons uniformly SMALLER, about 78% of current size, inside its OWN EXISTING cell. All silhouettes, blade tips, capes and glow must have at least 35 pixels of completely transparent margin on all four sides of EVERY cell; no neighboring fragments. Do not just extend outer canvas or shorten blades. Restore the complete extended blade on top-right, leaving clear space beyond its tip. All faces toward right as original, reading order identical: settled, windup1, windup2, release, follow-through, recovery, crossed-blade defense, kneeling defeat. True clean transparent alpha, NO gray/white matte or broad purple haze, no floor or shadow, no text/grid. Retain character identity, costume, proportions and anatomical movement; camera/figure scale consistent."
+    },
+    {
+      "id": "noct-renascimento-v1",
+      "path": "assets/poses/noct-renascimento-v1.png",
+      "reference": "assets/characters/returned-five.png (noct)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-09",
+      "bytes": 1246074,
+      "sha256": "0afe831eb6f4e30ee2811f1e1b11e1c9555c09893c07340f322455c12f047849",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "settled",
+        "anticipation",
+        "coiled_anticipation",
+        "release",
+        "follow_through",
+        "recovery",
+        "support_brace",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "prompt": "Production illustration asset for NEXUS, a real 2D animated full-body game sprite sheet. Preserve ONLY the named character from the provided identity reference, same painterly fantasy-anime design/costume/proportions. EXACT regular FOUR columns by TWO rows grid on a 2:1 landscape RGBA canvas, eight different full-body anatomical poses, all facing RIGHT in consistent 3/4 side view. VERY SMALL sprites surrounded by WIDE completely TRANSPARENT empty margins: each whole character plus all weapons, trailing hair/cloak and tiny glows fits inside the CENTRAL 60% of its own cell. Keep at least 40px entirely empty around every extremity in EVERY cell. Camera locked and same figure scale in all8. Do NOT enlarge art to fill cells; no cell overlap, fragments or clipped tips. No text, grid, labels, floor, cast shadow, smoke, haze, gray/white matte or checkerboard. Tight clean transparent alpha. Eight poses reading order:0 settled neutral,1 initial back-weighted anticipation,2 deep coiled anticipation,3 forceful forward release,4 low follow-through,5 recovery,6 protective/support brace,7 non-graphic defeated one-knee kneeling. Distinct body/limb poses, no transformed copies. ONLY far-right FIFTH character: Noct, enormous monstrous dark armored crystal golem with jagged obsidian plates, violet fissures, large purple diamond crystal in chest, angular horned head without exposed human face, huge clawed gauntlets with violet crystalline claws, broad heavy legs. No weapons held, no cape or human skin. Pose1 draws claw back and bends knees, pose2 coils torso with both claws near chest, pose3 extends a long forward slashing claw, pose4 claw downward follow-through, pose5 retracts claws, pose6 crossed armored forearms shielding chest crystal, pose7 kneels with head lowered and claws on ground. Preserve whole spikes and all claws within each cell; do not include other characters.",
+      "correctionPrompt": "Background extraction correction ONLY. Preserve Noct hulking obsidian-purple armored monster with angular horned closed head, chest crystal, huge violet clawed gauntlets, every anatomical pose, all proportions/rendering, composition and EXACT FOUR columns by TWO rows sprite-sheet grid. Remove ALL diffuse GRAY/WHITE/PURPLE cloudlike halo surrounding and between the eight characters. That is unwanted background, NOT part of sprites. Tight clean silhouettes ONLY, all pixels outside body, hair/costume, full claws or small orb must be truly TRANSPARENT. Keep tiny intrinsic glow inside claws/crystal/orb, no surrounding haze. No replacement matte, no shadow/floor/smoke/checkerboard. Keep eight whole distinct right-facing sprites in reading order: settled, anticipation1, anticipation2, release, follow-through, recovery, protective/support brace, kneeling defeat. Do not enlarge or reposition, current whole-body silhouettes fit cells; keep at least25px completely clear margin around all extremities within EVERY original cell, no fragments overlapping neighbors. No text or grid. Deliver clean RGBA true alpha."
+    },
+    {
+      "id": "maura-renascimento-v1",
+      "path": "assets/poses/maura-renascimento-v1.png",
+      "reference": "assets/characters/cutouts-c.png (maura)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-09",
+      "bytes": 1037304,
+      "sha256": "c32b3ef255b05dd685dccd0e11bf60541883483e1aef850ba8e3a6b3d981f334",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "settled",
+        "anticipation",
+        "coiled_anticipation",
+        "release",
+        "follow_through",
+        "recovery",
+        "support_brace",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "prompt": "Production illustration asset for NEXUS, a real 2D animated full-body game sprite sheet. Preserve ONLY the named character from the provided identity reference, same painterly fantasy-anime design/costume/proportions. EXACT regular FOUR columns by TWO rows grid on a 2:1 landscape RGBA canvas, eight different full-body anatomical poses, all facing RIGHT in consistent 3/4 side view. VERY SMALL sprites surrounded by WIDE completely TRANSPARENT empty margins: each whole character plus all weapons, trailing hair/cloak and tiny glows fits inside the CENTRAL 60% of its own cell. Keep at least 40px entirely empty around every extremity in EVERY cell. Camera locked and same figure scale in all8. Do NOT enlarge art to fill cells; no cell overlap, fragments or clipped tips. No text, grid, labels, floor, cast shadow, smoke, haze, gray/white matte or checkerboard. Tight clean transparent alpha. Eight poses reading order:0 settled neutral,1 initial back-weighted anticipation,2 deep coiled anticipation,3 forceful forward release,4 low follow-through,5 recovery,6 protective/support brace,7 non-graphic defeated one-knee kneeling. Distinct body/limb poses, no transformed copies. ONLY LEFT character: Maura, adult female shadow sorceress, long flowing BLACK hair, violet pointed crystal crown, black/gold corset and long layered black-purple split skirt, black strappy sandals, one dark violet angular runic orb floating above her palm. No staff, blades or white hair. Keep outfit/face/hair as reference. Pose1 leans back raising orb hand, pose2 coils knees and draws orb close to chest, pose3 extends palm forward casting small complete violet orb near fingertips, pose4 leans forward open palm after release, pose5 lowers hands recovering, pose6 upright ritual blessing with both palms raised holding small violet sigil close to chest, pose7 kneels head bowed and skirt pooling tightly inside own cell. Preserve whole crown, orb and skirt. No other character.",
+      "correctionPrompt": "Background extraction correction ONLY. Preserve Maura adult black-haired crowned sorceress in black/gold corset and long black-purple skirt, small violet runic orb, every anatomical pose, all proportions/rendering, composition and EXACT FOUR columns by TWO rows sprite-sheet grid. Remove ALL diffuse GRAY/WHITE/PURPLE cloudlike halo surrounding and between the eight characters. That is unwanted background, NOT part of sprites. Tight clean silhouettes ONLY, all pixels outside body, hair/costume, full claws or small orb must be truly TRANSPARENT. Keep tiny intrinsic glow inside claws/crystal/orb, no surrounding haze. No replacement matte, no shadow/floor/smoke/checkerboard. Keep eight whole distinct right-facing sprites in reading order: settled, anticipation1, anticipation2, release, follow-through, recovery, protective/support brace, kneeling defeat. Do not enlarge or reposition, current whole-body silhouettes fit cells; keep at least25px completely clear margin around all extremities within EVERY original cell, no fragments overlapping neighbors. No text or grid. Deliver clean RGBA true alpha."
+    },
+    {
+      "id": "riven-renascimento-v1",
+      "path": "assets/poses/riven-renascimento-v1.png",
+      "reference": "assets/characters/cutouts-c.png (riven)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-09",
+      "bytes": 1203433,
+      "sha256": "7b9b9a6090a3ee1094ef53f48f50e3e628d72e95b6c299434e866351442273d3",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "settled",
+        "anticipation",
+        "coiled_anticipation",
+        "release",
+        "follow_through",
+        "recovery",
+        "support_brace",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "prompt": "Production illustration asset for NEXUS, a real 2D animated full-body game sprite sheet. Preserve ONLY the named character from the provided identity reference, same painterly fantasy-anime design/costume/proportions. EXACT regular FOUR columns by TWO rows grid on a 2:1 landscape RGBA canvas, eight different full-body anatomical poses, all facing RIGHT in consistent 3/4 side view. VERY SMALL sprites surrounded by WIDE completely TRANSPARENT empty margins: each whole character plus all weapons, trailing hair/cloak and tiny glows fits inside the CENTRAL 60% of its own cell. Keep at least 40px entirely empty around every extremity in EVERY cell. Camera locked and same figure scale in all8. Do NOT enlarge art to fill cells; no cell overlap, fragments or clipped tips. No text, grid, labels, floor, cast shadow, smoke, haze, gray/white matte or checkerboard. Tight clean transparent alpha. Eight poses reading order:0 settled neutral,1 initial back-weighted anticipation,2 deep coiled anticipation,3 forceful forward release,4 low follow-through,5 recovery,6 protective/support brace,7 non-graphic defeated one-knee kneeling. Distinct body/limb poses, no transformed copies. ONLY RIGHT character: Riven, adult female lean assassin, extremely long SILVER-WHITE hair, BLACK face mask covering mouth/nose, magenta scarf and long torn magenta cape, fitted black/gold armor, black leg armor and boots, TWO purple jagged daggers. Preserve feminine reference face/body, mask, hair, cape and twin daggers. Pose1 crouches pulling blade back, pose2 coils with crossed blades, pose3 decisive forward dagger lunge with complete front blade extended, pose4 low diagonal slash follow-through, pose5 retracts both daggers recovering, pose6 defensive crossed blades in front of chest, pose7 one-knee kneeling head bowed and both dagger points touching ground. Keep all long hair/cape and blades within own cell, no other characters.",
+      "correctionPrompt": "Background extraction correction of this exact eight-frame Riven game sprite sheet. Preserve the exact silver-white LONG-haired masked adult female assassin, magenta scarf and cape, black/gold armor and TWO violet daggers, every body pose, scale, composition and 4x2 grid. COMPLETELY REMOVE THE DIFFUSE GRAY-WHITE HALO surrounding all eight figures; it is unwanted background/matte, NOT hair or cloth. All pixels outside the tight silhouette must be truly TRANSPARENT. Retain fine silver-white hair strands INSIDE the hair mass and crisp flyaways, keep magenta fabric edges; remove cloudlike gray haze outside hair/cape and around legs/blades. No light gray/white/colored replacement matte, no smoke or broad glow. Keep all complete characters within their original cells, with clear space at least25pixels inside all cell edges; do not enlarge anything. No shadows, floor, checkerboard, labels or text. Return RGBA with real alpha, eight complete isolated sprites, same identities/poses/scale."
+    },
+    {
+      "id": "elyra-renascimento-v1",
+      "path": "assets/poses/elyra-renascimento-v1.png",
+      "reference": "assets/characters/lumi-three.png (elyra)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-09",
+      "bytes": 1115274,
+      "sha256": "eb63b5919a15dba83d2acb9af08fa23dfdeedfad83149baec51c850bb1b43009",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "settled",
+        "anticipation",
+        "coiled_anticipation",
+        "release",
+        "follow_through",
+        "recovery",
+        "support_brace",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "prompt": "Use case illustration. Asset type production 2D game animation sprite sheet for NEXUS. The attached three-character artwork is IDENTITY REFERENCE ONLY. Extract ONLY the specified character design, ignore its brown background and ambient glows entirely. Paint EXACTLY eight isolated FULL BODY anatomical drawings, regular FOUR equal columns by TWO equal rows on a 2:1 landscape canvas. Each complete figure and whole weapon, long hair, cape, tiny intrinsic light must fit entirely INSIDE CENTRAL60% of its cell, at SAME figure scale, with at least40px completely empty margin from every cell boundary. Very small sprites surrounded by wide blank space, no cut tips, no cell crossing. All face RIGHT in 3/4 side view, locked orthographic camera, polished hand-painted fantasy anime rendering matching identity reference. CRITICAL true RGBA TRANSPARENT background with CLEAN tight alpha, ZERO white/gray/gold matte, halo, haze, cloud or cast shadow outside silhouettes. Background must be empty transparency, not luminous atmosphere. No floor, labels, grid, text, symbols outside character. Draw eight DIFFERENT limb/torso/weight poses, not rotated copies. Reading order0settled neutral,1anticipation,2coiled windup,3release,4follow-through,5recovery,6protection/blessing,7defeated kneeling head bowed. ONLY LEFT character: Elyra, adult female long wavy pale BLONDE hair, narrow golden halo crown behind head, white/gold fitted bodice, long white/gold split dress with dark-blue inner lining, white feather-like shoulder trims, gold sandals, ONE tall golden staff with sun disk and white-gold gem. Preserve face/dress/staff. Pose1 draws staff back, pose2 bends knees and gathers light near staff while free palm draws inward, pose3 forward casting stance free palm extended toward right and full staff diagonal nearby, pose4 cast follow-through front knee bent, pose5 lowers palm recovering, pose6 upright blessing with staff vertical and free palm raised, pose7 one-knee kneeling staff grounded and head bowed. Full sun disk, staff tip and halo fully inside every cell. Only tiny staff-gem light; no huge golden halo around body. No other characters.",
+      "correctionPrompt": "BACKGROUND REMOVAL / precise cutout of this exact Elyra eight-frame sprite sheet. Remove the entire WHITE and faint gray/checker patterned background. Deliver actual TRANSPARENT RGBA alpha everywhere outside the character, staff, halo crown, hair and dress. Do NOT replace white with black, gray, haze or another matte. Preserve ALL pale-blonde hair, WHITE/GOLD dress and its dark-blue lining, golden sun staff and narrow halo ring crown; these white/gold objects are character and must remain opaque. Clean tight crisp silhouettes with no surrounding white halo, no shadows/floor. Preserve all eight full-body anatomical poses, scale/proportions, camera and exact4columns2rows on the same2:1canvas, allrightfacing. Current figures fit cells; leave at least25px completely empty clear alpha around every extremity within each cell, do not enlarge or crop. No new detail, text, labels or grid. This is production game sprites, background must be truly empty transparency, NOT white.\n\nNEXT CORRECTION:\nPrecise production sprite sheet layout and transparent-alpha correction. Preserve Elyra blonde sorceress, narrow gold halo crown, white/gold dress with BLUE lining and full gold SUN STAFF, all eight distinct anatomical poses, rendering, colors and right-facing orientation. EXACT4columns2rows on a2:1landscape RGBA canvas. The bottom-left character's dress is cut at the outer LEFT edge. Restore the complete flowing dress and leave wide transparent margin beyond it; staff sun tips must all fit too. Repaint ALL EIGHT whole figures uniformly much SMALLER, about70% of current size, centered WITHIN their own existing cells. Whole body AND COMPLETE staff/bow/crown/hair/cape must have at least40px of entirely transparent padding on EVERY side of EVERY cell. Do not only add canvas padding, no crossed fragments. Keep body scale same in all8. REMOVE COMPLETELY all yellow/gold/red/white/gray haze, halos and residual matte outside tight silhouettes. Tiny light INSIDE gems or weapon is fine; no atmospheric glow surrounding figures. Keep pale hair/white outfit opaque, surrounding background actual EMPTY TRANSPARENT alpha, no replacement white/black/checker. Reading order unchanged neutral,windup1,windup2,release,follow-through,recovery,blessing,kneelingdefeat. No floor/shadows/text/grid/labels/redesign.\n\nNEXT CORRECTION:\nRemove background. Return this exact image as a clean transparent-background cutout PNG. Erase the entire pale white/gray background surrounding all eight Elyra figures, including between their hair/staff/dress gaps. Keep the eight complete characters and gold staffs intact. Do not draw any new background. Truly transparent alpha=0 in all blank areas; no gray/white matte or haze. Preserve exact pixel canvas composition: 4 columns x2 rows, current SMALL figure size, poses and locations, no enlargement, no cropping, no resizing, no repositioning. Preserve blonde hair, white/gold dresses with navy lining, gold sun staffs, gold halo crowns, sandals and all costume details. White dress is subject, white surrounding space is background to REMOVE. No other changes. Transparent background required."
+    },
+    {
+      "id": "solen-renascimento-v1",
+      "path": "assets/poses/solen-renascimento-v1.png",
+      "reference": "assets/characters/lumi-three.png (solen)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-09",
+      "bytes": 1036514,
+      "sha256": "9babe30c9cc4894f2c914fcf25f292b41b51269c1691ec8c8d9e4fb67d2d75fc",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "settled",
+        "anticipation",
+        "coiled_anticipation",
+        "release",
+        "follow_through",
+        "recovery",
+        "support_brace",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "prompt": "Use case illustration. Asset type production 2D game animation sprite sheet for NEXUS. The attached three-character artwork is IDENTITY REFERENCE ONLY. Extract ONLY the specified character design, ignore its brown background and ambient glows entirely. Paint EXACTLY eight isolated FULL BODY anatomical drawings, regular FOUR equal columns by TWO equal rows on a 2:1 landscape canvas. Each complete figure and whole weapon, long hair, cape, tiny intrinsic light must fit entirely INSIDE CENTRAL60% of its cell, at SAME figure scale, with at least40px completely empty margin from every cell boundary. Very small sprites surrounded by wide blank space, no cut tips, no cell crossing. All face RIGHT in 3/4 side view, locked orthographic camera, polished hand-painted fantasy anime rendering matching identity reference. CRITICAL true RGBA TRANSPARENT background with CLEAN tight alpha, ZERO white/gray/gold matte, halo, haze, cloud or cast shadow outside silhouettes. Background must be empty transparency, not luminous atmosphere. No floor, labels, grid, text, symbols outside character. Draw eight DIFFERENT limb/torso/weight poses, not rotated copies. Reading order0settled neutral,1anticipation,2coiled windup,3release,4follow-through,5recovery,6protection/blessing,7defeated kneeling head bowed. ONLY CENTER character: Solen, adult dark-brown-skinned muscular bald male monk with short dark goatee and golden eyes, large gold bead necklace, bare right shoulder and chest, white/gold diagonal robe and wide white pants, gold belt/sandals, huge golden sun gauntlets with molten cracks. No staff/blade. Pose1 pulls right gauntlet back into boxing stance, pose2 deeply coils knees and torso both fists ready, pose3 decisive long forward OPEN PALM strike with golden gauntlet and front-leg lunge, pose4 heavy palm follow-through, pose5 recovery retracting arm, pose6 crossed-gauntlet defensive brace at chest, pose7 one-knee kneeling gauntlets on ground head lowered. Keep complexion, goatee, robe, beads and massive gauntlets consistent in all8. No aura outside fists, no other characters.",
+      "correctionPrompt": "Production sprite-sheet correction ONLY: keep this exact Solen bald dark-skinned male monk, goatee, gold beads, white/gold robe and pants, huge golden gauntlets, all eight anatomical poses and exact FOUR columns by TWO rows. Current broad YELLOW/ORANGE/GRAY AURAS are unwanted background: REMOVE THEM COMPLETELY. Deliver tight clean silhouettes with REAL RGBA transparency everywhere outside body/cloth/gauntlets. Keep gold fissures INSIDE gauntlets but no fire, halo, smoke, haze or matte outside them. Preserve skin color and entire costume. Also uniformly shrink all eight full figures to about78% of current size within their ORIGINAL cells so each whole head, gauntlet, robe and sandal has at least35px completely clear margin from all four cell edges. Do not merely pad canvas, no cell overlap; same figure scale and full anatomy in all8. Retain right-facing 3/4 view, reading order neutral,windup1,coiled2,open-palm release,follow-through,recover,crossed-gauntletguard,kneelingdefeat. No text/grid/floor/shadows/checkerboard, no redesign. Preserve open-palm strike. Restore fully any clipped extremity, keep all sprites isolated."
+    },
+    {
+      "id": "zaya-renascimento-v1",
+      "path": "assets/poses/zaya-renascimento-v1.png",
+      "reference": "assets/characters/lumi-three.png (zaya)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-09",
+      "bytes": 1382807,
+      "sha256": "4727083a81d578815788b50953510022cdf5f89ec2a1123a47abfdcbc1a56ddf",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "settled",
+        "anticipation",
+        "coiled_anticipation",
+        "release",
+        "follow_through",
+        "recovery",
+        "support_brace",
+        "kneeling_defeat"
+      ],
+      "humanAcceptance": false,
+      "prompt": "Use case illustration. Asset type production 2D game animation sprite sheet for NEXUS. The attached three-character artwork is IDENTITY REFERENCE ONLY. Extract ONLY the specified character design, ignore its brown background and ambient glows entirely. Paint EXACTLY eight isolated FULL BODY anatomical drawings, regular FOUR equal columns by TWO equal rows on a 2:1 landscape canvas. Each complete figure and whole weapon, long hair, cape, tiny intrinsic light must fit entirely INSIDE CENTRAL60% of its cell, at SAME figure scale, with at least40px completely empty margin from every cell boundary. Very small sprites surrounded by wide blank space, no cut tips, no cell crossing. All face RIGHT in 3/4 side view, locked orthographic camera, polished hand-painted fantasy anime rendering matching identity reference. CRITICAL true RGBA TRANSPARENT background with CLEAN tight alpha, ZERO white/gray/gold matte, halo, haze, cloud or cast shadow outside silhouettes. Background must be empty transparency, not luminous atmosphere. No floor, labels, grid, text, symbols outside character. Draw eight DIFFERENT limb/torso/weight poses, not rotated copies. Reading order0settled neutral,1anticipation,2coiled windup,3release,4follow-through,5recovery,6protection/blessing,7defeated kneeling head bowed. ONLY RIGHT character: Zaya, adult female long wavy golden-blonde hair, white feather mantle and white/gold fitted light armor/dress over black leggings, gold boots, ONE long ornate GOLDEN BOW with pointed curved limbs, thin gold string. Preserve face, feathers, outfit and full bow. Pose1 raises bow and reaches to string, pose2 deep complete bow DRAW with drawn golden arrow and string at cheek, pose3 RELEASE with bow arm extended toward right and string hand behind cheek, pose4 follow-through open string hand and bow still extended, pose5 lowers bow recovering, pose6 protective/blessing posture bow upright and free palm raised, pose7 one-knee kneeling holding grounded bow. Entire bow, both sharp tips, arrow and full hair/feathers must stay well inside each own cell; shrink whole character uniformly rather than shorten bow. No other characters.",
+      "correctionPrompt": "Precise production sprite sheet layout and transparent-alpha correction. Preserve Zaya blonde archer, white feather cape, white/gold armor, black leggings, ONE long GOLDEN BOW with string and arrow, all eight distinct anatomical poses, rendering, colors and right-facing orientation. EXACT4columns2rows on a2:1landscape RGBA canvas. Top-row bow tips are clipped or almost touch cell tops. Restore complete bow limbs and tips, shrink entire bodies and bows together, never shorten the bow. Repaint ALL EIGHT whole figures uniformly much SMALLER, about70% of current size, centered WITHIN their own existing cells. Whole body AND COMPLETE staff/bow/crown/hair/cape must have at least40px of entirely transparent padding on EVERY side of EVERY cell. Do not only add canvas padding, no crossed fragments. Keep body scale same in all8. REMOVE COMPLETELY all yellow/gold/red/white/gray haze, halos and residual matte outside tight silhouettes. Tiny light INSIDE gems or weapon is fine; no atmospheric glow surrounding figures. Keep pale hair/white outfit opaque, surrounding background actual EMPTY TRANSPARENT alpha, no replacement white/black/checker. Reading order unchanged neutral,windup1,windup2,release,follow-through,recovery,blessing,kneelingdefeat. No floor/shadows/text/grid/labels/redesign."
+    },
+    {
+      "id": "rhazen-supreme-renascimento-v1",
+      "path": "assets/poses/rhazen-supreme-renascimento-v1.png",
+      "reference": "assets/poses/rhazen-renascimento-v1.png (existing Rhazen identity, basic storyboard preserved)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-10",
+      "bytes": 1006280,
+      "sha256": "38a8a5b0a6efa8e29360fa9badfac0de9e9856811878ee751973c384b1972387",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "low_gather",
+        "vertical_lift",
+        "supreme_overhead",
+        "downward_slam",
+        "ground_contact",
+        "heavy_settle",
+        "lever_recovery",
+        "ready_recovery"
+      ],
+      "humanAcceptance": false,
+      "generationPrompt": "Use case: identity-preserve. Asset type: production RGBA 2D game animation sprite sheet for Nexus, Queda da fornalha SUPREME only. Input image: reference ONLY, Rhazen's existing basic-attack sheet; preserve this EXACT massive black spiked plate armor, orange lava fissures, sealed horned helmet, orange furnace chest, torn crimson waist cloth, boots, enormous rectangular two-handed lava warhammer, same painted fantasy-anime rendering and proportions. Create a NEW sibling sheet, not a replacement for the reference. Exactly eight DIFFERENT anatomical full-body drawings in a precise 4-column 2-row landscape grid, 2:1 canvas. Transparent background, no floor/shadow/haze, no labels/grid/text. Facing right in 3/4 side orthographic view, camera locked. This is a heavier two-handed ground-slam supreme, clearly different from the ordinary shoulder swing. Row1: (0) deep planted crouch gathering force, hammer head held low in FRONT of right boot with both hands on long handle; (1) legs driving upward, torso twisting and entire hammer lifting vertically past chest; (2) fully extended overhead extreme windup with both hands high and hammer complete above the helmet, knees still loaded; (3) explosive downward two-handed hammer swing, torso folded forward, arms extended toward ground ahead of right boot, hammer diagonal midway down. Row2: (4) lowest ground-contact pose, deep lunge with front knee bent and hammer head planted forward, both hands still firmly gripping handle; (5) heavy follow-through settle with hammer grounded, back knee close to ground but hero ALIVE/strong, head raised; (6) lever the hammer up off ground with both arms as body rises; (7) return toward neutral ready with hammer low across front. No huge effects: the GAME draws area shockwaves separately. Art remains sharply readable. Every COMPLETE character and COMPLETE hammer including head and handle must be entirely inside its own cell with minimum 40px fully transparent padding on all edges, including overhead frame and forward contact frame. Uniform body scale across eight cells; boots contact consistent baseline 88% down cell. Do not crop, stretch, overlap neighboring cells or redesign identity. Exactly one Rhazen per cell, no other characters.",
+      "correctionPrompt": "Precise production layout correction only. Edit this Rhazen supreme sheet, keeping the SAME eight poses in the SAME 4-column 2-row order, same exact armor/helmet/weapon/red cloth/painted rendering/identity. Do not redraw into a different character. Uniformly reduce EACH complete character AND complete hammer by about 12% inside its current cell. Preserve actual RGBA transparency. Every sprite must have at least 40 pixels completely transparent padding on every edge at this 1774x887 output size, especially overhead hammer in top cell3 and hammer head on bottom cell1 near right edge. Restore no missing cropped parts because all parts must be visible. Keep each pose centered within its own cell; foot baseline approximately 86% down each cell. Keep relative body scale consistent, no stretching, no pose changes, no external glows, no floor/shadows/haze, no text/grid. Retain 2:1 landscape canvas and EXACTLY 8 isolated full-body figures, 4 columns x 2 rows. This is a game sprite sheet with fixed cells; no character or weapon may approach or cross its cell border."
+    },
+    {
+      "id": "cindra-supreme-renascimento-v1",
+      "path": "assets/poses/cindra-supreme-renascimento-v1.png",
+      "reference": "assets/poses/cindra-renascimento-v1.png (Cindra identity, original basic storyboard preserved)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-10",
+      "bytes": 1239834,
+      "sha256": "493b86ce76498fa041db8276886629352b37194909b242a8ede3f520f740640b",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "quiver_reach",
+        "skyward_nock",
+        "skyward_full_draw",
+        "skyward_release",
+        "high_follow_through",
+        "lowering_bow",
+        "ready_recovery",
+        "neutral_recovery"
+      ],
+      "humanAcceptance": false,
+      "generationPrompt": "Use case: identity-preserve. Asset type: production RGBA 2D game animation sprite sheet for Nexus, Cindra's Constelação ardente SUPREME only. Input image is reference ONLY: preserve this EXACT adult female fire archer Cindra, long orange-red hair, face, black fantasy armor with gold edging and lava seams, crimson torn cloak, boots, quiver, huge black/gold/orange longbow. Same hand-painted fantasy-anime rendering, costume and proportions; no redesign or increased exposure. Create a NEW sibling sheet of 8 genuinely different anatomical drawings, four equal columns by two equal rows, landscape2:1 canvas. Every COMPLETE figure and COMPLETE bow including all tips must fit inside its own cell with generous60px fully transparent padding on EVERY edge. Reduce figure size enough for raised bow and arrows to fit; uniform character scale across cells. Camera orthographic, facing right in consistent3/4 side view, ground baseline86% down cell. Transparent background. No text, labels, grid, floor, shadow, detached magic, external glow or haze. This supreme is a skyward volley, clearly different from her ordinary horizontal shot. Row1 left to right: (0) planted deep stance, bow low diagonally forward and free hand reaching back into quiver; (1) raise bow toward upper-right sky about50degrees, torso arches slightly back as right hand nocks three visible fine arrows together at string; (2) full powerful draw aimed50degrees up-right, bow arm firmly extended and drawing hand at cheek, three arrow shafts fanned narrowly and anatomically coherent taut bowstring; (3) release skyward volley, bow remains angled up-right, empty string springs forward, drawing hand follows behind cheek, torso rotated and rear heel lifted, no floating arrows outside cell. Row2: (4) follow-through holding bow up with upper-body recoil, free hand open behind jaw and three arrows already gone; (5) lower bow from sky with weight settling forward, cloak/hair follow motion; (6) recover ready posture bringing bow down across front and relaxing shoulders; (7) grounded neutral ready with bow low diagonally and hand near quiver. Keep distinct poses, articulated knees/hips/shoulders/arms/fingers. Both arms always anatomically coherent and connected, one bow only. Keep the ENTIRE bow, hair, cape, boots and hands well inside every cell; never touching a cell edge or another sprite. Background is true transparent alpha, not a colored matte. Do not include Rhazen, golems or any other character.",
+      "correctionPrompt": "Precise layout/transparency correction ONLY to this eight-frame Cindra supreme sheet. Preserve her exact adult identity, face, long orange-red hair, black/gold/lava fantasy armor, crimson cape, quiver, complete longbow, and all EIGHT distinct anatomical poses in the SAME four-column/two-row order. Uniformly SHRINK each entire character, cape, weapon and arrows by about12% inside its own current cell. Center each within its cell, feet around86% down cell. Every full figure AND ENTIRE bow must have at least45px clearly transparent padding on every edge at this1774x887 size; especially the raised bow in bottom-left cell and boots at row1 bottom. Remove the diffuse red/yellow halo outside the tight character/cape/bow silhouette: true RGBA transparency, no background glow or matte, no floor/shadow. Do NOT remove actual red cape, orange hair, orange bow ornament or lava seams. Keep the skyward volley choreography: reach quiver, raise/nock, full skywarddraw, release, highbowfollowthrough, lowering, recovering, ready. Keep three small arrows coherent ONLY in nocking/full-draw poses, none floating in released or recovery poses. No character redesign, no change to pose angles or order, no extra limbs, no cropping, no stretching, no text/grid/panels. Exactly8 figures isolated in4x2 equal cells on landscape2:1 transparentcanvas."
+    },
+    {
+      "id": "oren-supreme-renascimento-v1",
+      "path": "assets/poses/oren-supreme-renascimento-v1.png",
+      "reference": "assets/poses/oren-renascimento-v1.png (Oren identity, basic/support guard preserved)",
+      "tool": "built-in image_gen",
+      "generatedDate": "2026-11-10",
+      "bytes": 1313044,
+      "sha256": "67ebca86b3b684619bdef894b6405cbb4f71f8c13d71638192f050e135b6acf6",
+      "dimensions": [
+        1774,
+        887
+      ],
+      "grid": [
+        4,
+        2
+      ],
+      "frames": [
+        "low_gather",
+        "groundward_palms",
+        "rising_open_palms",
+        "wide_invocation",
+        "ward_release",
+        "lowering_arms",
+        "standing_recovery",
+        "ready_recovery"
+      ],
+      "humanAcceptance": false,
+      "generationPrompt": "Use case: identity-preserve. Asset type: production RGBA 2D game animation sheet for Nexus, Oren's friendly SUPPORT SUPREME Despertar da floresta. Input image is reference ONLY, preserving EXACT stone-and-root guardian Oren: massive brown/tan rock torso and limbs, intertwined wood roots, moss/green ivy covering shoulders/arms/back, green leaf waist loincloth, tree-like face and branch beard, huge stone fingers and feet, same fantasy-anime hand-painted rendering and proportions. NO weapons, no redesigned face, no new costume. Create a NEW sibling animation sheet, 8 distinctly articulated full-body poses in EXACTLY four equal columns by two equal rows, landscape2:1 canvas. Every entire character, leaves, fingers and raised arms must fit well inside its cell with minimum55px transparent padding on all edges. Use smaller figures if needed to keep arms within cells. Uniform character scale across eight cells, feet baseline about86% down each cell, facing right in consistent3/4 side orthographic view; camera locked. TRUE RGBA transparent background. No text/grid/labels/floor/shadow/detached effects/external haze/glow. This is a protective forest awakening for his TEAM, not an attack or a punch. The game adds protective roots/light separately. Row1 left to right: (0) quiet grounded preparation, knees bent, both huge hands beginning to open low in front of body; (1) deep planted crouch, both open stone palms reaching down toward ground just ahead of feet, shoulders bowing, head looking forward not defeated; (2) strong rise with open arms sweeping outward/up from hips, chest expands, palms cupped as if gathering forest life; (3) both arms spread wide at shoulder height with open palms facing forward/up, protective invocation and powerful raised chest, no clenched punch. Row2 left to right: (4) decisive ward-release gesture, both open palms gently press outward and down in front of torso, knees braced, fingers splayed to shelter allies, not striking any opponent; (5) follow-through with arms slowly descending and torso settling, maintaining watchful head; (6) recovery standing tall, arms returning toward sides, weight settling evenly; (7) grounded ready stance with heavy relaxed fists low, same guardian fully alive. Preserve eight genuinely different anatomical phases, articulated shoulders/elbows/wrists/hips/knees, exactly two arms/hands/legs per figure, stone/root construction consistent. Keep the whole foliage silhouette inside each cell, no clipping or overlap. No tree/background sprouting outside the silhouette and no floor roots extending outside cells. No other characters.",
+      "correctionPrompts": [
+        "Production cutout/layout correction only. Preserve EXACT same Oren guardian identity, rock/root anatomy, moss/ivy, face, all8different poses and their SAME4x2order. Uniformly shrink each entire figure about12% within its current equal cell, leaving at least45px empty transparent padding on ALL cell edges, especially spread palms in top-right cell and bottom-left ward pose. Keep landscape2:1canvas and consistent character scale. Remove ALL gray/green/red matte or blurred halo around bodies and in gaps between limbs. Background must be actual RGBA transparency right up to tight stone/leaf edges, including the space between hands and torso and between legs. No shadow, floor, colored haze, external glow, aura or rectangle. Do not remove actual green leaves, roots, fingers or leaf loincloth. Keep all full hands/fingers/feet visible and completely inside each cell. Keep friendly support invocation: gathering low, groundward openhands, rising with openpalms, wide protective invocation, outward/downward wardrelease, loweringarms, recovery, ready. No punching, weapons, detached effects, new background trees or pose/camera changes. No text/grid/frame. The game renders magical effects separately; show ONLY the complete isolated character in every cell with hard clean alpha silhouette.",
+        "BACKGROUND EXTRACTION ONLY. Make a clean transparent PNG cutout of the EIGHT existing Oren figures in this exact sheet. Keep every existing character pixel/shape/pose/placement/scale as faithfully as possible, same4columns2rows and same1774x887canvas. Remove the entire gray/white/green mist background and the pale halos between the figures and between limbs, setting that BACKGROUND TO ALPHA ZERO. Transparent means actual RGBA alpha0, not white, gray, a gradient or a painted checkerboard. Preserve opaque brown stone bodies, green ivy/leaves, roots, open hands/fingers/feet and all costume details. Retain all eight isolated full bodies at their current coordinates with generous empty padding, no cropping/resizing/repositioning/pose changes. Do not generate scenery, fog, glows, shadows, lighting panels, floor or new art outside the tight existing silhouettes. Background outside characters and in gaps must be fully transparent. The image must show ONLY the eight characters floating on actual transparency with clean antialiased cutout edges."
+      ],
+      "selectionNote": "First correction produced opaque graymatte and was rejected/preserved. Selected second correction background extraction; basic sheet untouched."
+    }
+  ]
+}

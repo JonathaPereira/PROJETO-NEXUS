@@ -1,0 +1,329 @@
+{
+  "veyra": {
+    "action": "skill",
+    "name": "Brasa de abrigo",
+    "patch": {
+      "power": 1.2,
+      "secondary": {
+        "kind": "shield",
+        "target": "actor",
+        "power": 0.06
+      }
+    },
+    "remove": [],
+    "description": "120% do ataque. Contra queimadura ou sangramento: +40% e consome uma aflição. Depois concede escudo próprio de 6% da vida por duas rodadas globais."
+  },
+  "rhazen": {
+    "action": "skill",
+    "name": "Ferro repartido",
+    "patch": {
+      "kind": "shieldAll",
+      "power": 0.07,
+      "effect": "emberguard"
+    },
+    "remove": [
+      "self",
+      "extraEffect"
+    ],
+    "description": "Escudo de 7% da vida máxima para a equipe por duas rodadas globais. Concede Brasa reativa por dois turnos de cada aliado. Substitui o escudo próprio de 16% e o Espelho."
+  },
+  "cindra": {
+    "action": "skill",
+    "name": "Sinal de retirada",
+    "patch": {
+      "kind": "supportAll",
+      "power": 0,
+      "cost": 35,
+      "effect": "cleanse",
+      "secondary": {
+        "kind": "energy",
+        "target": "allies",
+        "amount": 12
+      }
+    },
+    "remove": [],
+    "description": "Purifica a equipe e entrega até 12 EN a cada aliado vivo. Substitui escudo e empoderamento."
+  },
+  "torv": {
+    "action": "skill",
+    "name": "Fenda de escória",
+    "patch": {
+      "power": 1.15,
+      "effect": "expose",
+      "criticalChance": 0
+    },
+    "remove": [
+      "combo"
+    ],
+    "description": "115% do ataque e defesa exposta por dois turnos. Substitui a chance crítica adicional e a amplificação contra queimadura."
+  },
+  "sylva": {
+    "action": "skill",
+    "name": "Jardim de retorno",
+    "patch": {
+      "kind": "healAll",
+      "power": 0.1,
+      "cost": 35
+    },
+    "remove": [],
+    "description": "Cura 10% da vida máxima de toda a equipe e concede regeneração por dois turnos. Substitui a cura de 20% em um aliado."
+  },
+  "oren": {
+    "action": "skill",
+    "name": "Corda de regresso",
+    "patch": {
+      "power": 0.1,
+      "secondary": {
+        "kind": "energy",
+        "target": "target",
+        "amount": 10
+      }
+    },
+    "remove": [],
+    "description": "Escudo de 10% em um aliado. Oren recebe 25% de seus golpes individuais por dois turnos. O aliado recebe até 10 EN. Substitui o escudo de 14%."
+  },
+  "nima": {
+    "action": "skill",
+    "name": "Trilha de farpas",
+    "patch": {
+      "power": 1.15,
+      "effect": "bleed"
+    },
+    "remove": [
+      "combo"
+    ],
+    "description": "115% do ataque e sangramento por dois turnos. Substitui a exposição e o golpe amplificado que consumia sangramento."
+  },
+  "brin": {
+    "action": "skill",
+    "name": "Enxerto urgente",
+    "patch": {
+      "power": 0.12,
+      "effect": "regen",
+      "cost": 20
+    },
+    "remove": [],
+    "description": "Cura 12% da vida máxima de um aliado e concede regeneração por dois turnos. Substitui a cura de 18% com purificação. Recarga de uma ação."
+  },
+  "axion": {
+    "action": "skill",
+    "name": "Passagem segura",
+    "patch": {
+      "kind": "shield",
+      "power": 0.12,
+      "effect": "cleanse"
+    },
+    "remove": [],
+    "description": "Escudo de 12% e purificação em um aliado. A camada dura duas rodadas globais. Sentinela dura dois turnos do receptor. Substitui a proteção e a fortificação coletivas."
+  },
+  "kira": {
+    "action": "skill",
+    "name": "Tiro de ruptura",
+    "patch": {
+      "power": 1.1,
+      "pierce": 0.8,
+      "cost": 35
+    },
+    "remove": [
+      "combo"
+    ],
+    "description": "110% do ataque. 80% do dano atravessa escudos. Substitui o golpe de 165% e o bônus contra exposição."
+  },
+  "bast": {
+    "action": "skill",
+    "name": "Reserva magnética",
+    "patch": {
+      "kind": "shieldAll",
+      "power": 0.06,
+      "effect": "fortify",
+      "secondary": {
+        "kind": "shield",
+        "target": "actor",
+        "power": 0.08
+      }
+    },
+    "remove": [
+      "extraEffect"
+    ],
+    "description": "Escudo de 6% para a equipe por duas rodadas globais e Fortificação por dois turnos de cada aliado. Bast recebe outra camada de escudo de 8%. Substitui a interceptação individual."
+  },
+  "vektor": {
+    "action": "skill",
+    "name": "Drone de emergência",
+    "patch": {
+      "extraEffect": "fortify",
+      "secondary": {
+        "kind": "heal",
+        "target": "lowestAlly",
+        "power": 0.12
+      }
+    },
+    "remove": [],
+    "description": "Purifica e fortifica o aliado escolhido por dois turnos. Cura o aliado mais ferido em 12% da vida máxima. Substitui o empoderamento e a entrega de energia."
+  },
+  "astra": {
+    "action": "skill",
+    "name": "Órbita difusa",
+    "patch": {
+      "kind": "aoe",
+      "power": 0.65,
+      "cost": 35
+    },
+    "remove": [],
+    "description": "65% do ataque em todos os rivais vivos. Aplica Selo astral por dois turnos em cada alvo: o próximo golpe aliado causa +25% e consome seu Selo. Substitui o golpe de 125% em um alvo."
+  },
+  "elun": {
+    "action": "skill",
+    "name": "Espelho lacrado",
+    "patch": {
+      "power": 0.12,
+      "secondary": {
+        "kind": "energy",
+        "target": "actor",
+        "amount": 10
+      }
+    },
+    "remove": [
+      "extraEffect"
+    ],
+    "description": "Escudo de 12% em um aliado por duas rodadas globais e Espelho por dois turnos do receptor. Elun recupera até 10 EN. Substitui o escudo de 18% e a Égide elemental."
+  },
+  "saira": {
+    "action": "skill",
+    "name": "Maré convergente",
+    "patch": {
+      "kind": "heal",
+      "power": 0.24
+    },
+    "remove": [],
+    "description": "Cura 24% da vida máxima de um aliado e depois purifica efeitos negativos. Substitui a cura de 12% em toda a equipe."
+  },
+  "ivo": {
+    "action": "skill",
+    "name": "Eco ancorado",
+    "patch": {
+      "power": 1.3,
+      "effect": "darkmark",
+      "cost": 35
+    },
+    "remove": [
+      "spread"
+    ],
+    "description": "130% do ataque e Marca obscura por dois turnos. Substitui a propagação de uma aflição existente."
+  },
+  "vesper": {
+    "action": "skill",
+    "name": "Vigília livre",
+    "patch": {
+      "power": 0.12,
+      "effect": "riposte",
+      "extraEffect": "fortify"
+    },
+    "remove": [],
+    "description": "Escudo próprio de 12%, Riposta e Fortificação por dois turnos. Substitui a Provocação: não atrai golpes e não reduz a defesa."
+  },
+  "maura": {
+    "action": "skill",
+    "name": "Ferida partilhada",
+    "patch": {
+      "power": 0.65,
+      "secondary": {
+        "kind": "shield",
+        "target": "lowestAlly",
+        "power": 0.1,
+        "multiplier": 1.5,
+        "whenStatuses": [
+          "bleed",
+          "darkmark"
+        ]
+      }
+    },
+    "remove": [],
+    "description": "65% do ataque e enfraquecimento por dois turnos. Concede escudo ao aliado mais ferido: 10% da vida, ou 15% se o alvo atingido tinha sangramento ou Marca obscura. Substitui a cura secundária."
+  },
+  "noct": {
+    "action": "skill",
+    "name": "Cobrança adiada",
+    "patch": {
+      "power": 1.05,
+      "effect": "darkmark",
+      "combo": {
+        "statuses": [
+          "darkmark",
+          "bleed"
+        ],
+        "multiplier": 1.25,
+        "consume": false
+      }
+    },
+    "remove": [],
+    "description": "105% do ataque e Marca obscura por dois turnos. Contra marca ou sangramento: +25%, conservando a aflição. Substitui o golpe de 145% que consumia o efeito."
+  },
+  "riven": {
+    "action": "skill",
+    "name": "Cicatriz aberta",
+    "patch": {
+      "power": 1.2,
+      "effect": "bleed",
+      "duration": 3
+    },
+    "remove": [
+      "combo",
+      "executeThreshold",
+      "executeMultiplier"
+    ],
+    "description": "120% do ataque e sangramento por três turnos. Substitui o golpe de 160%, a sinergia de sangramento e a execução."
+  },
+  "auren": {
+    "action": "skill",
+    "name": "Lanterna cerrada",
+    "patch": {
+      "power": 0.16,
+      "self": true,
+      "extraEffect": "fortify"
+    },
+    "remove": [],
+    "description": "Escudo próprio de 16%, purificação e Fortificação por dois turnos. Substitui o escudo de 18% em um aliado e a Égide elemental."
+  },
+  "elyra": {
+    "action": "skill",
+    "name": "Leito de vigília",
+    "patch": {
+      "power": 0.12,
+      "effect": "regen",
+      "secondary": {
+        "kind": "shield",
+        "target": "target",
+        "power": 0.08
+      }
+    },
+    "remove": [],
+    "description": "Cura 12% da vida máxima de um aliado, concede regeneração por dois turnos e escudo de 8% por duas rodadas globais. Substitui a cura de 20% com purificação e escudo de 4%."
+  },
+  "solen": {
+    "action": "skill",
+    "name": "Horizonte estreito",
+    "patch": {
+      "kind": "damage",
+      "power": 1.55
+    },
+    "remove": [],
+    "description": "155% do ataque em um alvo e enfraquecimento por dois turnos. Substitui o golpe de 90% em área."
+  },
+  "zaya": {
+    "action": "skill",
+    "name": "Carta de resposta",
+    "patch": {
+      "kind": "supportAll",
+      "power": 0,
+      "effect": "elementalWard",
+      "secondary": {
+        "kind": "energy",
+        "target": "allies",
+        "amount": 10
+      }
+    },
+    "remove": [],
+    "description": "Égide elemental por dois turnos e até 10 EN para cada aliado vivo. Substitui a cura coletiva de 10% e a entrega de 6 EN."
+  }
+}

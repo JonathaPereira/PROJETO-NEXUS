@@ -1,5 +1,13 @@
 extends Control
 var tint := Color("a9a0f6")
+const TEXTURES := {
+	"ember": preload("res://assets/gems/ember.svg"),
+	"pulse": preload("res://assets/gems/pulse.svg"),
+	"sap": preload("res://assets/gems/sap.svg"),
+}
+
+static func texture_for(id: String) -> Texture2D:
+	return TEXTURES.get(id)
 
 func _ready() -> void:
 	mouse_filter = MOUSE_FILTER_IGNORE

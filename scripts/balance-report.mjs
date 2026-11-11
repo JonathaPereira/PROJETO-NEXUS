@@ -3,13 +3,13 @@ import {HEROES,CLASSES} from '../src/data.js';
 const {createBattle,chooseAI,act,currentUnit,getAction} = await import(new URL(process.env.NEXUS_BALANCE_ENGINE || '../src/engine.js', import.meta.url));
 export function sampleTeams(pair) {
   return [0,1].map(side=>['Tanque','Suporte','Dano'].map((role,index)=>{
-    const group=Math.floor(pair/5),base=pair%5,offsets=[side*2,group+side,group*2+side*3];
-    const c=CLASSES[(pair<5?base+side:base+offsets[index])%5].id;
+    const group=Math.floor(pair/CLASSES.length),base=pair%CLASSES.length,offsets=[side*2,group+side,group*2+side*3];
+    const c=CLASSES[(pair<CLASSES.length?base+side:base+offsets[index])%CLASSES.length].id;
     return HEROES.find(h=>h.classId===c&&h.role===role).id;
   }));
 }
 const cases=[];
-for(let pair=0;pair<30;pair++){
+for(let pair=0;pair<CLASSES.length*6;pair++){
  const teams=sampleTeams(pair);
  for(let swap=0;swap<2;swap++)cases.push({teams:[teams[swap],teams[1-swap]],seed:73+pair*113,group:'varied'});
 }
@@ -23,13 +23,19 @@ for(let pair=0;pair<15;pair++)for(let swap=0;swap<2;swap++) {
 }
 for(const role of ['Suporte','Tanque','Dano']) {
  const ids=HEROES.filter(h=>h.role===role).map(h=>h.id);
- for(let pair=0;pair<5;pair++)for(let swap=0;swap<2;swap++) {
-  const foe=[0,1,3].map(i=>ids[(pair+i)%5]);
+ for(let pair=0;pair<CLASSES.length;pair++)for(let swap=0;swap<2;swap++) {
+  const foe=[0,1,3].map(i=>ids[(pair+i)%ids.length]);
   const team=role==='Tanque'?['vesper','oren','elun']:healers;
   cases.push({teams:swap?[foe,team]:[team,foe],seed:331+pair*181,group:role==='Tanque'?'tank-trios':'healers-vs-'+role});
  }
 }
 for(let seed=1;seed<=6;seed++)cases.push({teams:[healers,healers],seed:seed*197,group:'healing-only',defensive:true});
+const returning=['torv','brin','bast','ivo','noct','auren','elyra','solen','zaya'];
+const partners=[['sylva','axion'],['kira','vesper'],['astra','oren'],['maura','rhazen'],['vektor','nima'],['saira','riven']];
+for(const [index,id] of returning.entries())for(const [pair,duo] of partners.entries())for(let swap=0;swap<2;swap++){
+ const team=[id,...duo],foe=sampleTeams(index*6+pair)[0];
+ cases.push({teams:swap?[foe,team]:[team,foe],seed:911+index*199+pair*131,group:'return-'+id});
+}
 const matches=cases.map(c=>{
  const s=createBattle(...c.teams,{seed:c.seed});let fracture=false,firstKO=null;
  while(s.phase==='playing'&&s.turns<400){
